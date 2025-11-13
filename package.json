@@ -1,0 +1,41 @@
+{
+  "name": "ts-rag-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --ext .ts,.tsx ."
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.65",
+    "@ai-sdk/huggingface": "^0.0.9",
+    "@ai-sdk/react": "^2.0.92",
+    "@huggingface/inference": "^4.13.2",
+    "@langchain/community": "^1.0.2",
+    "@langchain/core": "^1.0.0",
+    "@langchain/openai": "^1.1.0",
+    "@langchain/textsplitters": "^1.0.0",
+    "@vercel/postgres": "^0.10.0",
+    "ai": "^5.0.92",
+    "mammoth": "^1.11.0",
+    "next": "^16.0.1",
+    "pdf-parse": "^1.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "streamdown": "^1.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.25",
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.1",
+    "typescript": "^5.9.3",
+    "tailwindcss": "^4.1.17",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/typography": "^0.5.19"
+  }
+}
