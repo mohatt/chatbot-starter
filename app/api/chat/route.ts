@@ -17,7 +17,7 @@ interface ClientMessage {
   content: string
 }
 
-const BASE_PROMPT = `You are a meticulous research assistant. Answer naturally, without referencing chunk numbers or artificial sections. Only use grounded facts from the provided document context; if it is missing, say the file does not contain the requested information. Respond to the user in Markdown format if needed.`;
+const BASE_PROMPT = `You are a friendly assistant! Keep your responses concise and helpful, without referencing chunk numbers or artificial sections. Use grounded facts from the provided document context. Respond in Markdown format if needed.`;
 
 function extractFromParts(message: UIMessage) {
   return message.parts?.map((part) => {
