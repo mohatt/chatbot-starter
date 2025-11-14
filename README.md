@@ -63,13 +63,13 @@ CREATE TABLE IF NOT EXISTS session_chunks (
 Refer to `.env.example`:
 ```
 POSTGRES_URL=...
-HF_ACCESS_TOKEN=...
+HUGGING_FACE_API_KEY=...
 OPENAI_API_KEY=...
 OPENAI_BASE_URL=https://gateway.ai.cloudflare.com/...
 AI_MODEL=meta-llama/Llama-3.1-8B-Instruct
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 ```
-- **HF_ACCESS_TOKEN** – free tier works for both embeddings and chat.
+- **HUGGING_FACE_API_KEY** – free tier works for both embeddings and chat.
 - **OPENAI_API_KEY / BASE_URL** – optional; point at the AI Gateway, Together, Fireworks, etc.
 
 ### 4. Run locally
@@ -81,7 +81,7 @@ Visit `http://localhost:3000` and upload docs.
 ### 5. Deploy to Vercel
 1. `vercel` (or `vercel deploy --prod`)
 2. Attach the **Postgres** + **AI Gateway** integrations.
-3. Copy the env vars from `.env` to the Vercel dashboard (including `POSTGRES_URL`, `HF_ACCESS_TOKEN`, etc.).
+3. Copy the env vars from `.env` to the Vercel dashboard (including `POSTGRES_URL`, `HUGGING_FACE_API_KEY`, etc.).
 
 ---
 ## 🧠 Architecture
@@ -93,9 +93,7 @@ app/
 │   └── chat/route.ts    # similarity search + LLM streaming
 lib/
 ├── db.ts               # schema helpers & vector queries
-├── embeddings.ts       # LangChain embeddings factory
-├── docLoader.ts        # PDF/DOCX/TXT loaders
-├── utils.ts            # token estimates, summaries
+├── ai.ts               # AI models factory
 components/
 ├── UploadForm.tsx      # multi-file upload UI
 ├── FileSummary.tsx     # session metadata panel

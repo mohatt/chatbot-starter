@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import UploadForm from '../components/UploadForm';
-import FileSummary from '../components/FileSummary';
-import ChatBox from '../components/ChatBox';
-import type { IngestResponse } from '../lib/types';
+import UploadForm from '@/components/UploadForm';
+import FileSummary from '@/components/FileSummary';
+import ChatBox from '@/components/ChatBox';
+import type { IngestResponse } from '@/lib/types';
 
 export default function HomePage() {
   const [session, setSession] = useState<IngestResponse | null>(null);

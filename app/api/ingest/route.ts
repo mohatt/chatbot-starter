@@ -1,22 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path'
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { loadDocumentsFromBuffer } from '../../../lib/docLoader';
-import { createEmbeddings } from '../../../lib/embeddings';
-import { ensureSchema, getChunkCount, getSessionMetadata, insertSessionChunks, saveSession } from '../../../lib/db';
-import { buildFileMetadata, summarizeDocument } from '../../../lib/utils';
-import type { DocumentInterface } from '@langchain/core/documents';
-import type { IngestMetadata, IngestResponse } from '../../../lib/types';
+import { DocxLoader } from '@langchain/community/document_loaders/fs/docx'
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf'
+import { Document } from '@langchain/core/documents';
+import { ensureSchema, getChunkCount, getSessionMetadata, insertSessionChunks, saveSession } from '@/lib/db';
+import { createModels } from '@/lib/ai';
+import type { IngestMetadata, IngestResponse, SessionFileMetadata } from '@/lib/types'
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+type AppDocument = Document<{
+  fileId: string
+  fileName: string
+  sessionId: string
+}>
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.docx', '.txt', '.md']);
+
+function normalizeFileExtension(fileName: string, mime?: string) {
+  const extension = extname(fileName || '').toLowerCase();
+  if (extension) return extension;
+  if (mime?.includes('pdf')) return '.pdf';
+  if (mime?.includes('word')) return '.docx';
+  if (mime?.includes('markdown')) return '.md';
+  return '.txt';
+}
+
+export async function loadDocumentsFromFile(file: File): Promise<Document[]> {
+  const extension = normalizeFileExtension(file.name, file.type);
+  if (!SUPPORTED_EXTENSIONS.has(extension)) {
+    throw new Error(`Unsupported file type: ${extension}`);
+  }
+
+  switch (extension) {
+    case '.pdf': {
+      const loader = new PDFLoader(file);
+      return loader.load();
+    }
+    case '.docx': {
+      const loader = new DocxLoader(file);
+      return loader.load();
+    }
+    case '.txt':
+    case '.md': {
+      return [
+        new Document({
+          pageContent: await file.text(),
+          metadata: { source: file.name, mimeType: file.type || 'text/plain' }
+        })
+      ];
+    }
+    default:
+      throw new Error(`Unsupported file type: ${extension}`);
+  }
+}
+
+export function buildFileMetadata(file: File, chunks: Document[]): SessionFileMetadata {
+  const characters = chunks.reduce((acc, doc) => acc + doc.pageContent.length, 0);
+  const tokenEstimate = Math.max(1, Math.round(characters / 4));
+
+  return {
+    id: randomUUID(),
+    fileName: file.name || 'document',
+    mimeType: file.type || 'text/plain',
+    size: file.size,
+    chunkCount: chunks.length,
+    tokenEstimate,
+    addedAt: new Date().toISOString()
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const models = createModels();
     await ensureSchema();
     const formData = await request.formData();
-    const uploadedFiles = formData.getAll('files').filter((item): item is File => item instanceof File);
+    const uploadedFiles = formData.getAll('files').filter((item)=> item instanceof File);
 
     if (!uploadedFiles.length) {
       return NextResponse.json({ error: 'Choose at least one file to ingest.' }, { status: 400 });
@@ -33,28 +96,28 @@ export async function POST(request: NextRequest) {
     const sessionId = formData.get('sessionId')?.toString() || randomUUID();
     const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 800, chunkOverlap: 200 });
 
-    const allChunks: DocumentInterface[] = [];
-    const fileMetadata = [];
-    let latestChunks: DocumentInterface[] = [];
+    const allChunks: AppDocument[] = [];
+    const fileMetadata: SessionFileMetadata[] = [];
 
     for (const file of uploadedFiles) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const docs = await loadDocumentsFromBuffer({ buffer, fileName: file.name, mimeType: file.type });
+      const docs = await loadDocumentsFromFile(file);
       const chunks = await splitter.splitDocuments(docs);
       if (!chunks.length) {
         continue;
       }
-      const metadata = buildFileMetadata({ fileName: file.name, mimeType: file.type, size: file.size, chunks });
+      const metadata = buildFileMetadata(file, chunks);
       chunks.forEach((chunk) => {
-        chunk.metadata = {
-          ...chunk.metadata,
-          fileId: metadata.id,
-          fileName: metadata.fileName,
-          sessionId
-        };
+        const appDoc: AppDocument = {
+          ...chunk,
+          metadata: {
+            ...chunk.metadata,
+            fileId: metadata.id,
+            fileName: metadata.fileName,
+            sessionId
+          }
+        }
+        allChunks.push(appDoc);
       });
-      allChunks.push(...chunks);
-      latestChunks = chunks;
       fileMetadata.push(metadata);
     }
 
@@ -62,8 +125,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No readable text found in the uploaded files.' }, { status: 400 });
     }
 
-    const embeddings = createEmbeddings();
-    const chunkEmbeddings = await embeddings.embedDocuments(allChunks.map((chunk) => chunk.pageContent));
+    const chunkEmbeddings = await models.embedding.embedDocuments(allChunks.map((chunk) => chunk.pageContent));
 
     const existing = await getSessionMetadata(sessionId);
     const baseMetadata: IngestMetadata = existing?.metadata ?? {
@@ -81,9 +143,6 @@ export async function POST(request: NextRequest) {
       totalTokenEstimate: baseMetadata.totalTokenEstimate + fileMetadata.reduce((sum, file) => sum + file.tokenEstimate, 0),
       files: [...baseMetadata.files, ...fileMetadata]
     };
-
-    const latestFile = fileMetadata[fileMetadata.length - 1];
-    const summary = `Latest addition (${latestFile.fileName}): ${summarizeDocument(latestChunks)}`;
 
     await saveSession(sessionId, mergedMetadata);
 

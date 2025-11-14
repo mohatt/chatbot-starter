@@ -3,9 +3,9 @@ node_modules
 .vscode
 dist
 .env.development.local
+.env.production.local
 .next
 npm-debug.log*
-pnpm-lock.yaml
 yarn.lock
 .DS_Store
 .tsbuildinfo

@@ -1,6 +1,6 @@
 'use client';
 
-import type { IngestResponse } from '../lib/types';
+import type { IngestResponse } from '@/lib/types';
 
 interface Props {
   session: IngestResponse | null;

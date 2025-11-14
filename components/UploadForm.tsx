@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, ChangeEvent, FormEvent } from 'react';
-import type { IngestResponse } from '../lib/types';
+import type { IngestResponse } from '@/lib/types';
 
 interface UploadFormProps {
   sessionId: string | null;

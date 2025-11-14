@@ -1,11 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { streamText, type UIMessage  } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createHuggingFace } from '@ai-sdk/huggingface';
-import { createEmbeddings } from '../../../lib/embeddings';
-import { ensureSchema, getSessionMetadata, searchSessionChunks } from '../../../lib/db';
-import { env, defaults, assertEnv } from '../../../lib/env';
+import { streamText, type UIMessage } from 'ai';
+import { ensureSchema, getSessionMetadata, searchSessionChunks } from '@/lib/db';
+import { createModels } from '@/lib/ai';
 
 export const runtime = 'nodejs';
 
@@ -20,7 +17,7 @@ interface ClientMessage {
   content: string
 }
 
-const BASE_PROMPT = `You are a meticulous research assistant. Answer naturally, without referencing chunk numbers or artificial sections. Only use grounded facts from the provided document context; if it is missing, say the file does not contain the requested information. Respond to the user in Markdown format.`;
+const BASE_PROMPT = `You are a meticulous research assistant. Answer naturally, without referencing chunk numbers or artificial sections. Only use grounded facts from the provided document context; if it is missing, say the file does not contain the requested information. Respond to the user in Markdown format if needed.`;
 
 function extractFromParts(message: UIMessage) {
   return message.parts?.map((part) => {
@@ -66,6 +63,7 @@ function shouldAttachContext(question: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    const models = createModels();
     await ensureSchema();
     const body: ChatRequestBody = await request.json();
     if (!body.sessionId) {
@@ -82,8 +80,7 @@ export async function POST(request: NextRequest) {
     if (!lastUserMessage) {
       return NextResponse.json({ error: 'User message is required.' }, { status: 400 });
     }
-    const embeddings = createEmbeddings();
-    const queryEmbedding = await embeddings.embedQuery(lastUserMessage.content);
+    const queryEmbedding = await models.embedding.embedQuery(lastUserMessage.content);
     const relevantChunks = await searchSessionChunks(body.sessionId, queryEmbedding, 4);
     const context =
       relevantChunks
@@ -103,23 +100,8 @@ export async function POST(request: NextRequest) {
         )
       : history;
 
-    if (env.HF_ACCESS_TOKEN && defaults.chatModel.toLowerCase().includes('llama')) {
-      const apiKey = assertEnv(env.HF_ACCESS_TOKEN, 'HF_ACCESS_TOKEN');
-      const huggingFace = createHuggingFace({ apiKey });
-      const response = streamText({
-        model: huggingFace(defaults.chatModel),
-        system: BASE_PROMPT,
-        messages: augmentedHistory,
-        temperature: 0.2,
-        maxOutputTokens: 600
-      });
-      return response.toUIMessageStreamResponse();
-    }
-
-    const apiKey = assertEnv(env.OPENAI_API_KEY, 'OPENAI_API_KEY');
-    const openai = createOpenAI({ apiKey, baseURL: env.OPENAI_BASE_URL });
     const response = streamText({
-      model: openai(defaults.chatModel),
+      model: models.chat,
       system: BASE_PROMPT,
       messages: augmentedHistory,
       temperature: 0.2,

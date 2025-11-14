@@ -1,12 +1,12 @@
-import { z } from 'zod';
+import { object, string } from 'zod';
 
-const envSchema = z.object({
-  NODE_ENV: z.string().optional(),
-  HF_ACCESS_TOKEN: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
-  OPENAI_BASE_URL: z.string().optional(),
-  AI_MODEL: z.string().optional(),
-  EMBEDDING_MODEL: z.string().optional()
+const envSchema = object({
+  NODE_ENV: string().optional(),
+  HUGGING_FACE_API_KEY: string().optional(),
+  OPENAI_API_KEY: string().optional(),
+  OPENAI_BASE_URL: string().optional(),
+  AI_MODEL: string().optional(),
+  EMBEDDING_MODEL: string().optional()
 });
 
 export const env = envSchema.parse(process.env);
