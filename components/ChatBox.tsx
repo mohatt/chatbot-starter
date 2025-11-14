@@ -1,10 +1,9 @@
 'use client';
 
 import { ChangeEvent, FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
-import { useChat, Chat } from '@ai-sdk/react';
+import { useChat, UseChatOptions, type UIMessage } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { Streamdown } from 'streamdown';
-import ReactMarkdown from 'react-markdown';
 
 interface ChatBoxProps {
   sessionId: string | null;
@@ -16,17 +15,17 @@ export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
   const [input, setInput] = useState('');
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
-  const chat = useMemo(() => {
-    return new Chat({
+  const chatProps = useMemo<UseChatOptions<UIMessage>>(() => {
+    return {
       id: sessionId ?? 'bootstrap',
       transport: new DefaultChatTransport({
-        api: "/api/chat",
+        api: '/api/chat',
         body: sessionId ? { sessionId } : undefined
-      }),
-    });
+      })
+    };
   }, [sessionId]);
 
-  const { messages, setMessages, sendMessage, status, error, clearError } = useChat({ chat });
+  const { messages, setMessages, sendMessage, status, error, clearError } = useChat(chatProps);
 
   const resetSessionState = useEffectEvent(() => {
     setLocalError(null);
