@@ -82,11 +82,25 @@ export async function POST(request: NextRequest) {
     }
     const queryEmbedding = await models.embedding.embedQuery(lastUserMessage.content);
     const relevantChunks = await searchSessionChunks(body.sessionId, queryEmbedding, 4);
-    const context =
-      relevantChunks
-        .map((chunk) => chunk.content.trim())
-        .filter(Boolean)
-        .join('\n\n---\n\n');
+
+    const { files } = session.metadata;
+    const sessionDescriptor = files.length
+      ? [
+          `Session contains ${files.length} file${files.length === 1 ? '' : 's'}:`,
+          ...files.map((file) => `- ${file.fileName} (${file.mimeType})`),
+          'Note: multiple excerpts from the same file may appear below.'
+        ].join('\n')
+      : null;
+
+    const contextSections = [
+      sessionDescriptor,
+      ...relevantChunks.map(({ metadata, content }) => {
+        const source = `Excerpt from ${metadata.fileName}`;
+        return [source, content].join('\n');
+      })
+    ].filter(Boolean);
+
+    const context = contextSections.join('\n\n---\n\n');
 
     const includeContext = !!context && shouldAttachContext(lastUserMessage.content);
     const augmentedHistory = includeContext
@@ -94,7 +108,7 @@ export async function POST(request: NextRequest) {
           msg === lastUserMessage
             ? {
                 ...msg,
-                content: `Document context:\n${context}\n\n${msg.content}`
+                content: `Context:\n${context}\n\n${msg.content}`
               }
             : msg
         )
