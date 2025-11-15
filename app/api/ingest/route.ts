@@ -6,7 +6,7 @@ import { DocxLoader } from '@langchain/community/document_loaders/fs/docx'
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf'
 import { Document } from '@langchain/core/documents';
 import { ensureSchema, getChunkCount, getSessionMetadata, insertSessionChunks, saveSession } from '@/lib/db';
-import { createModels } from '@/lib/ai';
+import { models } from '@/lib/ai';
 import type { IngestMetadata, IngestResponse, SessionFileMetadata } from '@/lib/types'
 
 export const runtime = 'nodejs';
@@ -76,7 +76,6 @@ export function buildFileMetadata(file: File, chunks: Document[]): SessionFileMe
 
 export async function POST(request: NextRequest) {
   try {
-    const models = createModels();
     await ensureSchema();
     const formData = await request.formData();
     const uploadedFiles = formData.getAll('files').filter((item)=> item instanceof File);
