@@ -78,7 +78,7 @@ export async function getSessionMetadata(sessionId: string) {
 export async function searchSessionChunks(sessionId: string, embedding: number[], limit: number) {
   const vectorLiteral = toVectorLiteral(embedding);
   const { rows } = await sql<ChunkRecord>`
-    SELECT content, metadata
+    SELECT chunk_index, content, metadata
     FROM session_chunks
     WHERE session_id = ${sessionId}
     ORDER BY embedding <=> ${vectorLiteral}::vector

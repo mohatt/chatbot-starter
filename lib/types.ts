@@ -24,4 +24,5 @@ export interface IngestResponse {
 export interface ChunkRecord {
   content: string;
   metadata: Record<string, unknown>;
+  chunk_index: number;
 }

@@ -1,16 +1,60 @@
-import { cosineSimilarity, generateText } from 'ai'
+import { cosineSimilarity, generateText } from 'ai';
 import { models } from './ai';
 
 function isChitchat(text: string) {
-  // chitchat / acknowledgements
-  return /(hi|hey|hello|greeting|thnx|thanks|thank you|appreciate|cool|perfect|awesome|great|cheers|ok(ay)?|got it)/i.test(text);
+  const quickHits =
+    /(hi|hey|hello|greetings?|yo|sup|hru|thx|thanks|thank you|appreciate|cool|perfect|awesome|amazing|sweet|cheers|ok(ay)?|got it|no worries|you're welcome|np)/i;
+  if (quickHits.test(text)) return true;
+
+  const phrases = [
+    'sounds good',
+    'looks good',
+    'makes sense',
+    'great, thanks',
+    'all good',
+    'that helps',
+    'appreciate it',
+    'much appreciated',
+    'thank u',
+    'thankyou',
+    'thanks a lot'
+  ];
+  return phrases.some((phrase) => text.includes(phrase))
 }
 
 function isInfoRequest(text: string) {
   // clearly a question
   if (/[?]/.test(text)) return true;
   // wh-words and verbs indicating information request
-  return /\b(who|what|when|where|why|how|which|list|summarize|explain|describe|tell|show|give|extract|analyze)\b/i.test(text);
+  const keywords =
+    /\b(who|what|when|where|why|how|which|list|summarize|summaries|explain|describe|tell|show|give|extract|analyze|examine|compare|detail|outline|clarify|provide|identify|count|how many|steps|instructions|process)\b/i;
+  if (keywords.test(text)) return true;
+
+  return text.length > 40;
+}
+
+function isReferential(text: string) {
+  const cues = [
+    "his",
+    "her",
+    "their",
+    "its",
+    "that",
+    "this",
+    "those",
+    "which",
+    "the second",
+    "the first",
+    "the last",
+    "what about",
+    "address",
+    "email",
+    "date",
+    "value",
+    "number",
+  ];
+
+  return cues.some((c) => text.includes(c));
 }
 
 const RETRIEVAL_INTENTS = [
@@ -39,7 +83,7 @@ async function isDocumentRelated(query: number[]) {
   for (const emb of intents) {
     maxSim = Math.max(maxSim, cosineSimilarity(query, emb));
   }
-  return maxSim > 0.55;
+  return maxSim > 0.5;
 }
 
 async function isDocumentRelatedLLM(userMessage: string, lastAssistantMessage?: string) {
@@ -64,26 +108,27 @@ async function isDocumentRelatedLLM(userMessage: string, lastAssistantMessage?: 
   }
 }
 
-export async function shouldUseRag(text: string, previousAssistant?: string): Promise<number[] | false> {
-  const t = text.trim().toLowerCase();
-  if (!t) return false;
+export async function shouldUseRag(userMessage: string, previousAssistant?: string): Promise<number[] | false> {
+  const text = userMessage.trim().toLowerCase();
+  if (!text) return false;
 
-  const query = await models.embedding.embedQuery(text);
+  // embed the query on-demand
+  const embed = () => models.embedding.embedQuery(userMessage);
 
   // info request → likely needs RAG
-  if (isInfoRequest(t)) return query;
+  if (isInfoRequest(text) || isReferential(text)) return embed();
 
   // catch obvious non-RAG queries instantly
-  if (isChitchat(t)) return false;
+  if (isChitchat(text)) return false;
 
   // short pronoun-based follow-ups ALWAYS require context
-  if (t.split(' ').length <= 3) return query;
+  if (text.split(/\s+/).length <= 3) return embed();
 
   // semantic similarity against retrieval intent examples (MiniLM)
-  const semantic = await isDocumentRelated(query);
-  if (semantic) return query;
+  const vector = await embed();
+  if (await isDocumentRelated(vector)) return vector;
 
   // final tie-breaker: LLM classifier
-  const classifier = await isDocumentRelatedLLM(t, previousAssistant);
-  return classifier && query;
+  const llmResult = await isDocumentRelatedLLM(userMessage, previousAssistant);
+  return llmResult && vector;
 }
