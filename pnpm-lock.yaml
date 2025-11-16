@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/gateway':
+        specifier: ^2.0.9
+        version: 2.0.9(zod@3.25.76)
       '@ai-sdk/huggingface':
         specifier: ^0.0.9
         version: 0.0.9(zod@3.25.76)
-      '@ai-sdk/openai':
-        specifier: ^2.0.65
-        version: 2.0.65(zod@3.25.76)
       '@ai-sdk/react':
         specifier: ^2.0.93
         version: 2.0.93(react@19.2.0)(zod@3.25.76)
@@ -26,9 +26,6 @@ importers:
       '@langchain/core':
         specifier: ^1.0.0
         version: 1.0.5(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76))
-      '@langchain/openai':
-        specifier: ^1.1.0
-        version: 1.1.1(@langchain/core@1.0.5(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76)))(ws@8.18.3(bufferutil@4.0.9))
       '@langchain/textsplitters':
         specifier: ^1.0.0
         version: 1.0.0(@langchain/core@1.0.5(@opentelemetry/api@1.9.0)(openai@6.9.0(ws@8.18.3(bufferutil@4.0.9))(zod@3.25.76)))
@@ -107,12 +104,6 @@ packages:
 
   '@ai-sdk/openai-compatible@1.0.27':
     resolution: {integrity: sha512-bpYruxVLhrTbVH6CCq48zMJNeHu6FmHtEedl9FXckEgcIEAi036idFhJlcRwC1jNCwlacbzb8dPD7OAH1EKJaQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/openai@2.0.65':
-    resolution: {integrity: sha512-Wqo4iNCsxUYJFmEAzAHO0XDnnS76rqvPRX2AUhEAOX3cgL9UEfouFmiNQS2jM9AZhMdWj5GIG41hgr4YOr20tA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3925,12 +3916,6 @@ snapshots:
       zod: 3.25.76
 
   '@ai-sdk/openai-compatible@1.0.27(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.17(zod@3.25.76)
-      zod: 3.25.76
-
-  '@ai-sdk/openai@2.0.65(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@3.25.76)

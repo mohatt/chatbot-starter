@@ -72,7 +72,7 @@ let RETRIEVAL_INTENTS_EMBEDDINGS: number[][] | null = null;
 
 async function getIntentEmbeddings() {
   if (!RETRIEVAL_INTENTS_EMBEDDINGS) {
-    RETRIEVAL_INTENTS_EMBEDDINGS = await models.embedding.embedDocuments(RETRIEVAL_INTENTS);
+    RETRIEVAL_INTENTS_EMBEDDINGS = await models.embedding.embedMany(RETRIEVAL_INTENTS);
   }
   return RETRIEVAL_INTENTS_EMBEDDINGS;
 }
@@ -113,7 +113,7 @@ export async function shouldUseRag(userMessage: string, previousAssistant?: stri
   if (!text) return false;
 
   // embed the query on-demand
-  const embed = () => models.embedding.embedQuery(userMessage);
+  const embed = () => models.embedding.embed(userMessage);
 
   // info request → likely needs RAG
   if (isInfoRequest(text) || isReferential(text)) return embed();

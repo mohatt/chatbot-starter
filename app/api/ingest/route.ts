@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No readable text found in the uploaded files.' }, { status: 400 });
     }
 
-    const chunkEmbeddings = await models.embedding.embedDocuments(allChunks.map((chunk) => chunk.pageContent));
+    const chunkEmbeddings = await models.embedding.embedMany(allChunks.map((chunk) => chunk.pageContent));
 
     const existing = await getSessionMetadata(sessionId);
     const baseMetadata: IngestMetadata = existing?.metadata ?? {

@@ -1,44 +1,37 @@
+import { gateway } from '@ai-sdk/gateway';
 import { createHuggingFace } from '@ai-sdk/huggingface';
-import { createOpenAI } from '@ai-sdk/openai';
-import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { env, assertEnv } from './env';
+import { embed, embedMany } from 'ai';
+import { env, defaults } from './env';
 
-function createModels() {
+export interface Models {
+  chat: ReturnType<typeof gateway>;
+  embedding: {
+    model: ReturnType<typeof gateway['textEmbeddingModel']>;
+    embed(value: string): Promise<number[]>;
+    embedMany(values: string[]): Promise<number[][]>;
+  }
+}
+
+function createModels(): Models {
   const {
     HUGGING_FACE_API_KEY,
-    OPENAI_API_KEY,
-    OPENAI_BASE_URL,
     AI_MODEL,
     EMBEDDING_MODEL,
   } = env;
 
-  if (HUGGING_FACE_API_KEY) {
-    const apiKey = assertEnv(HUGGING_FACE_API_KEY, 'HUGGING_FACE_API_KEY');
-    const huggingFace = createHuggingFace({ apiKey });
-    return {
-      chat: huggingFace(AI_MODEL ?? 'meta-llama/Llama-3.1-8B-Instruct'),
-      embedding: new HuggingFaceInferenceEmbeddings({
-        apiKey,
-        model: EMBEDDING_MODEL ?? 'sentence-transformers/all-MiniLM-L6-v2',
-        provider: 'auto'
-      })
-    };
-  }
+  const chat = HUGGING_FACE_API_KEY
+   ? createHuggingFace({ apiKey: HUGGING_FACE_API_KEY })(AI_MODEL ?? defaults.hf.chat)
+   : gateway(AI_MODEL ?? defaults.gateway.chat)
+  const embedding = gateway.textEmbeddingModel(EMBEDDING_MODEL ?? defaults.gateway.embedding);
 
-  if (OPENAI_API_KEY) {
-    const apiKey = assertEnv(OPENAI_API_KEY, 'OPENAI_API_KEY');
-    const openai = createOpenAI({ apiKey, baseURL: OPENAI_BASE_URL });
-    return {
-      chat: openai(AI_MODEL ?? 'gpt-4o-mini'),
-      embedding: new OpenAIEmbeddings({
-        apiKey,
-        model: EMBEDDING_MODEL ?? 'text-embedding-3-small',
-      })
-    };
-  }
-
-  throw new Error('Provide HUGGING_FACE_API_KEY or OPENAI_API_KEY for AI models access.');
+  return {
+    chat,
+    embedding: {
+      model: embedding,
+      embed: (value) => embed({ model: embedding, value }).then((res) => res.embedding),
+      embedMany: (values) => embedMany({ model: embedding, values }).then((res) => res.embeddings),
+    }
+  };
 }
 
 export const models = createModels();

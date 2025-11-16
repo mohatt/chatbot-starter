@@ -24,7 +24,7 @@ export async function ensureSchema() {
       chunk_index INTEGER,
       content TEXT,
       metadata JSONB,
-      embedding VECTOR(384)
+      embedding VECTOR(1536)
     )`;
   schemaInitialized = true;
 }
@@ -33,7 +33,7 @@ export async function saveSession(sessionId: string, metadata: IngestMetadata) {
   await sql`
     INSERT INTO sessions (id, metadata)
     VALUES (${sessionId}, ${JSON.stringify(metadata)}::jsonb)
-    ON CONFLICT (id) DO UPDATE SET summary = EXCLUDED.summary, metadata = EXCLUDED.metadata
+    ON CONFLICT (id) DO UPDATE SET metadata = EXCLUDED.metadata
   `;
 }
 
@@ -67,8 +67,8 @@ export async function insertSessionChunks(
 }
 
 export async function getSessionMetadata(sessionId: string) {
-  const { rows } = await sql<{ summary: string; metadata: IngestMetadata }>`
-    SELECT summary, metadata
+  const { rows } = await sql<{ metadata: IngestMetadata }>`
+    SELECT metadata
     FROM sessions
     WHERE id = ${sessionId}
   `;

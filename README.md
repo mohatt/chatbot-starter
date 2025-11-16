@@ -59,18 +59,8 @@ CREATE TABLE IF NOT EXISTS session_chunks (
 ```
 > 💡 384 = embedding dimension for `sentence-transformers/all-MiniLM-L6-v2`. Change it if you switch models.
 
-### 3. Environment variables (`.env`)
+### 3. Environment variables
 Refer to `.env.example`:
-```
-POSTGRES_URL=...
-HUGGING_FACE_API_KEY=...
-OPENAI_API_KEY=...
-OPENAI_BASE_URL=https://gateway.ai.cloudflare.com/...
-AI_MODEL=meta-llama/Llama-3.1-8B-Instruct
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-```
-- **HUGGING_FACE_API_KEY** – free tier works for both embeddings and chat.
-- **OPENAI_API_KEY / BASE_URL** – optional; point at the AI Gateway, Together, Fireworks, etc.
 
 ### 4. Run locally
 ```bash

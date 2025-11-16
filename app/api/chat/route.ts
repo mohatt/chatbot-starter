@@ -18,15 +18,13 @@ interface ClientMessage {
   content: string
 }
 
-const BASE_PROMPT = `
-You are a friendly assistant working with multiple user-uploaded files.
-Keep your responses concise and helpful, without referencing excerpt numbers or artificial sections.
-Respond in Markdown format if needed.
+const BASE_PROMPT = `You are a friendly assistant working with user-provided files. Respond in Markdown format if needed.
 
-Your strict rules are:
+You MUST follow these rules when responding to user messages:
 
 1. Use grounded facts from the provided context.
-   - Each excerpt provided in the context belongs to exactly one file, identified by its index number and file name.
+   - Each excerpt provided in the context belongs to exactly one file, identified by its index number (eg. #1) as it appeared in the file content.
+   - Keep your responses concise and helpful WITHOUT referencing excerpt index numbers.
 
 2. Treat each file as completely independent.
    - Files are NOT related unless explicitly stated by the user.
@@ -91,42 +89,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User message is required.' }, { status: 400 });
     }
 
-    const { files } = session.metadata;
+    const { files, totalChunks } = session.metadata;
     const previousAssistant = historyReversed.find((msg) => msg.role === 'assistant');
-    const queryEmbedding = files.length > 0 && await shouldUseRag(lastUserMessage.content, previousAssistant?.content);
-    let augmentedHistory: ClientMessage[] = history;
+    const queryEmbedding = totalChunks > 0 && await shouldUseRag(lastUserMessage.content, previousAssistant?.content);
+    let context = 'None';
 
     if (queryEmbedding !== false) {
-      const relevantChunks = await searchSessionChunks(body.sessionId, queryEmbedding, 5);
-      const sessionDescriptor = [
-        `Session contains ${files.length} file${files.length === 1 ? '' : 's'}:`,
-        ...files.map((file) => `- ${file.fileName} (Size: ${(file.size / 1024).toFixed(0)} KB) (Content Type: ${file.mimeType})`),
-      ].join('\n')
-
-      const context = [
-        sessionDescriptor,
-        ...relevantChunks.map(({ metadata, content, chunk_index }) => {
-          const source = `Excerpt #${chunk_index + 1} from ${metadata.fileName}`;
-          return [source, content.trim()].join('\n');
-        })
-      ].join('\n\n---\n\n');
-
-      augmentedHistory = history.map((msg) =>
-        msg === lastUserMessage
-          ? {
-            ...msg,
-            content: `Context:\n${context}\n\nUser Query:\n${msg.content}`
-          }
-          : msg
-      );
+      const relevantChunks = await searchSessionChunks(body.sessionId, queryEmbedding, 6);
+      context = relevantChunks.map(({ metadata, content, chunk_index }) => {
+        const source = `Excerpt #${chunk_index + 1} from ${metadata.fileName}`;
+        return [source, content.trim()].join('\n');
+      }).join('\n\n---\n\n');
     }
+
+    const sessionDescriptor = [
+      `This session can access ${files.length} file${files.length === 1 ? '' : 's'}:\n`,
+      ...files.map((file) => [
+        `- ${file.fileName}`,
+        `  Content Type: ${file.mimeType}`,
+        `  Size: ${(file.size / 1024).toFixed(0)} KB`,
+      ]),
+    ].join('\n')
+
+    const augmentedHistory = history.map((msg) =>
+      msg === lastUserMessage
+        ? {
+          ...msg,
+          content: `Context:\n${context}\n\nUser Query:\n${msg.content}`
+        }
+        : msg
+    );
 
     const response = streamText({
       model: models.chat,
-      system: BASE_PROMPT,
+      system: [BASE_PROMPT, sessionDescriptor].join('\n\n'),
       messages: augmentedHistory,
       temperature: 0.2,
-      maxOutputTokens: 600
+      maxOutputTokens: 800
     });
 
     return response.toUIMessageStreamResponse();
