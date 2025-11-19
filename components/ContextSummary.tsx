@@ -1,13 +1,13 @@
 'use client';
 
-import type { IngestResponse } from '@/lib/types';
+import type { ChatRecord } from '@/lib/db';
 
-interface Props {
-  session: IngestResponse | null;
+interface ContextSummaryProps {
+  chat: ChatRecord | null;
 }
 
-export default function FileSummary({ session }: Props) {
-  if (!session) {
+export default function ContextSummary({ chat }: ContextSummaryProps) {
+  if (!chat) {
     return (
       <div className="file-summary">
         <p className="empty-state">No documents in memory yet. Upload one or more files to start a chat session.</p>
@@ -15,8 +15,8 @@ export default function FileSummary({ session }: Props) {
     );
   }
 
-  const { metadata } = session;
-  const totalFiles = metadata.files.length;
+  const { context } = chat;
+  const totalFiles = context.files.length;
 
   return (
     <div className="file-summary">
@@ -30,29 +30,29 @@ export default function FileSummary({ session }: Props) {
       </div>
       <dl>
         <div>
-          <dt>Total chunks</dt>
-          <dd>{metadata.totalChunks}</dd>
+          <dt>Total vectors</dt>
+          <dd>{context.vectors}</dd>
         </div>
         <div>
           <dt>Approx. tokens</dt>
-          <dd>{metadata.totalTokenEstimate.toLocaleString()}</dd>
+          <dd>{context.tokens.toLocaleString()}</dd>
         </div>
         <div>
           <dt>Total size</dt>
-          <dd>{(metadata.totalSize / 1024).toFixed(0)} KB</dd>
+          <dd>{(context.size / 1024).toFixed(0)} KB</dd>
         </div>
       </dl>
 
       <ul className="ingested-files">
-        {metadata.files.map((file) => (
+        {context.files.map((file) => (
           <li key={file.id}>
             <div>
-              <strong>{file.fileName}</strong>
+              <strong>{file.name}</strong>
               <p>
-                {(file.size / 1024).toFixed(0)} KB · {file.chunkCount} chunks · {file.tokenEstimate.toLocaleString()} tokens
+                {(file.size / 1024).toFixed(0)} KB · {file.vectors} vectors · {file.tokens.toLocaleString()} tokens
               </p>
             </div>
-            <span>{file.mimeType}</span>
+            <span>{file.type}</span>
           </li>
         ))}
       </ul>

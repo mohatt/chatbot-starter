@@ -6,28 +6,36 @@ import { DefaultChatTransport } from 'ai';
 import { Streamdown } from 'streamdown';
 
 interface ChatBoxProps {
-  sessionId: string | null;
+  chatId?: string | null;
   isReady: boolean;
 }
 
-export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
+export default function ChatBox({ chatId, isReady }: ChatBoxProps) {
   const [localError, setLocalError] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const chatProps = useMemo<UseChatOptions<UIMessage>>(() => {
+    const id = chatId ?? 'new'
     return {
-      id: sessionId ?? 'bootstrap',
+      id,
       transport: new DefaultChatTransport({
-        api: '/api/chat',
-        body: sessionId ? { sessionId } : undefined
+        api: `/api/chat/${id}/chat`,
+        prepareSendMessagesRequest: (request) => {
+          return {
+            body: {
+              messages: request.messages.slice(-25),
+              ...request.body,
+            },
+          }
+        }
       })
     };
-  }, [sessionId]);
+  }, [chatId]);
 
   const { messages, setMessages, sendMessage, status, error, clearError } = useChat(chatProps);
 
-  const resetSessionState = useEffectEvent(() => {
+  const resetState = useEffectEvent(() => {
     setLocalError(null);
     clearError();
     setMessages([]);
@@ -35,8 +43,8 @@ export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
   });
 
   useEffect(() => {
-    resetSessionState();
-  }, [sessionId]);
+    resetState();
+  }, [chatId]);
 
   useEffect(() => {
     const container = messagesRef.current;
@@ -51,7 +59,7 @@ export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const text = input.trim();
-    if (!sessionId || !text) return;
+    if (!chatId || !text) return;
     try {
       await sendMessage({ text });
       setInput('');
@@ -61,7 +69,7 @@ export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
     }
   };
 
-  const disabled = !isReady || !sessionId;
+  const disabled = !isReady || !chatId;
   const isLoading = status === 'submitted' || status === 'streaming';
 
   return (
@@ -71,7 +79,7 @@ export default function ChatBox({ sessionId, isReady }: ChatBoxProps) {
           <p className="eyebrow">Chat</p>
           <h2>{disabled ? 'Upload to chat' : 'Ask anything about your doc'}</h2>
         </div>
-        {sessionId && <span className="badge subtle">Session {sessionId.slice(0, 6)}</span>}
+        {chatId && <span className="badge subtle">Chat {chatId.slice(0, 6)}</span>}
       </div>
 
       <div className="chat-messages" ref={messagesRef}>

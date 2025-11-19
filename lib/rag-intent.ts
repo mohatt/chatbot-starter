@@ -3,7 +3,7 @@ import { models } from './ai';
 
 function isChitchat(text: string) {
   const quickHits =
-    /(hi|hey|hello|greetings?|yo|sup|hru|thx|thanks|thank you|appreciate|cool|perfect|awesome|amazing|sweet|cheers|ok(ay)?|got it|no worries|you're welcome|np)/i;
+    /(hi|hey|hello|greetings?|yo|sup|hru|thx|thanks|thank you|appreciate|cool|perfect|awesome|amazing|sweet|cheers|ok(ay)?|no(ope)?|got it|no worries|you're welcome|np)/i;
   if (quickHits.test(text)) return true;
 
   const phrases = [

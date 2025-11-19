@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS session_chunks (
+CREATE TABLE IF NOT EXISTS session_context (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,
   chunk_index INTEGER,
@@ -104,7 +104,7 @@ components/
 
 ---
 ## 🚀 Tips
-- **Vector index**: for larger corpora, add `CREATE INDEX session_chunks_embedding_idx ON session_chunks USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);`
+- **Vector index**: for larger corpora, add `CREATE INDEX session_context_embedding_idx ON session_context USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);`
 - **Cleanup**: add a cron/queue to delete stale sessions (e.g., after 24h) using the `sessions` table.
 - **Providers**: To stay 100% free, use Hugging Face Inference or Groq via AI Gateway and keep usage below their rate limits.
 
