@@ -1,17 +1,19 @@
-import { object, string } from 'zod';
+import { z } from 'zod'
 
-const envSchema = object({
-  NODE_ENV: string().optional(),
-  HUGGING_FACE_API_KEY: string().optional(),
-  OPENAI_API_KEY: string().optional(),
-  OPENAI_BASE_URL: string().optional(),
-  AI_MODEL: string().optional(),
-  EMBEDDING_MODEL: string().optional(),
+const envSchema = z.object({
+  NODE_ENV: z.string().optional(),
+  POSTGRES_URL: z.string().nonempty(),
+  UPSTASH_VECTOR_REST_URL: z.string().nonempty(),
+  UPSTASH_VECTOR_REST_TOKEN: z.string().nonempty(),
+  HUGGING_FACE_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_BASE_URL: z.string().optional(),
+  AI_MODEL: z.string().optional(),
+  EMBEDDING_MODEL: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+export type Env = z.infer<typeof envSchema>;
 
-export function assertEnv(value: string | undefined, name: string): string {
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
+export function loadEnv(): Env {
+  return envSchema.parse(process.env);
 }

@@ -26,7 +26,7 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
 
 export class AppError extends Error {
   type: ErrorType;
-  cause: Error | string;
+  cause?: Error | string;
   surface: Surface;
   statusCode: number;
 

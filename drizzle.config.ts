@@ -8,6 +8,6 @@ export default defineConfig({
   schema: './lib/db/models',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.POSTGRES_URL,
+    url: process.env.POSTGRES_URL!,
   },
 });

@@ -1,64 +1,75 @@
-import type { DocumentInterface } from '@langchain/core/documents'
-import { UpstashVectorStore, UpstashMetadata, UpstashQueryMetadata } from "@langchain/community/vectorstores/upstash";
-import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Index } from "@upstash/vector";
+import { chunk } from 'lodash-es'
+import { AsyncCaller } from '@/lib/async-caller'
+import { AppError } from '@/lib/errors'
+import type { Env } from '@/lib/env'
+import type { DocumentInterface, FileLoaderDoc } from '@/lib/document'
 
-export interface VectorFileMetadata {
-  chatId: string;
-  type: string;
-  size: number;
-  [key: string]: any;
-}
+const UPSERT_CONCURRENT_LIMIT = 1e3;
+const UPSERT_MAX_RETRIES = 1;
 
-export type VectorFileDoc = DocumentInterface<VectorFileMetadata>;
+export class VectorNamespace<Metadata extends Record<string, unknown>> {
+  readonly namespace: ReturnType<Index<Metadata>['namespace']>
+  private readonly caller: AsyncCaller
 
-export interface VectorContentMetadata {
-  index: number
-  chatId: string;
-  fileId: string;
-  fileName: string;
-  [key: string]: any;
-}
-
-export type VectorContentDoc = DocumentInterface<VectorContentMetadata>;
-
-export class VectorStore<Metadata extends UpstashMetadata> {
-  id: string
-  store: UpstashVectorStore
-
-  constructor(namespace: string, index: Index) {
-    this.store = new UpstashVectorStore(new FakeEmbeddings(), { index, namespace });
+  constructor(index: Index, readonly id: string) {
+    this.namespace = index.namespace(id);
+    this.caller = new AsyncCaller({
+      maxRetries: UPSERT_MAX_RETRIES,
+      maxConcurrency: Infinity,
+    });
   }
 
-  addDocs(docs: DocumentInterface<Metadata>[], ids?: string[]): Promise<string[]> {
-    return this.store.addDocuments(docs, ids ? { ids } : undefined);
+  async insert(docs: DocumentInterface<Metadata>[]) {
+    try {
+      const docChunks = chunk(docs, UPSERT_CONCURRENT_LIMIT);
+      const batchRequests = docChunks.map((chunk) => this.caller.call(async () => this.namespace.upsert<any>(chunk)));
+      await Promise.all(batchRequests);
+    } catch (_err) {
+      throw new AppError("internal:database", "Failed to save vector documents");
+    }
   }
 
-  similaritySearchWithScore(query: number[] | string, limit: number, filter?: string): Promise<[DocumentInterface<Metadata & UpstashQueryMetadata>, number][]> {
-    return this.store.similaritySearchVectorWithScore(query, limit, filter) as any;
+  async query(query: string | number[], k: number, filter?: string): Promise<[DocumentInterface<Metadata>, score: number][]> {
+    try {
+      const results = await this.namespace.query({
+        ...(typeof query === 'string' ? { data: query } : { vector: query }),
+        topK: k,
+        includeData: true,
+        includeMetadata: true,
+        filter,
+      });
+      return results.map(({ id, data, score, metadata }) => [{ id: id as string, data: data!, metadata: metadata! }, score]);
+    } catch (_err) {
+      throw new AppError("internal:database", "Failed to query vector documents");
+    }
+  }
+
+  async deleteByFilter(filter: string) {
+    try {
+      return await this.namespace.delete({ filter });
+    } catch (_err) {
+      throw new AppError("internal:database", "Failed to delete vector documents");
+    }
   }
 }
 
 export class VectorDb {
   index: Index;
-  files: VectorStore<VectorFileMetadata>;
-  content: VectorStore<VectorContentMetadata>;
+  content: VectorNamespace<FileLoaderDoc['metadata']>;
 
-  constructor() {
-    this.index = Index.fromEnv();
-    this.files = new VectorStore<VectorFileMetadata>('files', this.index);
-    this.content = new VectorStore<VectorContentMetadata>('content', this.index);
+  constructor(env: Env) {
+    this.index = Index.fromEnv(env);
+    this.content = new VectorNamespace(this.index, 'content');
   }
 
-  reset(mode: 'files' | 'content' | 'all') {
+  reset(mode: 'content' | 'all') {
     if (mode === 'all') {
       return this.index.reset({ all: true })
     }
-    if (mode === 'files' || mode === 'content') {
+    if (mode === 'content') {
       return this.index.reset({ namespace: mode })
     }
     throw new Error(`Invalid reset mode: ${String(mode)}`)
   }
 }
-
-export const vectorDb = new VectorDb();

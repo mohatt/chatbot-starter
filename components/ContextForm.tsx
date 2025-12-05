@@ -4,7 +4,7 @@ import { useRef, useState, ChangeEvent, FormEvent } from 'react';
 import type { ChatRecord } from '@/lib/db';
 
 interface ContextFormProps {
-  chatId: string | null;
+  chatId?: string | null;
   loading?: boolean;
   error?: string;
   onComplete: (payload: ChatRecord) => void;

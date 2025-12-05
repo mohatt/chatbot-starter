@@ -1,39 +1,40 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
-import { useChat, UseChatOptions, type UIMessage } from '@ai-sdk/react';
+import { ChangeEvent, FormEvent, useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useChat, type UIMessage } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { Streamdown } from 'streamdown';
+import { generateUUID, fetchWithErrorHandlers, getTimeZone } from '@/lib/util'
 
 interface ChatBoxProps {
   chatId?: string | null;
+  history?: UIMessage[];
   isReady: boolean;
 }
 
-export default function ChatBox({ chatId, isReady }: ChatBoxProps) {
+export default function ChatBox({ chatId, history, isReady }: ChatBoxProps) {
   const [localError, setLocalError] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
-  const chatProps = useMemo<UseChatOptions<UIMessage>>(() => {
-    const id = chatId ?? 'new'
-    return {
-      id,
-      transport: new DefaultChatTransport({
-        api: `/api/chat/${id}/chat`,
-        prepareSendMessagesRequest: (request) => {
-          return {
-            body: {
-              messages: request.messages.slice(-25),
-              ...request.body,
-            },
-          }
+  const id = chatId ?? 'new'
+  const { messages, setMessages, sendMessage, regenerate, status, error, clearError } = useChat({
+    id,
+    generateId: generateUUID,
+    transport: new DefaultChatTransport({
+      api: `/api/chat/${id}/chat`,
+      fetch: fetchWithErrorHandlers,
+      prepareSendMessagesRequest: (request) => {
+        return {
+          body: {
+            message: request.messages.at(-1),
+            timeZone: getTimeZone(),
+            ...request.body
+          },
         }
-      })
-    };
-  }, [chatId]);
-
-  const { messages, setMessages, sendMessage, status, error, clearError } = useChat(chatProps);
+      }
+    })
+  });
 
   const resetState = useEffectEvent(() => {
     setLocalError(null);
@@ -71,6 +72,7 @@ export default function ChatBox({ chatId, isReady }: ChatBoxProps) {
 
   const disabled = !isReady || !chatId;
   const isLoading = status === 'submitted' || status === 'streaming';
+  const allMessages = [...(history ?? []), ...messages]
 
   return (
     <div className="chat-box">
@@ -83,7 +85,7 @@ export default function ChatBox({ chatId, isReady }: ChatBoxProps) {
       </div>
 
       <div className="chat-messages" ref={messagesRef}>
-        {messages.length === 0 && (
+        {allMessages.length === 0 && (
           <div className="placeholder">
             <p>Once your document is processed you can ask grounded questions here.</p>
             <ul>
@@ -94,7 +96,7 @@ export default function ChatBox({ chatId, isReady }: ChatBoxProps) {
           </div>
         )}
 
-        {messages.map((message) => (
+        {allMessages.map((message) => (
           <div key={`message-${message.id}`} className={`bubble ${message.role}`}>
             <span className="role">{message.role === 'user' ? 'You' : 'Assistant'}</span>
             <div className="message-markdown">

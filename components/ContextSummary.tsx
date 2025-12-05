@@ -3,7 +3,7 @@
 import type { ChatRecord } from '@/lib/db';
 
 interface ContextSummaryProps {
-  chat: ChatRecord | null;
+  chat?: ChatRecord | null;
 }
 
 export default function ContextSummary({ chat }: ContextSummaryProps) {

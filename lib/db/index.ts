@@ -1,12 +1,18 @@
-import { UserModel, ChatModel } from './models'
 import { drizzle } from 'drizzle-orm/node-postgres'
+import { UserModel, ChatModel } from './models'
+import type { Env } from '@/lib/env'
 
 export class Db {
-  client = drizzle(process.env.POSTGRES_URL!);
-  users = new UserModel(this.client)
-  chats = new ChatModel(this.client)
-}
+  readonly client: ReturnType<typeof drizzle>;
+  readonly users: UserModel
+  readonly chats: ChatModel
 
-export const db = new Db();
+  constructor(env: Env) {
+    this.client = drizzle(env.POSTGRES_URL);
+    this.users = new UserModel(this.client)
+    this.chats = new ChatModel(this.client)
+
+  }
+}
 
 export type * from './models';

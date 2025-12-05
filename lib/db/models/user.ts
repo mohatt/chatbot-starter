@@ -7,7 +7,7 @@ import { DbModel } from './base'
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   email: varchar("email", { length: 64 }).notNull().unique(),
-  password: varchar("password", { length: 64 }),
+  password: varchar("password", { length: 64 }).notNull(),
   isAnonymous: boolean("isAnonymous").notNull(),
   createdAt: timestamp("createdAt").notNull(),
   signedAt: timestamp("signedAt").notNull(),
@@ -19,32 +19,36 @@ export type UserRecordInput = typeof users.$inferInsert;
 export class UserModel extends DbModel {
   schema = users;
 
-  async create(user: Pick<UserRecord, 'email' | 'password'>) {
+  async create(user: Pick<UserRecordInput, 'email' | 'password'>): Promise<UserRecord> {
     const hashedPassword = this.hashPassword(user.password);
 
     try {
-      return await this.db.insert(users).values({
+      const [insertedUser] = await this.db.insert(users).values({
         email: user.email,
         password: hashedPassword,
         isAnonymous: false,
         createdAt: new Date(),
         signedAt: new Date(),
-      });
+      }).returning();
+      return insertedUser
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to create user");
     }
   }
 
-  async createGuest() {
+  async createGuest(): Promise<UserRecord> {
+    const hashedPassword = this.hashPassword(randomBytes(16).toString("hex"));
     try {
-      return await this.db.insert(users).values({
-        email: `${Date.now()}@guest`,
+      const [insertedUser] = await this.db.insert(users).values({
+        email: `guest@${Date.now()}.time`,
+        password: hashedPassword,
         isAnonymous: true,
         createdAt: new Date(),
         signedAt: new Date(),
-      });
+      }).returning();
+      return insertedUser
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to create user");
+      throw new AppError("bad_request:database", "Failed to create guest user");
     }
   }
 

@@ -1,4 +1,6 @@
-import { AppError, ErrorCode } from '@/lib/errors'
+import { AppError, type ErrorCode } from '@/lib/errors'
+import { v7 as uuidv7 } from 'uuid';
+import { filesize } from 'filesize';
 
 export async function fetcher<D = any>(url: string): Promise<D> {
   const response = await fetch(url);
@@ -31,4 +33,26 @@ export async function fetchWithErrorHandlers(
 
     throw error;
   }
+}
+
+export function generateUUID(): string {
+  return uuidv7();
+}
+
+export function getTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+export function isValidTimeZone(timeZone: unknown): timeZone is string {
+  if (typeof timeZone !== 'string') return false;
+  try {
+    Intl.DateTimeFormat('en-US', { timeZone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function formatFileSize(bytes: number): string {
+  return filesize(bytes, { standard: 'jedec' });
 }

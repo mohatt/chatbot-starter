@@ -1,0 +1,119 @@
+import { tool, type ToolSet } from 'ai'
+import { z } from 'zod'
+import { formatFileSize } from '@/lib/util'
+import type { ChatRecordContextFile } from '@/lib/db'
+import type { FileLoaderDoc } from '@/lib/document'
+import type { ChatToolContext } from './types'
+
+export type ListFilesOutput = {
+  files: Pick<ChatRecordContextFile, 'id' | 'name'>[]
+  getOutput: () => ChatRecordContextFile[]
+}
+
+export function listFiles({ chat }: ChatToolContext) {
+  return {
+    listFiles: tool({
+      description: 'Lists user-uploaded files and metadata in the current session.',
+      inputSchema: z.object({}),
+      toModelOutput(result: ListFilesOutput) {
+        const fileList = result.getOutput()
+        return {
+          type: 'content',
+          value: [
+            {
+              type: 'text',
+              text: [
+                'Files in session:',
+                ...fileList.map(({ id, name, mimeType, size }, i) => {
+                  return `${i + 1}. ${name} (id: ${id}, type: ${mimeType}, size: ${formatFileSize(size)})`
+                }),
+                '\nYou can refer to file IDs when calling queryFileContents.'
+              ].join('\n')
+            }
+          ]
+        }
+      },
+      async execute(): Promise<ListFilesOutput> {
+        // console.log('listFiles-tool-call')
+        const { files } = chat.context
+        return {
+          files: files.map(({ id, name }) => ({ id, name })),
+          getOutput: () => files
+        }
+      },
+    })
+  } satisfies ToolSet
+}
+
+export type QueryFileContentsOutput = {
+  count: number
+  getOutput: () => {
+    data: string
+    score: number
+    metadata: Omit<FileLoaderDoc['metadata'], 'chatId'>
+  }[]
+}
+
+export function queryFileContents({ api, chat, dataStream }: ChatToolContext) {
+  return {
+    queryFileContents: tool({
+      description: 'Queries file text chunks and returns results sorted based on the distance metric score.',
+      inputSchema: z.object({
+        query: z.string().describe('The query to use for vector similarity search (Optional).').nullish(),
+        topK: z.number().int().describe('The total number of the results that you want to receive (Default: 5; Max: 10).').default(5),
+        fileIds: z.array(z.string().uuid()).describe('The file ids to use for content search (Optional; Accepts an array of UUID strings).').nullish(),
+      }),
+      toModelOutput({ getOutput }: QueryFileContentsOutput) {
+        return {
+          type: 'json',
+          value: getOutput(),
+        }
+      },
+      async execute({ query, topK, fileIds }): Promise<QueryFileContentsOutput> {
+        let filter = `chatId = '${chat.id}'`
+        if (fileIds?.length) {
+          filter += `AND file.id IN ('${fileIds.join(`', '`)}')`
+        }
+        const relevantChunks = await api.vectorDb.content.query(query || 'any', Math.min(10, topK), filter);
+        // console.log('queryFileContents-tool-call', { query, fileIds }, filter)
+        return {
+          count: relevantChunks.length,
+          getOutput: () => relevantChunks.map(([{ data, metadata }, score]) => {
+            const { chatId, ...meta } = metadata
+            return {
+              data,
+              metadata: meta,
+              score,
+            }
+          })
+        }
+      },
+    }),
+  } satisfies ToolSet
+}
+
+export const defaultVectorQueryDescription = () =>
+  `Access the knowledge base to find information needed to answer user questions.`;
+
+export const defaultGraphRagDescription = () =>
+  `Access and analyze relationships between information in the knowledge base to answer complex questions about connections and patterns.`;
+
+export const queryTextDescription = `The text query to search for in the vector database.
+- ALWAYS provide a non-empty query string
+- Must contain the user's question or search terms
+- Example: "market data" or "financial reports"
+- If the user's query is about a specific topic, use that topic as the queryText
+- Cannot be an empty string
+- Do not include quotes, just the text itself
+- Required for all searches`;
+
+export const topKDescription = `Controls how many matching documents to return.
+- ALWAYS provide a value
+- If no value is provided, use the default (10)
+- Must be a valid and positive number
+- Cannot be NaN
+- Uses provided value if specified
+- Default: 10 results (use this if unsure)
+- Higher values (like 20) provide more context
+- Lower values (like 3) focus on best matches
+- Based on query requirements`;

@@ -1,5 +1,5 @@
 {
-  "id": "4022c266-702e-4210-aa81-27515590f7c2",
+  "id": "6ac49a97-835f-4d3a-803d-cc58f9e7c05d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -38,13 +38,14 @@
           "name": "context",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -55,6 +56,64 @@
           "tableTo": "users",
           "columnsFrom": [
             "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.messages": {
+      "name": "messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "chatId": {
+          "name": "chatId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parts": {
+          "name": "parts",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "messages_chatId_chats_id_fk": {
+          "name": "messages_chatId_chats_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "chats",
+          "columnsFrom": [
+            "chatId"
           ],
           "columnsTo": [
             "id"
@@ -90,7 +149,7 @@
           "name": "password",
           "type": "varchar(64)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "isAnonymous": {
           "name": "isAnonymous",
