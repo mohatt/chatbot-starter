@@ -1,6 +1,11 @@
 import type { AppConfig } from './types'
 
 export const config = {
+  chat: {
+    history: {
+      limit: 10
+    }
+  },
   fileLoader: {},
   context: {
     uploads: {
@@ -29,5 +34,5 @@ export const config = {
         },
       }
     }
-  }
+  },
 } satisfies AppConfig
