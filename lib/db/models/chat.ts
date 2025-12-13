@@ -4,7 +4,7 @@ import { and, desc, eq, gte, inArray, lt, lte, isNull, sql } from 'drizzle-orm'
 import type { FileLoaderInput } from '@/lib/document'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
-import { users } from './user'
+import { users } from './auth'
 
 export type ChatProjectRecordFile = Omit<FileLoaderInput, 'blob'> & {
   vectors: number;

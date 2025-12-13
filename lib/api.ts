@@ -3,6 +3,7 @@ import { loadEnv, type Env } from './env'
 import { AI } from './ai'
 import { Db, type ChatRecord, ChatProjectRecord } from './db'
 import { VectorDb } from './db/vector'
+import { Auth } from './auth'
 import { AppError } from './errors'
 
 export type ApiAccessType = 'read' | 'write' | 'delete'
@@ -30,6 +31,10 @@ export class Api {
 
   get vectorDb(): VectorDb {
     return this.set('vectorDb', new VectorDb(this.env))
+  }
+
+  get betterAuth(): Auth {
+    return this.set('betterAuth', new Auth(this.env, this.db))
   }
 
   canAccessProject<T extends Pick<ChatProjectRecord, 'userId'>>(project: T | null): project is T {

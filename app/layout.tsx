@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToasterProvider } from "@/components/toaster-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout(props: LayoutProps<'/'>) {
           enableSystem
         >
           <ToasterProvider position="top-center" />
-          <>{props.children}</>
+          <AuthProvider>{props.children}</AuthProvider>
         </ThemeProvider>
       </body>
     </html>
