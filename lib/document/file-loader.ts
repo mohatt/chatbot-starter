@@ -34,7 +34,7 @@ export type FileLoaderType = Extract<keyof FileLoaderTypeMap, string>
 
 type FileLoaderDocMap = {
   [Type in FileLoaderType]: DocumentInterface<FileLoaderTypeMap[Type]['metadata'] & {
-    chatId: string
+    projectId: string
     file: {
       id: string
       name: string
@@ -53,7 +53,7 @@ export type FileLoaderResult<Type extends FileLoaderType = FileLoaderType> = {
 }
 
 export interface FileLoaderMetadata {
-  chatId: string
+  projectId: string
 }
 
 export interface FileLoaderOptions {

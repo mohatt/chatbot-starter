@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { loadEnv, type Env } from './env'
 import { AI } from './ai'
-import { Db, type ChatRecord } from './db'
+import { Db, type ChatRecord, ChatProjectRecord } from './db'
 import { VectorDb } from './db/vector'
 import { AppError } from './errors'
 
@@ -32,15 +32,18 @@ export class Api {
     return this.set('vectorDb', new VectorDb(this.env))
   }
 
-  async ensureChatAccess(access: ApiAccessType, chat: ChatRecord | null) {
-    if (!chat) {
-      throw new AppError('not_found:chat')
+  canAccessProject<T extends Pick<ChatProjectRecord, 'userId'>>(project: T | null): project is T {
+    return project != null && project.userId === this.auth.user.id;
+  }
+
+  canAccessChat<T extends Pick<ChatRecord, 'userId' | 'privacy'>>(reason: ApiAccessType, chat: T | null): chat is T {
+    if (chat == null) {
+      return false
     }
     if (chat.userId !== this.auth.user.id) {
-      if (access === 'read' && chat.privacy === 'public') return
-      throw new AppError('forbidden:chat')
+      return reason === 'read' && chat.privacy === 'public';
     }
-    return
+    return true
   }
 
   private set<K extends keyof this, V extends this[K]>(key: K, value: V): V {

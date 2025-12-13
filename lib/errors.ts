@@ -8,6 +8,7 @@ export type ErrorType =
   | "offline";
 
 export type Surface =
+  | "project"
   | "chat"
   | "api"
   | "database"
@@ -19,6 +20,7 @@ export type ErrorVisibility = "response" | "log" | "none";
 
 export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   database: "log",
+  project: "response",
   chat: "response",
   api: "response",
   activate_gateway: "response",
@@ -89,6 +91,11 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
       return "We're having trouble sending your message. Please check your internet connection and try again.";
     case "bad_request:chat":
       return "The request to update the chat was invalid. Please check your input and try again.";
+
+    case "not_found:project":
+      return "The requested project was not found. Please check the project ID and try again.";
+    case "bad_request:project":
+      return "The request to update the project was invalid. Please check your input and try again.";
 
     case "not_found:api":
       return "The requested api resource was not found.";

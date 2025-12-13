@@ -11,12 +11,17 @@ You have access to two tools (listFiles and queryFileContents), both of them use
 - Don't mention internal details like file ids or search tools.
 --
 The user's time is {dateTime} ({timeZone}).
+The user's location is {location}.
 `,
-  schema: z.object({ timeZone: z.string() }),
-  format: ({ timeZone }) => {
+  schema: z.object({
+    timeZone: z.string(),
+    location: z.string().nullish(),
+  }),
+  format: ({ timeZone, location }) => {
     return {
       timeZone,
-      dateTime: new Date().toLocaleString('en-US', { timeZone })
+      dateTime: new Date().toLocaleString('en-US', { timeZone }),
+      location: location ?? 'Unknown',
     }
   }
 })

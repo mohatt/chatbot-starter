@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ThemeProvider } from "@/components/theme-provider";
+import { ToasterProvider } from "@/components/toaster-provider";
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -6,23 +8,23 @@ export const metadata: Metadata = {
   description: 'Docs in, answers out — powered by Next.js, Vercel AI SDK, and Postgres.'
 };
 
+export const viewport = {
+  maximumScale: 1, // Disable auto-zoom on mobile Safari
+};
+
 export default function RootLayout(props: LayoutProps<'/'>) {
   return (
-    <html lang="en">
-      <body>
-      <div className="app-shell">
-        <header>
-          <div>
-            <p className="eyebrow">Docs in, answers out.</p>
-            <h1>TypeScript RAG Demo</h1>
-            <p className="lede">Upload documents and chat with an AI assistant grounded entirely in your content.</p>
-          </div>
-        </header>
-        {props.children}
-        <footer>
-          <span>Built with Next.js · Vercel AI SDK · Postgres</span>
-        </footer>
-      </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          disableTransitionOnChange
+          enableSystem
+        >
+          <ToasterProvider position="top-center" />
+          <>{props.children}</>
+        </ThemeProvider>
       </body>
     </html>
   );

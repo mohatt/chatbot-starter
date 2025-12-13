@@ -3,16 +3,16 @@ import type { AppConfig } from './types'
 export const config = {
   chat: {
     history: {
-      limit: 10
+      defaultLimit: 100,
+      maxLimit: 100
     }
   },
   fileLoader: {},
-  context: {
+  project: {
     uploads: {
       files: {
         rules: {
           types: ['pdf', 'docx', 'txt', 'md', 'csv', 'html'],
-          min: 1,
           max: 10,
           maxSize: 8 * 1024 * 1024,
           maxTotalSize: 16 * 1024 * 1024,

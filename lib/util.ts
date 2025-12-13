@@ -43,16 +43,6 @@ export function getTimeZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
-export function isValidTimeZone(timeZone: unknown): timeZone is string {
-  if (typeof timeZone !== 'string') return false;
-  try {
-    Intl.DateTimeFormat('en-US', { timeZone })
-    return true
-  } catch {
-    return false
-  }
-}
-
 export function formatFileSize(bytes: number): string {
   return filesize(bytes, { standard: 'jedec' });
 }

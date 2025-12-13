@@ -143,7 +143,7 @@ export function createUrlUploadSchema<Type extends string = string>(rules: FileU
     const result: FilesUploadResult<Type> = { data: [], errors: [] }
     promises.forEach((promise, index) => {
       if (promise.status === 'fulfilled') {
-        result.data!.push(promise.value);
+        result.data!.push({ index, file: promise.value });
       } else {
         result.errors.push({ index, message: promise.reason.message })
       }

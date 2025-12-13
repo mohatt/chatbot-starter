@@ -4,11 +4,12 @@ import type { FileUploadRules, UrlUploadOptions } from '@/lib/upload'
 export interface AppConfig {
   chat: {
     history: {
-      limit: number
+      defaultLimit: number
+      maxLimit: number
     }
   }
   fileLoader: FileLoaderOptions
-  context: {
+  project: {
     uploads: {
       files: {
         rules: FileUploadRules<FileLoaderType>

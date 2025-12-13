@@ -10,13 +10,18 @@ export interface FileUpload<Type extends string = string> {
   blob: Blob
 }
 
+export interface FileUploadEntry<Type extends string = string> {
+  index: number;
+  file: FileUpload<Type>;
+}
+
 export interface FileUploadError {
-  index?: number | null;
+  index?: number;
   message: string;
 }
 
 export interface FilesUploadResult<Type extends string = string> {
-  data: FileUpload<Type>[] | null
+  data: FileUploadEntry<Type>[] | null
   errors: FileUploadError[]
 }
 

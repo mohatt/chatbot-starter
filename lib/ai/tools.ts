@@ -1,16 +1,19 @@
 import { tool, type ToolSet } from 'ai'
 import { z } from 'zod'
 import { formatFileSize } from '@/lib/util'
-import type { ChatRecordContextFile } from '@/lib/db'
+import type { ChatProjectRecordFile } from '@/lib/db'
 import type { FileLoaderDoc } from '@/lib/document'
 import type { ChatToolContext } from './types'
 
 export type ListFilesOutput = {
-  files: Pick<ChatRecordContextFile, 'id' | 'name'>[]
-  getOutput: () => ChatRecordContextFile[]
+  files: Pick<ChatProjectRecordFile, 'id' | 'name'>[]
+  getOutput: () => ChatProjectRecordFile[]
 }
 
-export function listFiles({ chat }: ChatToolContext) {
+export function listFiles({ project }: ChatToolContext) {
+  if (!project) {
+    return null
+  }
   return {
     listFiles: tool({
       description: 'Lists user-uploaded files and metadata in the current session.',
@@ -35,7 +38,7 @@ export function listFiles({ chat }: ChatToolContext) {
       },
       async execute(): Promise<ListFilesOutput> {
         // console.log('listFiles-tool-call')
-        const { files } = chat.context
+        const { files } = project
         return {
           files: files.map(({ id, name }) => ({ id, name })),
           getOutput: () => files
@@ -50,11 +53,14 @@ export type QueryFileContentsOutput = {
   getOutput: () => {
     data: string
     score: number
-    metadata: Omit<FileLoaderDoc['metadata'], 'chatId'>
+    metadata: Omit<FileLoaderDoc['metadata'], 'projectId'>
   }[]
 }
 
-export function queryFileContents({ api, chat, dataStream }: ChatToolContext) {
+export function queryFileContents({ api, project, dataStream }: ChatToolContext) {
+  if (!project) {
+    return null
+  }
   return {
     queryFileContents: tool({
       description: 'Queries file text chunks and returns results sorted based on the distance metric score.',
@@ -70,7 +76,7 @@ export function queryFileContents({ api, chat, dataStream }: ChatToolContext) {
         }
       },
       async execute({ query, topK, fileIds }): Promise<QueryFileContentsOutput> {
-        let filter = `chatId = '${chat.id}'`
+        let filter = `projectId = '${project.id}'`
         if (fileIds?.length) {
           filter += `AND file.id IN ('${fileIds.join(`', '`)}')`
         }
@@ -79,7 +85,7 @@ export function queryFileContents({ api, chat, dataStream }: ChatToolContext) {
         return {
           count: relevantChunks.length,
           getOutput: () => relevantChunks.map(([{ data, metadata }, score]) => {
-            const { chatId, ...meta } = metadata
+            const { projectId, ...meta } = metadata
             return {
               data,
               metadata: meta,

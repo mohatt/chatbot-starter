@@ -1,5 +1,5 @@
 import type { InferUITools, UIMessage, UIMessageStreamWriter } from 'ai'
-import type { ChatMessageMetadata, ChatRecord } from '@/lib/db'
+import type { ChatMessageMetadata, ChatRecord, ChatProjectRecord } from '@/lib/db'
 import type { Api } from '@/lib/api'
 import type { AI } from './index'
 
@@ -17,5 +17,6 @@ export type ChatTools = InferUITools<ChatToolSet>
 export interface ChatToolContext {
   api: Api
   chat: ChatRecord
+  project?: ChatProjectRecord | null
   dataStream: UIMessageStreamWriter<ChatMessage>;
 }
