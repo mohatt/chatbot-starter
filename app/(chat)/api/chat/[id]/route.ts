@@ -24,7 +24,7 @@ export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, requ
       projectId: null,
     })
   } else {
-    const dbChat = await db.chats.getById(id);
+    const dbChat = await db.chats.findById(id);
     if(!api.authz.can(user, 'write:chat', dbChat)) {
       throw new AppError('not_found:chat')
     }
@@ -32,17 +32,17 @@ export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, requ
   }
 
   if (regenerate) {
-    await db.chats.deleteMessagesAfter(id, message.id)
+    await db.messages.deleteByChatId(id, message.id)
   }
 
-  const { data: dbMessages } = await db.chats.getMessages(id, 10);
+  const { data: dbMessages } = await db.messages.findByChatId(id, 10);
   const uiMessages = [...dbMessages, message];
 
-  await db.chats.insertMessages(id, [message])
+  await db.messages.insertMany(id, [message])
 
   let project: ChatProjectRecord | null = null
   if (chat.projectId) {
-    project = await db.chats.getProjectById(chat.projectId)
+    project = await db.projects.findById(chat.projectId)
     if(!project) {
       throw new AppError('internal:chat', 'The project associated with this chat no longer exists.')
     }
@@ -83,7 +83,7 @@ export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, requ
       dataStream.merge(result.toUIMessageStream());
     },
     onFinish: async ({ messages }) => {
-      await db.chats.insertMessages(id, messages).catch((err) => {
+      await db.messages.insertMany(id, messages).catch((err) => {
         console.warn('Failed to save chat messages:', id, err);
       })
     },
@@ -99,14 +99,14 @@ export const PATCH = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, ses
   const id = validateUUIDv7(params.id)
   const body = validatePatchRequest(await request.json())
   const { user } = await session()
-  const updatedChat = await api.db.chats.update(id, user.id, body);
+  const updatedChat = await api.db.chats.updateByIdForUser(id, user.id, body);
   return NextResponse.json(updatedChat);
 });
 
 export const GET = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const id = validateUUIDv7(params.id)
   const { user } = await session()
-  const chat = await api.db.chats.getById(id);
+  const chat = await api.db.chats.findById(id);
   if(!api.authz.can(user, 'read:chat', chat)) {
     throw new AppError('not_found:chat')
   }
@@ -117,10 +117,10 @@ export const DELETE = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, se
   const { authz, db } = api;
   const id = validateUUIDv7(params.id)
   const { user } = await session()
-  const chat = await db.chats.getById(id);
+  const chat = await db.chats.findById(id);
   if(!authz.can(user, 'delete:chat', chat)) {
     throw new AppError('not_found:chat')
   }
-  const deletedChat = await db.chats.delete(id);
+  const deletedChat = await db.chats.deleteById(id);
   return NextResponse.json(deletedChat);
 });

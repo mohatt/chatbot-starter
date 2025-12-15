@@ -23,7 +23,7 @@ export class AI {
   readonly embedding: ReturnType<typeof gateway['textEmbeddingModel']>;
   readonly prompts = { chatPrompt }
 
-  constructor(env: Env) {
+  constructor(env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'AI_MODEL' | 'EMBEDDING_MODEL'>) {
     const {
       HUGGING_FACE_API_KEY,
       AI_MODEL,

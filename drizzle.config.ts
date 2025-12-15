@@ -1,13 +1,14 @@
 import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
+import { loadPartialEnv } from '@/lib/env';
 
 config({ path: '.env.development.local' });
 
 export default defineConfig({
   out: './lib/db/migrations',
-  schema: './lib/db/models',
+  schema: './lib/db/schema',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.POSTGRES_URL!,
+    url: loadPartialEnv({ POSTGRES_URL: true }).POSTGRES_URL,
   },
 });

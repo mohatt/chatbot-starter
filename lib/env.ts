@@ -16,6 +16,12 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-export function loadEnv(): Env {
-  return envSchema.parse(process.env);
+const noop = {} as unknown
+
+export function loadEnv(input = noop): Env {
+  return envSchema.parse(input === noop ? process.env : input);
+}
+
+export function loadPartialEnv<T extends z.util.Mask<keyof Env>>(pick: T, input = noop) {
+  return envSchema.pick(pick).parse(input === noop ? process.env : input);
 }

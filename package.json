@@ -10,7 +10,7 @@
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "auth:generate": "better-auth generate --config auth.config.ts --output lib/db/models/auth.ts",
+    "auth:generate": "better-auth generate --config auth.config.ts --output lib/db/schema/auth.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

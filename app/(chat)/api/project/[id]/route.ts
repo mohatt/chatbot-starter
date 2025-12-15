@@ -23,7 +23,7 @@ export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, s
       files: [],
     }
   } else {
-    const dbProject = await db.chats.getProjectById(id);
+    const dbProject = await db.projects.findById(id);
     if (!api.authz.can(user, 'write:project', dbProject)) {
       throw new AppError('not_found:project')
     }
@@ -62,7 +62,7 @@ export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, s
   }
 
   if (create) {
-    const data = await db.chats.createProject({
+    const data = await db.projects.create({
       ...project,
       files: newFiles,
     });
@@ -85,7 +85,7 @@ export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, s
       await vectorDb.content.deleteByFilter(`file.id in (${validDeletedIds.join(',')})`)
     }
   }
-  const data = await db.chats.updateProject(project.id, {
+  const data = await db.projects.updateById(project.id, {
     name,
     prompt,
     files: updatedFiles,
@@ -97,7 +97,7 @@ export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, s
 export const GET = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {
   const id = validateUUIDv7(params.id)
   const { user } = await session()
-  const project = await api.db.chats.getProjectById(id);
+  const project = await api.db.projects.findById(id);
   if (!api.authz.can(user, 'read:project', project)) {
     throw new AppError('not_found:project')
   }
@@ -108,11 +108,11 @@ export const DELETE = createApi<RouteContext<'/api/project/[id]'>>(async ({ api,
   const { db, vectorDb } = api;
   const id = validateUUIDv7(params.id);
   const { user } = await session()
-  const project = await db.chats.getProjectById(id);
+  const project = await db.projects.findById(id);
   if (!api.authz.can(user, 'delete:project', project)) {
     throw new AppError('not_found:project')
   }
   await vectorDb.content.deleteByFilter(`projectId='${id}'`)
-  const deletedProject = await db.chats.deleteProject(id);
+  const deletedProject = await db.projects.deleteById(id);
   return NextResponse.json(deletedProject);
 });
