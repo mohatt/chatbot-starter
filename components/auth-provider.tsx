@@ -3,12 +3,13 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter } from "next/navigation"
 import { createAuthClient } from "better-auth/react"
 import { anonymousClient } from "better-auth/client/plugins"
+import { billingClient } from '@/lib/auth/plugins/billing/client'
 import { AuthUIProvider, useAuthenticate } from "@daveyplate/better-auth-ui"
 import { LoadingDots } from '@/components/loading'
 import Link from "next/link"
 
 export const authClient = createAuthClient({
-  plugins: [anonymousClient()]
+  plugins: [anonymousClient(), billingClient()]
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {

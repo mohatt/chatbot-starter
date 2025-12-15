@@ -5,6 +5,7 @@ import type { Env } from '@/lib/env'
 import type { Db } from '@/lib/db'
 import { config } from '@/lib/config'
 import * as authSchema from '@/lib/db/schema/auth'
+import { billing } from './plugins/billing'
 
 export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | 'BETTER_AUTH_URL'>) {
   const auth = betterAuth({
@@ -28,6 +29,7 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
           // @todo move app data from anonymous user to the new user
         },
       }),
+      billing(),
       openAPI(),
     ],
     session: {

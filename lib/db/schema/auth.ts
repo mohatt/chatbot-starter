@@ -2,6 +2,7 @@ import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
+  bigint,
   timestamp,
   boolean,
   uuid,
@@ -22,6 +23,9 @@ export const users = pgTable("users", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   isAnonymous: boolean("isAnonymous").default(false),
+  billingId: uuid("billingId")
+    .notNull()
+    .references(() => billings.id, { onDelete: "no action" }),
 });
 
 export const sessions = pgTable(
@@ -89,7 +93,29 @@ export const verifications = pgTable(
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const billings = pgTable(
+  "billings",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    type: text("type", { enum: ["anonymous", "user"] }).notNull(),
+    period: text("period").notNull(),
+    inputUsage: bigint("inputUsage", { mode: "number" }).default(0).notNull(),
+    outputUsage: bigint("outputUsage", { mode: "number" }).default(0).notNull(),
+    updatedAt: timestamp("updatedAt")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("billings_period_idx").on(table.period)],
+);
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  billings: one(billings, {
+    fields: [users.billingId],
+    references: [billings.id],
+  }),
   sessions: many(sessions),
   accounts: many(accounts),
 }));
@@ -106,4 +132,8 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
     fields: [accounts.userId],
     references: [users.id],
   }),
+}));
+
+export const billingsRelations = relations(billings, ({ many }) => ({
+  users: many(users),
 }));
