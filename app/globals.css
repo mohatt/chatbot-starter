@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* include auth ui styles */
+@import "@daveyplate/better-auth-ui/css";
+
 /* include utility classes in streamdown */
 @source "../node_modules/streamdown/dist/index.js";
 

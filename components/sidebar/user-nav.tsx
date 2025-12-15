@@ -1,7 +1,7 @@
 "use client";
-import { ChevronsUpDown, BadgeCheck, LogOut, Palette, Sun, Moon, Monitor } from 'lucide-react'
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useTheme } from "next-themes";
+import { useAuth } from '@/components/auth-provider'
 import {
   DropdownMenu,
   DropdownMenuContent, DropdownMenuGroup,
@@ -17,8 +17,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem, useSidebar,
 } from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { UserView } from "@daveyplate/better-auth-ui";
+import { ChevronsUpDown, BadgeCheck, LogIn, LogOut, Palette, Sun, Moon, Monitor, UserRoundPlus } from 'lucide-react'
+import Link from 'next/link'
+import { UserAccountDialog } from './user-account-dialog'
 
 const themes = [
   {
@@ -39,118 +42,113 @@ const themes = [
 ];
 
 export function SidebarUserNav() {
-  const router = useRouter();
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
-
-  const user = {
-    id: 'xxx',
-    name: 'Mohamed Elkholy',
-    email: 'mkh117@gmail.com',
-    image: 'https://avatars.githubusercontent.com/u/16206684?v=4',
-  }
-  const status = 'ready' as 'ready' | 'loading'
-  const isGuest = /^guest-\d+$/.test(user?.email ?? "");
-  const signOut = (_: any) => {}
+  const { user, isPending } = useAuth()
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   return (
-    <SidebarMenu>
-      {status === "loading" ? (
-        <SidebarMenuItem>
-          <div
-            data-slot="sidebar-menu-skeleton"
-            data-sidebar="menu-skeleton"
-            className='flex items-center gap-2 rounded-md px-2'
-          >
-            <Skeleton className="size-8 rounded-lg" />
-            <div className="grid flex-1 gap-2">
-              <Skeleton className="h-3 max-w-3/4" />
-              <Skeleton className="h-3 max-w-2/4" />
-            </div>
-          </div>
-        </SidebarMenuItem>
-      ) : (
-        <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} alt={user.email ?? "User Avatar"} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
-                <ChevronsUpDown className="ml-auto size-4" />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-              side={isMobile ? "bottom" : "right"}
-              align="end"
-              sideOffset={4}
+    <>
+      <SidebarMenu>
+        {isPending ? (
+          <SidebarMenuItem>
+            <div
+              data-slot="sidebar-menu-skeleton"
+              data-sidebar="menu-skeleton"
+              className='flex items-center gap-2 rounded-md px-2'
             >
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} alt={user.email ?? "User Avatar"} />
-                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs">{user.email}</span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem className="cursor-pointer">
-                  <BadgeCheck />
-                  Account
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Palette />
-                    <span>Theme:</span>
-                    <span className='text-muted-foreground'>
-                    {themes.find((t) => t.key === theme)?.label ?? theme}
-                  </span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent className='w-48'>
-                      <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                        {themes.map(({ key, icon: Icon, label }) => (
-                          <DropdownMenuRadioItem key={key} value={key} className='cursor-pointer'>
-                            <Icon /> {label}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => {
-                  if (isGuest) {
-                    router.push("/login");
-                  } else {
-                    signOut({ redirect: true });
-                  }
-                }}
-              >
-                <LogOut />
-                {isGuest ? "Login to your account" : "Sign out"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
-      )}
-    </SidebarMenu>
+              <Skeleton className="size-8 rounded-lg" />
+              <div className="grid flex-1 gap-2">
+                <Skeleton className="h-3 max-w-3/4" />
+                <Skeleton className="h-3 max-w-2/4" />
+              </div>
+            </div>
+          </SidebarMenuItem>
+        ) : (
+          user ? (
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <UserView user={user} isPending={isPending} />
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                  side={isMobile ? "bottom" : "right"}
+                  align="end"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="px-1 py-1.5 font-normal">
+                    <UserView user={user} isPending={isPending} />
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem className="w-full cursor-pointer" asChild>
+                      {user.isAnonymous ? (
+                        <Link href='/auth/sign-up'>
+                          <UserRoundPlus />
+                          Sign Up
+                        </Link>
+                      ) : (
+                        <button onClick={() => setIsAccountOpen(true)}>
+                          <BadgeCheck />
+                          Account
+                        </button>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Palette />
+                        <span>Theme:</span>
+                        <span className='text-muted-foreground'>
+                          {themes.find((t) => t.key === theme)?.label ?? theme}
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className='w-48' sideOffset={4}>
+                          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                            {themes.map(({ key, icon: Icon, label }) => (
+                              <DropdownMenuRadioItem key={key} value={key} className='cursor-pointer'>
+                                <Icon /> {label}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="cursor-pointer" asChild>
+                      {user.isAnonymous ? (
+                        <Link href='/auth/sign-in'>
+                          <LogIn />
+                          Sign in to your account
+                        </Link>
+                      ) : (
+                        <Link href='/auth/sign-out'>
+                          <LogOut />
+                          Sign Out
+                        </Link>
+                      )}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          ) : (
+            <SidebarMenuItem>
+              <SidebarMenuButton className='h-12 px-4 text-destructive' variant='outline'>
+                Failed loading user session
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )
+        )}
+        <UserAccountDialog open={isAccountOpen} onOpenChange={setIsAccountOpen}/>
+      </SidebarMenu>
+    </>
   );
 }

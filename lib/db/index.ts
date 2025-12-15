@@ -6,7 +6,7 @@ export class Db {
   readonly client: ReturnType<typeof drizzle>;
   readonly chats: ChatModel
 
-  constructor(env: Env) {
+  constructor(env: Pick<Env, 'POSTGRES_URL'>) {
     this.client = drizzle(env.POSTGRES_URL);
     this.chats = new ChatModel(this.client)
   }

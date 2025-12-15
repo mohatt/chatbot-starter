@@ -1,6 +1,8 @@
 import type { AppConfig } from './types'
 
 export const config = {
+  appId: 'rag-chatbot',
+  appName: 'Rag Chatbot',
   chat: {
     history: {
       defaultLimit: 100,
@@ -36,3 +38,5 @@ export const config = {
     }
   },
 } satisfies AppConfig
+
+export type { AppConfig }

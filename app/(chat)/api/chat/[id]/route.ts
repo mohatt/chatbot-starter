@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stepCountIs, streamText, convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, smoothStream} from 'ai'
+import { stepCountIs, streamText, convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, smoothStream } from 'ai'
 import { geolocation } from "@vercel/functions";
 import type { ChatMessage } from '@/lib/ai'
 import { generateUUID } from '@/lib/util'
@@ -9,22 +9,23 @@ import { validateUUIDv7 } from '@/lib/schema'
 import { validatePatchRequest, validatePostRequest } from './schema'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 
-export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params }) => {
+export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai } = api;
   const id = validateUUIDv7(params.id)
   const body = validatePostRequest(await request.json())
+  const { user } = await session()
   const { message, timeZone, regenerate, create } = body;
   let chat: ChatRecord
   if (create) {
     chat = await db.chats.create({
       id,
       title: 'New Chat',
-      userId: api.auth.user.id,
+      userId: user.id,
       projectId: null,
     })
   } else {
     const dbChat = await db.chats.getById(id);
-    if(!api.canAccessChat('write', dbChat)) {
+    if(!api.authz.can(user, 'write:chat', dbChat)) {
       throw new AppError('not_found:chat')
     }
     chat = dbChat
@@ -94,30 +95,32 @@ export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, requ
   return createUIMessageStreamResponse({ stream });
 });
 
-export const PATCH = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params }) => {
+export const PATCH = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, request, params }) => {
   const id = validateUUIDv7(params.id)
   const body = validatePatchRequest(await request.json())
-  const updatedChat = await api.db.chats.update(id, api.auth.user.id, body);
+  const { user } = await session()
+  const updatedChat = await api.db.chats.update(id, user.id, body);
   return NextResponse.json(updatedChat);
 });
 
-export const GET = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, params }) => {
+export const GET = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const id = validateUUIDv7(params.id)
+  const { user } = await session()
   const chat = await api.db.chats.getById(id);
-  if(!api.canAccessChat('read', chat)) {
+  if(!api.authz.can(user, 'read:chat', chat)) {
     throw new AppError('not_found:chat')
   }
   return NextResponse.json(chat);
 });
 
-export const DELETE = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, params }) => {
-  const { db, vectorDb } = api;
+export const DELETE = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
+  const { authz, db } = api;
   const id = validateUUIDv7(params.id)
+  const { user } = await session()
   const chat = await db.chats.getById(id);
-  if(!api.canAccessChat('delete', chat)) {
+  if(!authz.can(user, 'delete:chat', chat)) {
     throw new AppError('not_found:chat')
   }
-  await vectorDb.content.deleteByFilter(`chatId='${id}'`)
   const deletedChat = await db.chats.delete(id);
   return NextResponse.json(deletedChat);
 });

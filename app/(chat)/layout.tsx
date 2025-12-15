@@ -1,22 +1,21 @@
-import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { AppSidebar } from "@/components/sidebar";
+import { AuthProvider, GuestAuthProvider } from "@/components/auth-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Api } from '@/lib/api'
 
-export default async function Layout({
-  children,
-}: {
-  children: ReactNode
-}) {
-  const [cookieStore] = await Promise.all([cookies()]);
+export default async function Layout({ children }: LayoutProps<'/'>) {
+  const { auth } = Api.getInstance()
+  const [session, cookieStore] = await Promise.all([auth.getSession(), cookies()]);
   const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
-
+  const Auth = session ? AuthProvider : GuestAuthProvider
+  console.log('Layout session', session)
   return (
-    <>
+    <Auth>
       <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={undefined} />
+        <AppSidebar />
         <SidebarInset>{children}</SidebarInset>
       </SidebarProvider>
-    </>
+    </Auth>
   );
 }

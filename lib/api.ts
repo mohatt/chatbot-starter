@@ -1,23 +1,17 @@
 import type { NextRequest } from 'next/server';
 import { loadEnv, type Env } from './env'
 import { AI } from './ai'
-import { Db, type ChatRecord, ChatProjectRecord } from './db'
+import { Db } from './db'
 import { VectorDb } from './db/vector'
-import { Auth } from './auth'
+import { Auth, type AuthSession } from './auth'
+import { Authorizer } from './authz'
 import { AppError } from './errors'
 
-export type ApiAccessType = 'read' | 'write' | 'delete'
-
 export class Api {
+  private static instance?: Api
   readonly env: Env
-  readonly auth = {
-    user: {
-      id: 'e35df7ca-8c99-4821-b025-b8e1f9bf5539',
-      type: 'guest'
-    }
-  }
 
-  constructor(readonly request?: NextRequest) {
+  private constructor(private readonly request?: NextRequest) {
     this.env = loadEnv()
   }
 
@@ -33,22 +27,12 @@ export class Api {
     return this.set('vectorDb', new VectorDb(this.env))
   }
 
-  get betterAuth(): Auth {
-    return this.set('betterAuth', new Auth(this.env, this.db))
+  get auth(): Auth {
+    return this.set('auth', new Auth(this.db, this.env, this.request))
   }
 
-  canAccessProject<T extends Pick<ChatProjectRecord, 'userId'>>(project: T | null): project is T {
-    return project != null && project.userId === this.auth.user.id;
-  }
-
-  canAccessChat<T extends Pick<ChatRecord, 'userId' | 'privacy'>>(reason: ApiAccessType, chat: T | null): chat is T {
-    if (chat == null) {
-      return false
-    }
-    if (chat.userId !== this.auth.user.id) {
-      return reason === 'read' && chat.privacy === 'public';
-    }
-    return true
+  get authz(): Authorizer {
+    return this.set('authz', new Authorizer())
   }
 
   private set<K extends keyof this, V extends this[K]>(key: K, value: V): V {
@@ -59,20 +43,37 @@ export class Api {
     })
     return value
   }
+
+  static getInstance(request?: NextRequest) {
+    return this.instance ??= new Api(request)
+  }
 }
 
 export interface ApiHandlerParams<T extends RouteContext<any>> {
   readonly api: Api
   readonly request: NextRequest
   readonly params: Awaited<T['params']>
+  session(): Promise<AuthSession>
+  session(mode: 'optional'): Promise<AuthSession | null>
 }
 
 export function createApi<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>) {
   return async (request: NextRequest, ctx: T): Promise<Response> => {
     try {
-      const api = new Api(request);
+      const api = Api.getInstance(request);
       const params = await ctx.params
-      return await fn({ api, request, params })
+      return await fn({
+        api,
+        request,
+        params,
+        session: async (mode?: 'optional') => {
+          const session = await api.auth.getSession()
+          if (!session && mode !== 'optional') {
+            throw new AppError('unauthorized:api')
+          }
+          return session as AuthSession
+        }
+      })
     } catch (error) {
       if (error instanceof AppError) {
         return error.toResponse();
