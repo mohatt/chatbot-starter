@@ -9,7 +9,7 @@ import { LoadingDots } from '@/components/loading'
 import Link from "next/link"
 
 export const authClient = createAuthClient({
-  plugins: [anonymousClient(), billingClient()]
+  plugins: [anonymousClient(), billingClient()],
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       replace={router.replace}
       // Clear router cache (protected routes)
       onSessionChange={router.refresh}
+      changeEmail={false}
       deleteUser
       Link={Link}
       gravatar

@@ -22,6 +22,14 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
     emailAndPassword: {
       enabled: true,
     },
+    user: {
+      changeEmail: {
+        enabled: false,
+      },
+      deleteUser: {
+        enabled: true,
+      }
+    },
     plugins: [
       anonymous({
         generateName: () => 'Guest',

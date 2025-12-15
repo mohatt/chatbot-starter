@@ -1,6 +1,12 @@
 import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AccountSettingsCards, SecuritySettingsCards } from "@daveyplate/better-auth-ui";
+import { AccountSettingsCards, SecuritySettingsCards, SettingsCard } from "@daveyplate/better-auth-ui";
+import { CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useAuth } from '@/components/auth-provider'
+import { BadgeCheckIcon, BadgeInfoIcon } from 'lucide-react'
 
 export interface UserAccountDialogProps {
   open: boolean;
@@ -21,6 +27,7 @@ export function UserAccountDialog({ open, onOpenChange }: UserAccountDialogProps
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
           <TabsContent value="profile" className="max-h-[60vh] overflow-auto">
+            <ReadonlyEmailCard />
             <AccountSettingsCards />
           </TabsContent>
           <TabsContent value="security" className="max-h-[60vh] overflow-auto">
@@ -29,5 +36,46 @@ export function UserAccountDialog({ open, onOpenChange }: UserAccountDialogProps
         </Tabs>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function ReadonlyEmailCard() {
+  const { user, isPending } = useAuth()
+  const title = (
+    <div className='flex items-center gap-3'>
+      <span>Email</span>
+      {isPending ? (
+        <Skeleton className="h-5 w-20" />
+      ) : (
+        user?.emailVerified ? (
+          <Badge
+            variant="secondary"
+            className="bg-blue-500 text-white dark:bg-blue-600"
+          >
+            <BadgeCheckIcon />
+            Verified
+          </Badge>
+        ) : (
+          <Badge
+            variant="secondary"
+            className="bg-yellow-500 text-white dark:bg-yellow-600"
+          >
+            <BadgeInfoIcon />
+            Unverified
+          </Badge>
+        )
+      )}
+    </div>
+  )
+  return (
+    <SettingsCard title={title} description='The email address you use to log in.' className='mb-4 md:mb-6'>
+      <CardContent>
+        {isPending ? (
+          <Skeleton className="h-9 w-full" />
+        ) : (
+          <Input value={user?.email} type="email" disabled />
+        )}
+      </CardContent>
+    </SettingsCard>
   )
 }
