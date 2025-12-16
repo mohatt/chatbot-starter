@@ -13,7 +13,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronRight, Folder, FolderOpen, FolderPlus, Forward, MoreHorizontal, Trash2 } from 'lucide-react'
+import {
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Forward,
+  MoreHorizontal,
+  Trash2,
+  Settings,
+  PencilLine,
+} from 'lucide-react'
+import Link from 'next/link'
 
 export function SidebarProjectsNav() {
   const { isMobile } = useSidebar();
@@ -52,9 +63,9 @@ export function SidebarProjectsNav() {
                     <SidebarMenuSub className='mr-0 pr-0'>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild>
-                          <a href='/xxx'>
-                            <span>Child</span>
-                          </a>
+                          <Link href='/chat/xxxx-xxx-xxxx-xxxx'>
+                            <span>Test Chat</span>
+                          </Link>
                         </SidebarMenuSubButton>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -64,22 +75,22 @@ export function SidebarProjectsNav() {
                             </SidebarMenuAction>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
-                            className="w-48 rounded-lg"
+                            className="w-44 rounded-lg"
                             side={isMobile ? "bottom" : "right"}
                             align={isMobile ? "end" : "start"}
                           >
                             <DropdownMenuItem>
-                              <Folder className="text-muted-foreground" />
-                              <span>View Project</span>
+                              <PencilLine className="text-muted-foreground" />
+                              <span>Rename</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Forward className="text-muted-foreground" />
-                              <span>Share Project</span>
+                              <span>Share</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem>
                               <Trash2 className="text-muted-foreground" />
-                              <span>Delete Project</span>
+                              <span>Delete</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -97,22 +108,18 @@ export function SidebarProjectsNav() {
                       </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      className="w-48 rounded-lg"
+                      className="w-44 rounded-lg"
                       side={isMobile ? "bottom" : "right"}
                       align={isMobile ? "end" : "start"}
                     >
                       <DropdownMenuItem>
-                        <Folder className="text-muted-foreground" />
-                        <span>View Project</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Forward className="text-muted-foreground" />
-                        <span>Share Project</span>
+                        <Settings className="text-muted-foreground" />
+                        <span>Settings</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
                         <Trash2 className="text-muted-foreground" />
-                        <span>Delete Project</span>
+                        <span>Delete</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

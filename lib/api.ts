@@ -57,7 +57,7 @@ export interface ApiHandlerParams<T extends RouteContext<any>> {
   session(mode: 'optional'): Promise<AuthSession | null>
 }
 
-export function createApi<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>) {
+export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>) {
   return async (request: NextRequest, ctx: T): Promise<Response> => {
     try {
       const api = Api.getInstance(request);

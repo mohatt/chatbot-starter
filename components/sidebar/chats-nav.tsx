@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuAction,
-  useSidebar,
+  useSidebar, SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
@@ -36,11 +36,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 import {
-  Folder,
   Forward,
   MoreHorizontal,
   Trash2,
   ChevronRight, CircleAlert,
+  PencilLine
 } from 'lucide-react'
 import { toast } from "sonner";
 
@@ -91,25 +91,28 @@ export function SidebarChatsNav() {
                   </SidebarMenuAction>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-48 rounded-lg"
+                  className="w-44 rounded-lg"
                   side={isMobile ? "bottom" : "right"}
                   align={isMobile ? "end" : "start"}
                 >
                   <DropdownMenuItem>
-                    <Folder className="text-muted-foreground" />
-                    <span>View Project</span>
+                    <PencilLine className="text-muted-foreground" />
+                    <span>Rename</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Forward className="text-muted-foreground" />
-                    <span>Share Project</span>
+                    <span>Share</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Trash2 className="text-muted-foreground" />
-                    <span>Delete Project</span>
+                    <span>Delete</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuSkeleton />
             </SidebarMenuItem>
           </SidebarMenu>
           <DeleteChatsDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog} />

@@ -1,0 +1,25 @@
+import { z } from 'zod';
+import { AppError } from '@/lib/errors'
+import { uuidV7 } from '@/lib/schema'
+
+export const getRequestBodySchema = z.object({
+  cursor: uuidV7.optional(),
+  limit: z.coerce
+    .number()
+    .int()
+    .positive()
+    .min(25)
+    .max(50)
+    .default(25),
+});
+
+export function validateGetRequest(params: URLSearchParams) {
+  const result = getRequestBodySchema.safeParse({
+    cursor: params.get('cursor') || undefined,
+    limit: params.get('limit') || undefined,
+  })
+  if (!result.success) {
+    throw new AppError('bad_request:chat')
+  }
+  return result.data
+}

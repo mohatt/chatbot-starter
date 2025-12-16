@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createApi } from '@/lib/api'
+import { createApiHandler } from '@/lib/api'
 import { AppError } from '@/lib/errors'
 import { validateGetRequest } from './schema'
 
-export const GET = createApi<RouteContext<'/api/chat/[id]/history'>>(async ({ api, session, request, params }) => {
+export const GET = createApiHandler<RouteContext<'/api/chat/[id]/history'>>(async ({ api, session, request, params }) => {
   const { authz, db } = api;
   const { id, limit, before } = validateGetRequest(params.id, request.nextUrl.searchParams);
   const { user } = await session()

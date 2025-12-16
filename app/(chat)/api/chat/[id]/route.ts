@@ -3,13 +3,13 @@ import { stepCountIs, streamText, convertToModelMessages, createUIMessageStream,
 import { geolocation } from "@vercel/functions";
 import type { ChatMessage } from '@/lib/ai'
 import { generateUUID } from '@/lib/util'
-import { createApi } from '@/lib/api'
+import { createApiHandler } from '@/lib/api'
 import { AppError } from '@/lib/errors'
 import { validateUUIDv7 } from '@/lib/schema'
 import { validatePatchRequest, validatePostRequest } from './schema'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 
-export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
+export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai } = api;
   const id = validateUUIDv7(params.id)
   const body = validatePostRequest(await request.json())
@@ -95,7 +95,7 @@ export const POST = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, requ
   return createUIMessageStreamResponse({ stream });
 });
 
-export const PATCH = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, request, params }) => {
+export const PATCH = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, request, params }) => {
   const id = validateUUIDv7(params.id)
   const body = validatePatchRequest(await request.json())
   const { user } = await session()
@@ -103,7 +103,7 @@ export const PATCH = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, ses
   return NextResponse.json(updatedChat);
 });
 
-export const GET = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
+export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const id = validateUUIDv7(params.id)
   const { user } = await session()
   const chat = await api.db.chats.findById(id);
@@ -113,7 +113,7 @@ export const GET = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, sessi
   return NextResponse.json(chat);
 });
 
-export const DELETE = createApi<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
+export const DELETE = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const { authz, db } = api;
   const id = validateUUIDv7(params.id)
   const { user } = await session()

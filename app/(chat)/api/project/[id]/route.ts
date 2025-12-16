@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createApi } from '@/lib/api'
+import { createApiHandler } from '@/lib/api'
 import type { ChatProjectRecordInput, ChatProjectRecordFile } from '@/lib/db'
 import { FileLoader, type FileLoaderDoc } from '@/lib/document'
 import { AppError } from '@/lib/errors'
@@ -7,7 +7,7 @@ import { config } from '@/lib/config'
 import { validateUUIDv7 } from '@/lib/schema'
 import { UpsertProjectBody, UpsertProjectBodyError, validatePostRequest } from './schema'
 
-export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, session, request, params }) => {
+export const POST = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({ api, session, request, params }) => {
   const { db, vectorDb } = api;
   const id = validateUUIDv7(params.id)
   const { body, files } = await validatePostRequest(await request.formData());
@@ -94,7 +94,7 @@ export const POST = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, s
   return NextResponse.json<UpsertProjectBody>({ data, errors }, { status: 200 });
 });
 
-export const GET = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {
+export const GET = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {
   const id = validateUUIDv7(params.id)
   const { user } = await session()
   const project = await api.db.projects.findById(id);
@@ -104,7 +104,7 @@ export const GET = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, se
   return NextResponse.json(project);
 });
 
-export const DELETE = createApi<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {
+export const DELETE = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {
   const { db, vectorDb } = api;
   const id = validateUUIDv7(params.id);
   const { user } = await session()
