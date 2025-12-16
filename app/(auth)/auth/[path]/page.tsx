@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export default async function AuthPage({ params }: PageProps<'/auth/[path]'>) {
   const { path } = await params
   return (
-    <main className="container mx-auto flex grow flex-col items-center justify-center self-center p-4 md:p-8">
+    <main className="flex items-center justify-center h-screen">
       <AuthView path={path} />
     </main>
   )

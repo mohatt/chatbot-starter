@@ -28,6 +28,9 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
       },
       deleteUser: {
         enabled: true,
+        afterDelete: async (user) => {
+          // @todo cleanup app data linked to deleted user
+        }
       }
     },
     plugins: [
