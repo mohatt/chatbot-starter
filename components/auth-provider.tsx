@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type ReactNode } from 'react'
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { createAuthClient } from "better-auth/react"
 import { anonymousClient } from "better-auth/client/plugins"
 import { billingClient } from '@/lib/auth/plugins/billing/client'
@@ -33,31 +33,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function GuestAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>()
-  const [result, setResult] = useState<Record<'data' | 'error', string | null>>()
+  const [success, setSuccess] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    if (loading !== undefined) return
+    if (success || loading !== undefined) return
 
-    const run = async () => {
+    const signIn = async () => {
       setLoading(true)
       console.log('guest login started')
       try {
-        const { data, error } = await authClient.signIn.anonymous()
-        setResult({
-          data: data?.user.id || null,
-          error: error?.message || error?.statusText || null,
-        })
-      } catch (error) {
-        setResult({ data: null, error: String(error) })
+        const { data } = await authClient.signIn.anonymous()
+        return !!data?.user.id
+      } catch {
+        return false
       } finally {
         setLoading(false)
       }
     }
 
-    void run()
-  }, [loading])
+    void signIn()
+      .then((signedIn) => {
+        if (signedIn) {
+          return setSuccess(true)
+        }
 
-  if (loading !== false) {
+        const { search, pathname } = window.location
+        const searchParams = new URLSearchParams(search)
+        const redirectTo = searchParams.get("redirectTo") || pathname + search
+        router.replace(`/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`)
+      })
+  }, [loading, router])
+
+  if (loading !== false || !success) {
     return (
       <div className="flex items-center justify-center h-screen">
         <LoadingDots className='text-4xl' />
@@ -65,7 +73,7 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  console.log('guest login result', result)
+  console.log('guest login done')
   return (
     <AuthProvider>
       {children}

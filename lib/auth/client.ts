@@ -37,7 +37,7 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
           // @todo move app data from anonymous user to the new user
         },
       }),
-      billing(),
+      billing(db),
       openAPI(),
     ],
     session: {

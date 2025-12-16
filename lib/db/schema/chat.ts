@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import { index, json, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import type { TextUIPart, FileUIPart, DataUIPart } from 'ai'
 import type { FileLoaderInput } from '@/lib/document'
@@ -59,3 +59,30 @@ export const messages = pgTable("messages", {
 }, (self) => [
   index('messages_chat_id_idx').on(self.chatId, self.id.desc()),
 ]);
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  user: one(users, {
+    fields: [projects.userId],
+    references: [users.id],
+  }),
+  chats: many(chats),
+}));
+
+export const chatsRelations = relations(chats, ({ one, many }) => ({
+  user: one(users, {
+    fields: [chats.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [chats.projectId],
+    references: [projects.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  chat: one(chats, {
+    fields: [messages.chatId],
+    references: [chats.id],
+  }),
+}));

@@ -1,0 +1,31 @@
+import { relations } from "drizzle-orm";
+import { pgTable, uuid, bigint, timestamp, index, integer } from "drizzle-orm/pg-core";
+import { billings } from "./auth";
+
+export const billingPeriods = pgTable("billingPeriods", {
+    id: uuid("id").primaryKey(),
+    billingId: uuid("billingId")
+      .notNull()
+      .references(() => billings.id, { onDelete: "cascade" }),
+    year: integer("year").notNull(),
+    month: integer("month").notNull(),
+    inputUsage: bigint("inputUsage", { mode: "number" }).default(0).notNull(),
+    outputUsage: bigint("outputUsage", { mode: "number" }).default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("billingPeriods_billingId_idx").on(table.billingId),
+    index("billingPeriods_year_month_idx").on(table.year, table.month),
+  ],
+);
+
+export const billingPeriodsRelations = relations(billingPeriods, ({ one }) => ({
+  billings: one(billings, {
+    fields: [billingPeriods.billingId],
+    references: [billings.id],
+  }),
+}));

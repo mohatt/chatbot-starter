@@ -2,7 +2,6 @@ import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
-  bigint,
   timestamp,
   boolean,
   uuid,
@@ -93,23 +92,13 @@ export const verifications = pgTable(
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
-export const billings = pgTable(
-  "billings",
-  {
-    id: uuid("id")
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
-    type: text("type", { enum: ["anonymous", "user"] }).notNull(),
-    period: text("period").notNull(),
-    inputUsage: bigint("inputUsage", { mode: "number" }).default(0).notNull(),
-    outputUsage: bigint("outputUsage", { mode: "number" }).default(0).notNull(),
-    updatedAt: timestamp("updatedAt")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [index("billings_period_idx").on(table.period)],
-);
+export const billings = pgTable("billings", {
+  id: uuid("id")
+    .default(sql`pg_catalog.gen_random_uuid()`)
+    .primaryKey(),
+  type: text("type", { enum: ["anonymous", "user"] }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   billings: one(billings, {

@@ -1,5 +1,5 @@
 {
-  "id": "6a46b696-b27f-4fd0-bbcd-bc0804149dd7",
+  "id": "b274e6ed-9348-446f-ba1b-8b356cbabb0b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -127,8 +127,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.billings": {
-      "name": "billings",
+    "public.billingPeriods": {
+      "name": "billingPeriods",
       "schema": "",
       "columns": {
         "id": {
@@ -138,9 +138,9 @@
           "notNull": true,
           "default": "pg_catalog.gen_random_uuid()"
         },
-        "type": {
-          "name": "type",
-          "type": "text",
+        "billingId": {
+          "name": "billingId",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -164,6 +164,13 @@
           "notNull": true,
           "default": 0
         },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
         "updatedAt": {
           "name": "updatedAt",
           "type": "timestamp",
@@ -173,8 +180,23 @@
         }
       },
       "indexes": {
-        "billings_period_idx": {
-          "name": "billings_period_idx",
+        "billingPeriods_billingId_idx": {
+          "name": "billingPeriods_billingId_idx",
+          "columns": [
+            {
+              "expression": "billingId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "billingPeriods_period_idx": {
+          "name": "billingPeriods_period_idx",
           "columns": [
             {
               "expression": "period",
@@ -189,6 +211,53 @@
           "with": {}
         }
       },
+      "foreignKeys": {
+        "billingPeriods_billingId_billings_id_fk": {
+          "name": "billingPeriods_billingId_billings_id_fk",
+          "tableFrom": "billingPeriods",
+          "tableTo": "billings",
+          "columnsFrom": [
+            "billingId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.billings": {
+      "name": "billings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
