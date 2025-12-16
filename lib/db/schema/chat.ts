@@ -14,7 +14,7 @@ export const projects = pgTable("projects", {
   name: varchar("name", { length: 256 }).notNull(),
   userId: uuid("userId")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
   files: jsonb("files").array().notNull().$type<ChatProjectRecordFile[]>(),
   prompt: text("prompt").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -28,9 +28,9 @@ export const chats = pgTable("chats", {
   title: text("title").notNull(),
   userId: uuid("userId")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
   projectId: uuid("projectId")
-    .references(() => projects.id),
+    .references(() => projects.id, { onDelete: "cascade" }),
   privacy: varchar("privacy", { enum: ["public", "private"] })
     .notNull()
     .default("private"),
@@ -52,7 +52,7 @@ export const messages = pgTable("messages", {
   id: uuid("id").primaryKey().notNull(),
   chatId: uuid("chatId")
     .notNull()
-    .references(() => chats.id),
+    .references(() => chats.id, { onDelete: "cascade" }),
   role: varchar("role").notNull().$type<'user' | 'assistant'>(),
   parts: json("parts").notNull().$type<Array<TextUIPart | FileUIPart | DataUIPart<any>>>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

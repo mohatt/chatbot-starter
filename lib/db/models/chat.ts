@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, isNull } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
-import { chats, messages } from '../schema'
+import { chats } from '../schema'
 
 export type ChatRecord = typeof chats.$inferSelect;
 export type ChatRecordInput = Omit<typeof chats.$inferInsert, 'createdAt'>;
@@ -48,16 +48,25 @@ export class ChatModel extends DbModel {
 
   async deleteById(id: string): Promise<ChatRecord> {
     try {
-      return await this.db.transaction(async (tx) => {
-        await tx.delete(messages).where(eq(messages.chatId, id));
-        const [deletedChat] = await tx
-          .delete(chats)
-          .where(eq(chats.id, id))
-          .returning();
-        return deletedChat;
-      })
+      const [deletedChat] = await this.db
+        .delete(chats)
+        .where(eq(chats.id, id))
+        .returning();
+      return deletedChat;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to delete chat by id");
+    }
+  }
+
+  async deleteMany({ userId, projectId }: { userId: string; projectId?: string | null }): Promise<number> {
+    try {
+      const projectCond = projectId
+        ? eq(chats.projectId, projectId)
+        : isNull(chats.projectId)
+      const { rowCount } = await this.db.delete(chats).where(and(eq(chats.userId, userId), projectCond))
+      return rowCount ?? 0
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to delete user chats");
     }
   }
 

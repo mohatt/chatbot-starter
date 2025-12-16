@@ -23,3 +23,18 @@ export function validateGetRequest(params: URLSearchParams) {
   }
   return result.data
 }
+
+
+export const deleteRequestBodySchema = z.object({
+  projectId: uuidV7.optional(),
+});
+
+export function validateDeleteRequest(params: URLSearchParams) {
+  const result = deleteRequestBodySchema.safeParse({
+    projectId: params.get('projectId') || undefined,
+  })
+  if (!result.success) {
+    throw new AppError('bad_request:chat')
+  }
+  return result.data
+}

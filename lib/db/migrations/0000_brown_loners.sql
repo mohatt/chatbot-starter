@@ -14,16 +14,6 @@ CREATE TABLE "accounts" (
 	"updatedAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "billingPeriods" (
-	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
-	"billingId" uuid NOT NULL,
-	"period" text NOT NULL,
-	"inputUsage" bigint DEFAULT 0 NOT NULL,
-	"outputUsage" bigint DEFAULT 0 NOT NULL,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "billings" (
 	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
 	"type" text NOT NULL,
@@ -64,6 +54,17 @@ CREATE TABLE "verifications" (
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "billingPeriods" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"billingId" uuid NOT NULL,
+	"year" integer NOT NULL,
+	"month" integer NOT NULL,
+	"inputUsage" bigint DEFAULT 0 NOT NULL,
+	"outputUsage" bigint DEFAULT 0 NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "chats" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"title" text NOT NULL,
@@ -91,18 +92,18 @@ CREATE TABLE "projects" (
 );
 --> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "billingPeriods" ADD CONSTRAINT "billingPeriods_billingId_billings_id_fk" FOREIGN KEY ("billingId") REFERENCES "public"."billings"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_billingId_billings_id_fk" FOREIGN KEY ("billingId") REFERENCES "public"."billings"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "chats" ADD CONSTRAINT "chats_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "chats" ADD CONSTRAINT "chats_projectId_projects_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "messages" ADD CONSTRAINT "messages_chatId_chats_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."chats"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "projects" ADD CONSTRAINT "projects_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "billingPeriods" ADD CONSTRAINT "billingPeriods_billingId_billings_id_fk" FOREIGN KEY ("billingId") REFERENCES "public"."billings"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "chats" ADD CONSTRAINT "chats_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "chats" ADD CONSTRAINT "chats_projectId_projects_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_chatId_chats_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."chats"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "projects" ADD CONSTRAINT "projects_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "accounts_userId_idx" ON "accounts" USING btree ("userId");--> statement-breakpoint
-CREATE INDEX "billingPeriods_billingId_idx" ON "billingPeriods" USING btree ("billingId");--> statement-breakpoint
-CREATE INDEX "billingPeriods_period_idx" ON "billingPeriods" USING btree ("period");--> statement-breakpoint
 CREATE INDEX "sessions_userId_idx" ON "sessions" USING btree ("userId");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_idx" ON "verifications" USING btree ("identifier");--> statement-breakpoint
+CREATE INDEX "billingPeriods_billingId_idx" ON "billingPeriods" USING btree ("billingId");--> statement-breakpoint
+CREATE INDEX "billingPeriods_year_month_idx" ON "billingPeriods" USING btree ("year","month");--> statement-breakpoint
 CREATE INDEX "chats_user_project_id_idx" ON "chats" USING btree ("userId","projectId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "chats_user_ungrouped_id_idx" ON "chats" USING btree ("userId","id" DESC NULLS LAST) WHERE "chats"."projectId" is null;--> statement-breakpoint
 CREATE INDEX "messages_chat_id_idx" ON "messages" USING btree ("chatId","id" DESC NULLS LAST);--> statement-breakpoint
