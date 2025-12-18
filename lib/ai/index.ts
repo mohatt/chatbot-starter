@@ -4,7 +4,7 @@ import { embed, embedMany, type ToolSet } from 'ai'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
 import { listFiles, queryFileContents } from './tools'
-import { chatPrompt } from './prompts'
+import { chatPrompt, chatTitlePrompt } from './prompts'
 
 const defaults = {
   gateway: {
@@ -21,7 +21,7 @@ const defaults = {
 export class AI {
   readonly chat: ReturnType<typeof gateway>;
   readonly embedding: ReturnType<typeof gateway['textEmbeddingModel']>;
-  readonly prompts = { chatPrompt }
+  readonly prompts = { chatPrompt, chatTitlePrompt }
 
   constructor(env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'AI_MODEL' | 'EMBEDDING_MODEL'>) {
     const {

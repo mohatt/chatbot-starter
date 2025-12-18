@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm'
-import { index, json, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { index, json, jsonb, pgTable, text, timestamp, boolean, uuid, varchar } from 'drizzle-orm/pg-core'
 import type { TextUIPart, FileUIPart, DataUIPart } from 'ai'
 import type { FileLoaderInput } from '@/lib/document'
 import { users } from './auth'
@@ -34,6 +34,7 @@ export const chats = pgTable("chats", {
   privacy: varchar("privacy", { enum: ["public", "private"] })
     .notNull()
     .default("private"),
+  isTitlePending: boolean("isTitlePending").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (self) => [
   // Project chat listing (user + project, ordered by recency)

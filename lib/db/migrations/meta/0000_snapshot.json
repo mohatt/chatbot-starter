@@ -1,5 +1,5 @@
 {
-  "id": "c993e02f-2514-427d-87d8-ba916063ca02",
+  "id": "f6279da0-b8e5-4b6c-96ab-276e9a1d14a8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -573,6 +573,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'private'"
+        },
+        "isTitlePending": {
+          "name": "isTitlePending",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "createdAt": {
           "name": "createdAt",

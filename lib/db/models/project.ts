@@ -65,16 +65,19 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async deleteMany({ userId }: { userId: string }): Promise<number> {
+  async deleteMany({ userId }: { userId: string }): Promise<string[]> {
     try {
-      const { rowCount } = await this.db.delete(projects).where(eq(projects.userId, userId))
-      return rowCount ?? 0
+      const deleted = await this.db
+        .delete(projects)
+        .where(eq(projects.userId, userId))
+        .returning({ id: projects.id })
+      return deleted.map((row) => row.id)
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to delete user projects");
+      throw new AppError('bad_request:database', 'Failed to delete user projects')
     }
   }
 
-  async findWithChats(userId: string, limit: number, chatsLimit: number, cursor?: string): Promise<ChatsByProjectResult> {
+  async findManyWithChats({ userId }: { userId: string }, limit: number, chatsLimit: number, cursor?: string): Promise<ChatsByProjectResult> {
     try {
       const projectRows = await this.db.query.projects.findMany({
         where: (fields, $) =>

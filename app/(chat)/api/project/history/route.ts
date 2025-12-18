@@ -6,13 +6,16 @@ export const GET = createApiHandler<RouteContext<'/api/project/history'>>(async 
   const { db } = api;
   const { limit, chatsLimit, cursor } = validateGetRequest(request.nextUrl.searchParams);
   const { user } = await session()
-  const result = await db.projects.findWithChats(user.id, limit, chatsLimit, cursor);
+  const result = await db.projects.findManyWithChats({ userId :user.id }, limit, chatsLimit, cursor);
   return NextResponse.json(result);
 })
 
 export const DELETE = createApiHandler<RouteContext<'/api/project/history'>>(async ({ api, session }) => {
-  const { db } = api;
+  const { db, vectorDb } = api;
   const { user } = await session()
-  const deletedCount = await db.projects.deleteMany({ userId :user.id });
-  return NextResponse.json(deletedCount);
+  const deletedIds = await db.projects.deleteMany({ userId :user.id });
+  if (deletedIds.length) {
+    await vectorDb.content.deleteByFilter(`projectId IN ('${deletedIds.join(`', '`)}')`)
+  }
+  return NextResponse.json(deletedIds);
 });

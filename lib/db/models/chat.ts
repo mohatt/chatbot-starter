@@ -35,7 +35,7 @@ export class ChatModel extends DbModel {
     }
   }
 
-  async updateByIdForUser(id: string, userId: string, chat: Partial<Pick<ChatRecordInput, 'title' | 'privacy'>>): Promise<ChatRecord> {
+  async updateByIdForUser(id: string, userId: string, chat: Partial<Pick<ChatRecordInput, 'title' | 'privacy' | 'isTitlePending'>>): Promise<ChatRecord> {
     try {
       const [updatedChat] = await this.db.update(chats).set(chat).where(
         and(eq(chats.id, id), eq(chats.userId, userId))
@@ -58,19 +58,24 @@ export class ChatModel extends DbModel {
     }
   }
 
-  async deleteMany({ userId, projectId }: { userId: string; projectId?: string | null }): Promise<number> {
+  async deleteMany({ userId, projectId }: { userId: string; projectId?: string | null }): Promise<string[]> {
     try {
-      const projectCond = projectId
-        ? eq(chats.projectId, projectId)
-        : isNull(chats.projectId)
-      const { rowCount } = await this.db.delete(chats).where(and(eq(chats.userId, userId), projectCond))
-      return rowCount ?? 0
+      const deletedRows = await this.db
+        .delete(chats)
+        .where(
+          and(
+            eq(chats.userId, userId),
+            projectId ? eq(chats.projectId, projectId) : isNull(chats.projectId),
+          )
+        )
+        .returning({ id: chats.id })
+      return deletedRows.map((row) => row.id)
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to delete user chats");
     }
   }
 
-  async findByUser(userId: string, limit: number, cursor?: string): Promise<ChatsResult> {
+  async findMany({ userId, projectId }: { userId: string; projectId?: string | null }, limit: number, cursor?: string): Promise<ChatsResult> {
     try {
       const rows = await this.db
         .select()
@@ -78,7 +83,7 @@ export class ChatModel extends DbModel {
         .where(
           and(
             eq(chats.userId, userId),
-            isNull(chats.projectId),
+            projectId ? eq(chats.projectId, projectId) : isNull(chats.projectId),
             cursor ? lt(chats.id, cursor) : undefined,
           ),
         )

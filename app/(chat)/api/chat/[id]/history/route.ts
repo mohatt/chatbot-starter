@@ -11,6 +11,6 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]/history'>>(asyn
   if (!authz.can(user, 'read:chat', chat)) {
     throw new AppError('not_found:chat')
   }
-  const history = await db.messages.findByChatId(id, limit, before);
+  const history = await db.messages.findMany(id, limit, before);
   return NextResponse.json(history);
 })

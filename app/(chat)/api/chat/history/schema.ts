@@ -3,6 +3,7 @@ import { AppError } from '@/lib/errors'
 import { uuidV7 } from '@/lib/schema'
 
 export const getRequestBodySchema = z.object({
+  projectId: uuidV7.optional(),
   cursor: uuidV7.optional(),
   limit: z.coerce
     .number()
@@ -13,8 +14,11 @@ export const getRequestBodySchema = z.object({
     .default(25),
 });
 
+export type GetRequestBody = z.infer<typeof getRequestBodySchema>;
+
 export function validateGetRequest(params: URLSearchParams) {
   const result = getRequestBodySchema.safeParse({
+    projectId: params.get('projectId') || undefined,
     cursor: params.get('cursor') || undefined,
     limit: params.get('limit') || undefined,
   })
@@ -24,10 +28,11 @@ export function validateGetRequest(params: URLSearchParams) {
   return result.data
 }
 
-
 export const deleteRequestBodySchema = z.object({
   projectId: uuidV7.optional(),
 });
+
+export type DeleteRequestBody = z.infer<typeof deleteRequestBodySchema>;
 
 export function validateDeleteRequest(params: URLSearchParams) {
   const result = deleteRequestBodySchema.safeParse({

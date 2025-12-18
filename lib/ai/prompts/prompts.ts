@@ -27,3 +27,17 @@ The user's location is {location}.
 })
 
 export type ChatPromptVars = typeof chatPrompt.$inferInput
+
+export const chatTitlePrompt = new PromptTemplate({
+  template: `You will generate a short title based on the first message a user begins a conversation with.
+[IMPORTANT !!!]
+- ensure it is not more than {maxLength} characters long
+- the title should be a summary of the user's message
+- do not use quotes or colons
+`,
+  schema: z.object({
+    maxLength: z.number().positive().int().min(10).max(100),
+  }),
+})
+
+export type ChatTitlePromptVars = typeof chatTitlePrompt.$inferInput

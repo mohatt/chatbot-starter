@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stepCountIs, streamText, convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, smoothStream } from 'ai'
+import { stepCountIs, streamText, generateText, convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, smoothStream } from 'ai'
 import { geolocation } from "@vercel/functions";
 import type { ChatMessage } from '@/lib/ai'
 import { generateUUID } from '@/lib/util'
@@ -19,9 +19,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   if (create) {
     chat = await db.chats.create({
       id,
-      title: 'New Chat',
+      title: message.parts
+        .map((part) => part.type === 'text' ? part.text : `[File: ${part.name}]`)
+        .join('\n'),
       userId: user.id,
-      projectId: null,
     })
   } else {
     const dbChat = await db.chats.findById(id);
@@ -32,10 +33,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   }
 
   if (regenerate) {
-    await db.messages.deleteByChatId(id, message.id)
+    await db.messages.deleteMany(id, message.id)
   }
 
-  const { data: dbMessages } = await db.messages.findByChatId(id, 10);
+  const { data: dbMessages } = await db.messages.findMany(id, 10);
   const uiMessages = [...dbMessages, message];
 
   await db.messages.insertMany(id, [message])
@@ -104,12 +105,25 @@ export const PATCH = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ a
 });
 
 export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
+  const { db, ai, authz } = api;
   const id = validateUUIDv7(params.id)
   const { user } = await session()
-  const chat = await api.db.chats.findById(id);
-  if(!api.authz.can(user, 'read:chat', chat)) {
+  let chat = await db.chats.findById(id);
+  if(!authz.can(user, 'read:chat', chat)) {
     throw new AppError('not_found:chat')
   }
+
+  // Generate title for new chats
+  if (chat.isTitlePending) {
+    const { text: title } = await generateText({
+      model: ai.chat,
+      system: ai.prompts.chatTitlePrompt.toString({ maxLength: 40 }),
+      prompt: chat.title,
+      temperature: 0.2,
+    });
+    chat = await db.chats.updateByIdForUser(id, user.id, { title, isTitlePending: false });
+  }
+
   return NextResponse.json(chat);
 });
 

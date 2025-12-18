@@ -28,7 +28,7 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  async findByChatId(chatId: string, limit: number, cursor?: string): Promise<ChatMessagesResult> {
+  async findMany(chatId: string, limit: number, cursor?: string): Promise<ChatMessagesResult> {
     try {
       const data = await this.db.select()
         .from(messages)
@@ -48,7 +48,7 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  async deleteByChatId(chatId: string, afterId?: string): Promise<number | null> {
+  async deleteMany(chatId: string, afterId?: string): Promise<number | null> {
     try {
       const { rowCount } = await this.db.delete(messages).where(
         and(

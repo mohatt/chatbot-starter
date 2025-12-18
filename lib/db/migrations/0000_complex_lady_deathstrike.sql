@@ -71,6 +71,7 @@ CREATE TABLE "chats" (
 	"userId" uuid NOT NULL,
 	"projectId" uuid,
 	"privacy" varchar DEFAULT 'private' NOT NULL,
+	"isTitlePending" boolean DEFAULT true NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

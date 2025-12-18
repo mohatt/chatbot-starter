@@ -1,13 +1,12 @@
 import { z } from 'zod'
 import { validate as validateUUID, version as getUUIDVersion } from 'uuid'
-import type { UUID } from 'node:crypto'
 import { AppError, type ErrorCode } from '@/lib/errors'
 
 export function uuidSchema<V extends number>(version?: V) {
   return z.string().transform((val, ctx) => {
     if (!validateUUID(val)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Invalid UUID',
       })
       return z.NEVER
@@ -15,13 +14,13 @@ export function uuidSchema<V extends number>(version?: V) {
 
     if (version != null && getUUIDVersion(val) !== version) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: `Invalid UUIDv${version}`,
       })
       return z.NEVER
     }
 
-    return val as UUID
+    return val
   })
 }
 
