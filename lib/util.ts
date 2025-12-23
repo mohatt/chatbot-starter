@@ -1,19 +1,37 @@
 import { AppError, type ErrorCode } from '@/lib/errors'
 import { v7 as uuidv7 } from 'uuid';
 import { filesize } from 'filesize';
+import { config } from '@/lib/config'
+import type { ChatRecord, ChatProjectRecord } from '@/lib/db'
 
-export async function fetcher<D = any>(url: string): Promise<D> {
-  const response = await fetch(url);
+export function getProjectUrl(project: Pick<ChatProjectRecord, 'id'>, full = false) {
+  const path = `/project/${project.id}`
+  return full ? `${config.baseUrl}${path}` : path
+}
+
+export function getChatUrl(chat: Pick<ChatRecord, 'id' | 'projectId'>, full = false) {
+  const { id, projectId } = chat
+  const path = projectId ? `/project/${projectId}/${id}` : `/chat/${id}`
+  return full ? `${config.baseUrl}${path}` : path
+}
+
+export async function fetcher<D = unknown>(url: string, init?: RequestInit): Promise<D> {
+  const response = await fetch(url, init);
 
   if (!response.ok) {
-    const { code, cause } = await response.json();
-    throw new AppError(code as ErrorCode, cause);
+    let data: any
+    try {
+      data = await response.json();
+    } catch {
+      throw new AppError('bad_request:api', response.statusText);
+    }
+    throw new AppError(data.code as ErrorCode, data.cause);
   }
 
   return response.json();
 }
 
-export async function fetchWithErrorHandlers(
+export async function fetchWithOfflineHandler(
   input: RequestInfo | URL,
   init?: RequestInit,
 ) {

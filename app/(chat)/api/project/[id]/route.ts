@@ -5,7 +5,7 @@ import { FileLoader, type FileLoaderDoc } from '@/lib/document'
 import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import { validateUUIDv7 } from '@/lib/schema'
-import { UpsertProjectBody, UpsertProjectBodyError, validatePostRequest } from './schema'
+import { UpsertProjectResponse, UpsertProjectBodyError, validatePostRequest } from './schema'
 
 export const POST = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({ api, session, request, params }) => {
   const { db, vectorDb } = api;
@@ -66,7 +66,7 @@ export const POST = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({
       ...project,
       files: newFiles,
     });
-    return NextResponse.json<UpsertProjectBody>({ data, errors }, { status: 201 });
+    return NextResponse.json<UpsertProjectResponse>({ data, errors }, { status: 201 });
   }
 
   const updatedFiles = [...project.files, ...newFiles]
@@ -91,7 +91,7 @@ export const POST = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({
     files: updatedFiles,
   })
 
-  return NextResponse.json<UpsertProjectBody>({ data, errors }, { status: 200 });
+  return NextResponse.json<UpsertProjectResponse>({ data, errors }, { status: 200 });
 });
 
 export const GET = createApiHandler<RouteContext<'/api/project/[id]'>>(async ({ api, session, params }) => {

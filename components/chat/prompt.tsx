@@ -12,7 +12,6 @@ import {
   PromptInputFooter,
   PromptInputTools, usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
-import { PaperclipIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -23,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector'
-import { SuggestedActions } from './suggested-actions'
+import { PaperclipIcon } from 'lucide-react';
 import type { UseChatResult } from './hooks'
 
 const models = [
@@ -45,11 +44,11 @@ export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'st
   model: string
   setInput: (value: string) => void
   setModel: (value: string) => void
-  hasMessages: boolean
+  isNew?: boolean
 }
 
 export const ChatPrompt = (props: ChatPromptProps) => {
-  const { input, model, setInput, setModel, sendMessage, hasMessages, status } = props;
+  const { input, model, setInput, setModel, sendMessage, status } = props;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const handleSubmit = (message: PromptInputMessage) => {
     const text = message.text.trim()
@@ -61,13 +60,6 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   };
   return (
     <div className="size-full mt-4">
-      {!hasMessages && (
-          <SuggestedActions
-            chatId='xxx'
-            sendMessage={sendMessage}
-            className='mb-4'
-          />
-        )}
       <PromptInput onSubmit={handleSubmit}>
         <PromptInputAttachments>
           {(attachment) => <PromptInputAttachment data={attachment} />}

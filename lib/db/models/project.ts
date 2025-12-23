@@ -1,13 +1,18 @@
-import { and, desc, eq, inArray, lt, lte, sql } from 'drizzle-orm'
+import { and, desc, eq, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
-import { projects, chats, ChatProjectRecordFile } from '../schema'
-import type { ChatRecord, ChatsResult } from './chat'
+import { projects, type ChatProjectRecordFile } from '../schema'
+import type { ChatsResult } from './chat'
 
 export type ChatProjectRecord = typeof projects.$inferSelect;
 export type ChatProjectRecordInput = Omit<typeof projects.$inferInsert, 'createdAt'>;
 
 export type { ChatProjectRecordFile }
+
+export interface ProjectsResult {
+  data: ChatProjectRecord[]
+  nextCursor?: string | null
+}
 
 export interface ChatsByProjectRecord {
   project: ChatProjectRecord
@@ -74,6 +79,30 @@ export class ChatProjectModel extends DbModel {
       return deleted.map((row) => row.id)
     } catch (_error) {
       throw new AppError('bad_request:database', 'Failed to delete user projects')
+    }
+  }
+
+  async findMany({ userId }: { userId: string }, limit: number, cursor?: string): Promise<ProjectsResult> {
+    try {
+      const rows = await this.db
+        .select()
+        .from(projects)
+        .where(
+          and(
+            eq(projects.userId, userId),
+            cursor ? lt(projects.id, cursor) : undefined,
+          ),
+        )
+        .orderBy(desc(projects.id))
+        .limit(limit + 1)
+      const hasMore = rows.length > limit
+      const data = hasMore ? rows.slice(0, limit) : rows
+      return {
+        data,
+        nextCursor: hasMore ? data[data.length - 1].id : null,
+      }
+    } catch (_error) {
+      throw new AppError('bad_request:database', 'Failed to fetch chats')
     }
   }
 

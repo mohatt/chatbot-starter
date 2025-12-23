@@ -1,9 +1,19 @@
 import type { AppConfig } from './types'
 
+function getDeploymentBaseUrl() {
+  const host = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL
+  return host ? `https://${host}` : 'http://localhost:3000'
+}
+
 export const config = {
   appId: 'rag-chatbot',
   appName: 'Rag Chatbot',
+  baseUrl: getDeploymentBaseUrl(),
   chat: {
+    title: {
+      fallback: 'New Chat',
+      maxGeneratedLength: 40
+    },
     history: {
       defaultLimit: 100,
       maxLimit: 100

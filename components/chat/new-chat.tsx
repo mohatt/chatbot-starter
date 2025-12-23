@@ -1,0 +1,69 @@
+'use client';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCreateNewChat, type ChatIdProps, type UseChatResult } from './hooks'
+import { ConversationEmptyState } from '@/components/ai-elements/conversation'
+import { ChatHeader } from './header'
+import { ChatGreeting, ChatSuggestions } from './greeting'
+import { ChatPrompt } from './prompt'
+
+export interface NewChatProps extends ChatIdProps {
+  children?: ReactNode;
+}
+
+export function NewChat(props: NewChatProps) {
+  const createNewChat = useCreateNewChat(props)
+  const router = useRouter()
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query")?.trim();
+
+  const [input, setInput] = useState("");
+  const [model, setModel] = useState('gpt-4o');
+
+  const sendMessage = useCallback<UseChatResult['sendMessage']>(async (...args) => {
+    const { url } = createNewChat(args)
+    router.push(url)
+  }, [router, createNewChat])
+
+  const isQuerySent = useRef(false);
+  useEffect(() => {
+    if (query && !isQuerySent.current) {
+      isQuerySent.current = true;
+      const { url } = createNewChat([{ text: query }])
+      router.replace(url)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col">
+        <ChatHeader />
+        <div className="relative flex-1">
+          <div className="absolute inset-0">
+            {props.children ?? (
+              <div className='flex flex-col gap-8 h-full overflow-y-auto'>
+                <ConversationEmptyState>
+                  <ChatGreeting/>
+                  <ChatSuggestions className='md:max-w-3xl mt-4' sendMessage={sendMessage} />
+                </ConversationEmptyState>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 px-2 pb-3 md:px-4 md:pb-4">
+          <ChatPrompt
+            input={input}
+            model={model}
+            setInput={setInput}
+            setModel={setModel}
+            sendMessage={sendMessage}
+            stop={async () => {}}
+            status={query ? 'submitted' : 'ready'}
+            isNew
+          />
+        </div>
+      </div>
+    </>
+  )
+}

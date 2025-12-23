@@ -7,11 +7,13 @@ import { config } from '@/lib/config'
 const fileUpload = createFileUploadSchema(config.project.uploads.files.rules)
 
 const postRequestBodySchema = z.object({
-  name: z.string().trim().nonempty().max(32),
+  name: z.string().trim().nonempty().max(100),
   prompt: z.string().trim().max(2000),
-  deleteFiles: z.array(z.string().uuid()).max(32).default([]),
+  deleteFiles: z.array(z.uuid()).default([]),
   create: z.boolean().default(false),
 }).strict();
+
+export type UpsertProjectRequest = z.infer<typeof postRequestBodySchema> & { files: File[] }
 
 export async function validatePostRequest(formData: FormData) {
   const rawBody = formData.get('body')
@@ -46,12 +48,12 @@ export async function validatePostRequest(formData: FormData) {
 }
 
 export interface UpsertProjectBodyError {
-  field: string
+  field: keyof UpsertProjectRequest
   index?: number
   message: string
 }
 
-export interface UpsertProjectBody {
+export interface UpsertProjectResponse {
   data: ChatProjectRecord | null
   errors: UpsertProjectBodyError[]
 }

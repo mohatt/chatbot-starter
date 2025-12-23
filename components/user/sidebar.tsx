@@ -17,11 +17,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem, useSidebar,
 } from '@/components/ui/sidebar'
-import { Skeleton } from '@/components/ui/skeleton'
 import { UserView } from "@daveyplate/better-auth-ui";
+import { Skeleton } from '@/components/ui/skeleton'
 import { ChevronsUpDown, BadgeCheck, LogIn, LogOut, Palette, Sun, Moon, Monitor, UserRoundPlus } from 'lucide-react'
+import { UserAccountDialog } from './dialogs/account'
 import Link from 'next/link'
-import { UserAccountDialog } from './user-account-dialog'
 
 const themes = [
   {
@@ -41,7 +41,7 @@ const themes = [
   },
 ];
 
-export function SidebarUserNav() {
+export function UserSidebar() {
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
   const { user, isPending } = useAuth()

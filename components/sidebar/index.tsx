@@ -1,6 +1,4 @@
 "use client";
-import Link from "next/link";
-import { SidebarUserNav } from "./user-nav";
 import {
   Sidebar,
   SidebarContent,
@@ -10,32 +8,32 @@ import {
   useSidebar,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarRail,
+  SidebarRail, SidebarMenuAction,
+  SidebarTrigger
 } from '@/components/ui/sidebar'
-import { Plus, FolderPlus, Sparkles } from "lucide-react"
-import { SidebarChatsNav } from "./chats-nav"
-import { SidebarProjectsNav } from "./projects-nav"
+import { useProjectUpsertDialog } from '@/components/project/dialogs/upsert'
+import { ChatsSidebar } from "@/components/chat/sidebar"
+import { ProjectsSidebar } from "@/components/project/sidebar"
+import { UserSidebar } from "@/components/user/sidebar";
+import { SquarePen, FolderPlus, Sparkles, MoreHorizontal, PanelLeftIcon } from 'lucide-react'
+import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export function AppSidebar() {
-  const { setOpenMobile } = useSidebar();
-
+  const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  const projectDialog = useProjectUpsertDialog()
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className='group-data-[collapsible=icon]:hidden'>
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               asChild
             >
-              <Link
-                href="/"
-                onClick={() => {
-                  setOpenMobile(false);
-                }}
-              >
-                  <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
+              <Link href="/" onClick={() => setOpenMobile(false)}>
+                <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Sparkles className="size-4" />
                 </span>
                 <span className="font-semibold text-lg">
@@ -43,38 +41,54 @@ export function AppSidebar() {
                 </span>
               </Link>
             </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuAction asChild>
+                  <SidebarTrigger />
+                </SidebarMenuAction>
+              </TooltipTrigger>
+              <TooltipContent align="start" className="hidden md:block">
+                Close sidebar
+              </TooltipContent>
+            </Tooltip>
+          </SidebarMenuItem>
+          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
+            <SidebarMenuButton className="group-hover:hidden cursor-pointer" asChild>
+              <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
+                <Sparkles className="size-4" />
+              </span>
+            </SidebarMenuButton>
+            <SidebarMenuButton tooltip='Open sidebar' className="cursor-pointer hidden group-hover:flex" asChild>
+              <SidebarTrigger />
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip='New Chat' asChild>
-              <Link
-                href="/"
-                onClick={() => {
-                  setOpenMobile(false);
-                }}
-              >
-                <Plus className="" />
-                <span>New Chat</span>
+            <SidebarMenuButton tooltip='New chat' asChild>
+              <Link href="/" onClick={() => setOpenMobile(false)}>
+                <SquarePen />
+                <span>New chat</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
-            <SidebarMenuButton className="">
-              <FolderPlus className="" />
-              <span>New Project</span>
+            <SidebarMenuButton tooltip='New project' className="cursor-pointer" onClick={() => projectDialog.open(null)}>
+              <FolderPlus />
+              <span>New project</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarProjectsNav />
-        <SidebarChatsNav />
+        <ProjectsSidebar onUpsert={projectDialog.open} />
+        <ChatsSidebar />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarUserNav />
+        <UserSidebar />
       </SidebarFooter>
       <SidebarRail />
+      {projectDialog.render()}
     </Sidebar>
   );
 }

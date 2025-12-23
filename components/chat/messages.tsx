@@ -117,7 +117,7 @@ function ChatMessage(props: ChatMessageProps) {
         }
       })}
       {!isStreaming && !isEditMode && (
-        <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start' : 'justify-end opacity-0 transition-opacity duration-300 delay-300 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
+        <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
           <MessageAction
             onClick={handleCopy}
             label="Copy"

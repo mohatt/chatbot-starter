@@ -1,4 +1,4 @@
-import { useChat as useChatSDK, type UseChatHelpers, type UseChatOptions, Chat } from '@ai-sdk/react'
+import { useChat as useChatSDK, type UseChatHelpers, type UseChatOptions } from '@ai-sdk/react'
 import type { ChatMessage } from '@/lib/ai'
 
 export type UseChatProps = UseChatOptions<ChatMessage>

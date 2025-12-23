@@ -25,6 +25,7 @@ export const postRequestBodySchema = z.object({
   timeZone,
   regenerate: z.boolean().default(false),
   create: z.boolean().default(false),
+  projectId: uuidV7.nullable().default(null),
   // privacy: z.enum(["public", "private"]),
 });
 

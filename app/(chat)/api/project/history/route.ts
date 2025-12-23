@@ -4,9 +4,9 @@ import { validateGetRequest } from './schema'
 
 export const GET = createApiHandler<RouteContext<'/api/project/history'>>(async ({ api, session, request }) => {
   const { db } = api;
-  const { limit, chatsLimit, cursor } = validateGetRequest(request.nextUrl.searchParams);
+  const { limit, cursor } = validateGetRequest(request.nextUrl.searchParams);
   const { user } = await session()
-  const result = await db.projects.findManyWithChats({ userId :user.id }, limit, chatsLimit, cursor);
+  const result = await db.projects.findMany({ userId :user.id }, limit, cursor);
   return NextResponse.json(result);
 })
 

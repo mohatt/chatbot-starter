@@ -1,68 +1,95 @@
 "use client";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { memo } from "react";
-import { useWindowSize } from "usehooks-ts";
-import { SidebarToggle } from "@/components/sidebar/toggler";
+import { Fragment, type ReactNode } from "react";
+import { useMediaQuery } from 'usehooks-ts'
+import { useSidebar } from '@/components/ui/sidebar'
+import { getProjectUrl } from '@/lib/util'
 import { Button } from "@/components/ui/button";
-import { VercelIcon } from "../icons";
-import { PlusIcon } from "lucide-react";
-import { useSidebar } from "../ui/sidebar";
-import { VisibilitySelector, type VisibilityType } from "../visibility-selector";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { GithubIcon } from "../icons";
+import { LockIcon, GlobeIcon, FolderClosedIcon, MenuIcon } from 'lucide-react'
+import Link from "next/link";
+import type { ChatRecord } from '@/lib/db'
 
-export interface HeaderProps {
-  isReadonly: boolean;
-  visibilityType: VisibilityType;
-  setVisibilityType: (type: VisibilityType) => void;
+export interface ChatHeaderProps {
+  chat?: ChatRecord | null;
 }
 
-export function ChatHeader(props: HeaderProps) {
-  const { isReadonly, visibilityType, setVisibilityType } = props;
-  const router = useRouter();
-  const { open } = useSidebar();
+export function ChatHeader({ chat }: ChatHeaderProps) {
+  const { open, isMobile, toggleSidebar } = useSidebar();
+  const isPointerFine = useMediaQuery('(pointer: fine)')
+  const items: ReactNode[] = []
 
-  const { width: windowWidth } = useWindowSize();
+  if (!open && (isMobile || !isPointerFine)) {
+    items.push(
+      <BreadcrumbPage>
+        <Button
+          className='w-6'
+          onClick={toggleSidebar}
+          variant="ghost"
+          size='icon-sm'
+        >
+          <MenuIcon className='size-5' />
+          <span className="sr-only">Open sidebar</span>
+        </Button>
+      </BreadcrumbPage>
+    )
+  }
+
+  if (chat?.projectId) {
+    items.push(
+      <BreadcrumbLink asChild>
+        <Link href={getProjectUrl({ id: chat.projectId })}>
+          <FolderClosedIcon className='size-5' />
+        </Link>
+      </BreadcrumbLink>
+    )
+  }
+
+  if (chat) {
+    items.push(
+      <span className='inline-flex items-center gap-1.5'>
+        {chat.privacy === 'public' ? <GlobeIcon className='size-4' /> : <LockIcon className='size-4' />}
+        <span className='truncate'>{chat.title}</span>
+      </span>
+    )
+  }
 
   return (
-    <header className="sticky top-0 flex items-center gap-2 bg-background px-2 py-1.5 md:px-2">
-      <SidebarToggle />
-
-      {(!open || windowWidth < 768) && (
-        <Button
-          onClick={() => {
-            router.push("/");
-            router.refresh();
-          }}
-          variant="outline"
-          size='icon'
-        >
-          <PlusIcon />
-          <span className="md:sr-only">New Chat</span>
-        </Button>
-      )}
-
-      {!isReadonly && (
-        <VisibilitySelector
-          className="order-1 md:order-2"
-          visibilityType={visibilityType}
-          setVisibilityType={setVisibilityType}
-        />
-      )}
+    <header className="sticky top-0 flex items-center gap-2 px-2 py-2">
+      <Breadcrumb className='md:px-2'>
+        <BreadcrumbList>
+          {items.map((item, index) => (
+            <Fragment key={index}>
+              <BreadcrumbItem>{item}</BreadcrumbItem>
+              {index !== items.length - 1 && (
+                <BreadcrumbSeparator />
+              )}
+            </Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <Button
         asChild
-        className="order-3 hidden bg-zinc-900 px-2 text-zinc-50 hover:bg-zinc-800 md:ml-auto md:flex dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        size='sm'
+        className="order-3 hidden md:flex md:ml-auto"
       >
         <Link
-          href={"https://vercel.com/templates/next.js/nextjs-ai-chatbot"}
+          href="https://github.com/mohatt/ai-chatbot"
           rel="noreferrer"
           target="_noblank"
         >
-          <VercelIcon size={16} />
-          Deploy with Vercel
+          <GithubIcon size={16} />
+          View on Github
         </Link>
       </Button>
     </header>
-  );
+  )
 }

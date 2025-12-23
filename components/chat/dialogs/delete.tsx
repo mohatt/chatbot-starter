@@ -1,0 +1,67 @@
+import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useDeleteChatMutation } from '@/api/mutations/chats'
+import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
+import { toast } from 'sonner'
+import type { ChatRecord } from '@/lib/db'
+
+export interface DeleteChatDialogProps extends BaseDialogProps {
+  chat: ChatRecord;
+}
+
+export function DeleteChatDialog(props: DeleteChatDialogProps) {
+  const { open, chat, onOpenChange } = props;
+  const { mutate, error, isPending } = useDeleteChatMutation()
+  const router = useRouter();
+  const { id, title } = chat;
+
+  const handleDelete = useCallback(() => {
+    mutate({ id }, {
+      onSuccess: () => {
+        onOpenChange(false);
+        router.replace("/");
+        setTimeout(() => {
+          toast.success('Chat deleted successfully.')
+        }, 100);
+      },
+      onError: (err) => {
+        toast.error(err.message)
+      },
+    })
+  }, [id, mutate, onOpenChange, router])
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onSubmit={handleDelete}
+      title='Delete chat?'
+      description={<>This will delete <b>{title}</b>.</>}
+      submit='Delete'
+      variant='destructive'
+      error={error && 'Failed to delete chat.'}
+      isPending={isPending}
+    />
+  )
+}
+
+export function useDeleteChatDialog() {
+  const { key, isOpen, setIsOpen, open, close } = useDialogState()
+  const [chat, setChat] = useState<ChatRecord | null>(null)
+
+  return {
+    open: useCallback((target: ChatRecord) => {
+      open()
+      setChat(target)
+    }, [open]),
+    close,
+    render: () => chat !== null && (
+      <DeleteChatDialog
+        key={key}
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        chat={chat}
+      />
+    )
+  }
+}
