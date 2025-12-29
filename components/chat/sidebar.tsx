@@ -17,7 +17,7 @@ import {
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { LoadingDots } from '@/components/loading'
+import { motion } from 'framer-motion'
 import {
   MoreHorizontal,
   Trash2,
@@ -120,21 +120,17 @@ export function ChatsSidebar() {
                 <SidebarMenuSkeleton />
               </SidebarMenuItem>
             )}
-            {hasNextPage && (
+            {hasNextPage && !isFetchingNextPage && (
               <SidebarMenuItem>
+                <motion.div onViewportEnter={handleLoadMore} />
                 <SidebarMenuButton
                   size='sm'
                   tooltip='Load more chats'
                   className="text-sidebar-foreground/70"
-                  disabled={isFetchingNextPage}
                   onClick={handleLoadMore}
                 >
-                  {isFetchingNextPage ? (
-                    <LoadingDots className='text-lg' />
-                  ) : (
-                    <MoreHorizontal className="text-sidebar-foreground/70" />
-                  )}
-                  <span>{isFetchingNextPage ? 'Loading' : 'More'}</span>
+                  <MoreHorizontal className="text-sidebar-foreground/70" />
+                  <span>More</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}

@@ -1,9 +1,10 @@
-import type { ChatRecord, ChatProjectRecord } from './db'
+import type { ChatRecord, ChatProjectRecord, FileRecord } from './db'
 import type { AuthUser } from './auth'
 
 type AuthzResourceMap = {
   chat: Pick<ChatRecord, 'userId' | 'privacy'>
   project: Pick<ChatProjectRecord, 'userId'>
+  file: Pick<FileRecord, 'userId'>
 }
 
 type AuthzType = 'read' | 'write' | 'delete'
@@ -30,6 +31,9 @@ export class Authorizer {
         return true
       },
       project: ({ user, resource }) => {
+        return user != null && resource != null && user.id === resource.userId
+      },
+      file: ({ user, resource }) => {
         return user != null && resource != null && user.id === resource.userId
       },
     }

@@ -1,5 +1,6 @@
 export * from './message'
 export * from './chat'
+export * from './file'
 export * from './project'
 export * from './billing'
 export * from './billing-period'

@@ -1,13 +1,8 @@
 import { relations, sql } from 'drizzle-orm'
-import { index, json, jsonb, pgTable, text, timestamp, boolean, uuid, varchar } from 'drizzle-orm/pg-core'
+import { index, json, pgTable, text, timestamp, boolean, uuid, varchar } from 'drizzle-orm/pg-core'
 import type { TextUIPart, FileUIPart, DataUIPart } from 'ai'
-import type { FileLoaderInput } from '@/lib/document'
 import { users } from './auth'
-
-export type ChatProjectRecordFile = Omit<FileLoaderInput, 'blob'> & {
-  vectors: number;
-  tokens: number;
-}
+import { files } from './file'
 
 export const projects = pgTable("projects", {
   id: uuid("id").primaryKey().notNull(),
@@ -15,7 +10,6 @@ export const projects = pgTable("projects", {
   userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  files: jsonb("files").array().notNull().$type<ChatProjectRecordFile[]>(),
   prompt: text("prompt").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (self) => [
@@ -67,6 +61,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [users.id],
   }),
   chats: many(chats),
+  files: many(files),
 }));
 
 export const chatsRelations = relations(chats, ({ one, many }) => ({
@@ -79,6 +74,7 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
     references: [projects.id],
   }),
   messages: many(messages),
+  files: many(files),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({

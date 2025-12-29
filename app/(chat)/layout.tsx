@@ -3,7 +3,6 @@ import { AppSidebar } from "@/components/sidebar";
 import { AuthProvider, GuestAuthProvider } from "@/components/auth-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ClientShell } from '@/components/client-shell'
-import { ApiClientProvider } from '@/api/client-provider'
 import { Api } from '@/lib/api'
 
 export default async function Layout({ children }: LayoutProps<'/'>) {
@@ -14,14 +13,12 @@ export default async function Layout({ children }: LayoutProps<'/'>) {
   console.log('Layout session', session?.user)
   return (
     <ClientShell>
-      <ApiClientProvider>
-        <Auth>
-          <SidebarProvider defaultOpen={!isCollapsed}>
-            <AppSidebar />
-            <SidebarInset>{children}</SidebarInset>
-          </SidebarProvider>
-        </Auth>
-      </ApiClientProvider>
+      <Auth>
+        <SidebarProvider defaultOpen={!isCollapsed}>
+          <AppSidebar />
+          <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
+      </Auth>
     </ClientShell>
   );
 }

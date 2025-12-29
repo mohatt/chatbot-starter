@@ -1,5 +1,5 @@
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
-import type { FileUploadRules, UrlUploadOptions } from '@/lib/upload'
+import type { FileUploadRules } from '@/lib/schema'
 
 export interface AppConfig {
   appId: string
@@ -18,12 +18,11 @@ export interface AppConfig {
   fileLoader: FileLoaderOptions
   project: {
     uploads: {
+      images: {
+        rules: FileUploadRules<'png' | 'jpg' | 'webp'>
+      }
       files: {
         rules: FileUploadRules<FileLoaderType>
-      }
-      urls: {
-        rules: FileUploadRules<FileLoaderType>
-        options?: UrlUploadOptions
       }
     }
   }

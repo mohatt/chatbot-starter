@@ -2,6 +2,8 @@
 import { type ReactNode, useEffect } from 'react'
 import { isServer, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+const retryStatuses = [408, 429, 500, 502, 503, 504]
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -9,6 +11,12 @@ function makeQueryClient() {
         // With SSR, we usually want to set some default staleTime
         // above 0 to avoid refetching immediately on the client
         staleTime: 60 * 1000,
+        retry: (failures, error) => {
+          if (error.statusCode && !retryStatuses.includes(error.statusCode)) {
+            return false
+          }
+          return failures < 3
+        },
       },
     },
   })

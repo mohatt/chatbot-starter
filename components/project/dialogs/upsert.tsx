@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUpsertProjectMutation } from '@/api/mutations/projects'
+import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api/mutations/projects'
 import { generateUUID, getProjectUrl } from '@/lib/util'
 import { toast } from 'sonner'
 import {
@@ -9,7 +9,6 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSet,
-  FieldError,
 } from '@/components/ui/field'
 import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Input } from "@/components/ui/input"
@@ -26,7 +25,9 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   const { project, open, onOpenChange } = props;
   const [name, setName] = useState(project?.name ?? '');
   const [prompt, setPrompt] = useState(project?.prompt ?? '');
-  const { data, mutate, reset, error, isPending } = useUpsertProjectMutation()
+  const createMutation = useCreateProjectMutation()
+  const updateMutation = useUpdateProjectMutation()
+  const { mutate, reset, error, isPending } = project ? updateMutation : createMutation
   const router = useRouter()
 
   // handle project object updated due to cache invalidation
@@ -44,27 +45,17 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
         id: project?.id ?? generateUUID(),
         name,
         prompt,
-        files: [],
-        deleteFiles: [],
-        create: !project,
       },
       {
         onSuccess: (result) => {
-          if (result.data) {
-            onOpenChange(false)
-            if(!project) {
-              router.push(getProjectUrl(result.data))
-            }
-            setTimeout(() => {
-              toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
-              if (result.errors.length) {
-                result.errors.forEach(({ field, message }) => {
-                  toast.warning(`${field}: ${message}`)
-                })
-              }
-            }, 100);
-            return
+          onOpenChange(false)
+          if(!project) {
+            router.push(getProjectUrl(result))
           }
+          setTimeout(() => {
+            toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
+          }, 100);
+          return
         },
         onError: (err) => {
           toast.error(err.message)
@@ -118,14 +109,6 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
               )}
             </Field>
           </FieldGroup>
-          {data && !data.data && data?.errors.length && (
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Errors</FieldLabel>
-                <FieldError errors={data.errors} />
-              </Field>
-            </FieldGroup>
-          )}
         </FieldSet>
       </FieldGroup>
     </FormDialog>

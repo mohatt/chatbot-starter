@@ -35,7 +35,7 @@ export class ChatModel extends DbModel {
     }
   }
 
-  async updateByIdForUser(id: string, userId: string, chat: Partial<Pick<ChatRecordInput, 'title' | 'privacy' | 'isTitlePending'>>): Promise<ChatRecord> {
+  async updateByIdForUser(id: string, userId: string, chat: Partial<Pick<ChatRecordInput, 'title' | 'privacy' | 'isTitlePending'>>): Promise<ChatRecord | undefined> {
     try {
       const [updatedChat] = await this.db.update(chats).set(chat).where(
         and(eq(chats.id, id), eq(chats.userId, userId))

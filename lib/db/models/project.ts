@@ -1,13 +1,11 @@
 import { and, desc, eq, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
-import { projects, type ChatProjectRecordFile } from '../schema'
+import { projects } from '../schema'
 import type { ChatsResult } from './chat'
 
 export type ChatProjectRecord = typeof projects.$inferSelect;
 export type ChatProjectRecordInput = Omit<typeof projects.$inferInsert, 'createdAt'>;
-
-export type { ChatProjectRecordFile }
 
 export interface ProjectsResult {
   data: ChatProjectRecord[]
@@ -48,16 +46,16 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async updateById(id: string, project: Partial<Pick<ChatProjectRecordInput, 'name' | 'files' | 'prompt'>>): Promise<ChatProjectRecord> {
+  async updateByIdForUser(id: string, userId: string, project: Partial<Pick<ChatProjectRecordInput, 'name' | 'prompt'>>): Promise<ChatProjectRecord> {
     try {
       const [updatedProject] = await this.db
         .update(projects)
         .set(project)
-        .where(eq(projects.id, id))
-        .returning()
+        .where(and(eq(projects.id, id), eq(projects.userId, userId)))
+        .returning();
       return updatedProject
     } catch (_error) {
-      throw new AppError('bad_request:database', 'Failed to update project')
+      throw new AppError("bad_request:database", "Failed to update project");
     }
   }
 

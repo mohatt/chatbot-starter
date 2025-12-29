@@ -11,7 +11,7 @@ import type { ChatMessage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
-  const { db, ai } = api;
+  const { db, ai, authz } = api;
   const id = validateUUIDv7(params.id)
   const body = validatePostRequest(await request.json())
   const { user } = await session()
@@ -28,7 +28,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     })
   } else {
     const dbChat = await db.chats.findById(id);
-    if(!api.authz.can(user, 'write:chat', dbChat) || dbChat.projectId !== projectId) {
+    if(!authz.can(user, 'write:chat', dbChat) || dbChat.projectId !== projectId) {
       throw new AppError('not_found:chat')
     }
     chat = dbChat
@@ -65,6 +65,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         maxOutputTokens: 800,
         tools: ai.createChatTools({ api, dataStream, chat, project }),
         stopWhen: stepCountIs(5),
+        abortSignal: request.signal,
         experimental_transform: smoothStream({ chunking: "word" }),
         onFinish: (res) => {
           // console.log(JSON.stringify(res.request, null, 2))
@@ -129,7 +130,7 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api
     } catch (err) {
       console.warn('Failed to generate chat title:', id, err);
     }
-    chat = await db.chats.updateByIdForUser(id, user.id, { title, isTitlePending: false });
+    chat = (await db.chats.updateByIdForUser(id, user.id, { title, isTitlePending: false }))!;
   }
 
   return NextResponse.json(chat);

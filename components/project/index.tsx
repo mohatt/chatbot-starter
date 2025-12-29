@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useProjectQuery } from '@/api/queries/projects'
 import { useChatsQuery } from '@/api/queries/chats'
+import { useFilesQuery } from '@/api/queries/files'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Item, ItemActions, ItemTitle } from "@/components/ui/item"
 import {
@@ -42,6 +43,9 @@ export function ProjectIndex({ id }: { id: string }) {
   const { data: project, error: projectError, isLoading: projectLoading } = useProjectQuery({
     variables: { id }
   })
+  const { data: files, error: filesError, isLoading: filesLoading } = useFilesQuery({
+    variables: { projectId: id }
+  })
   const { data: chatsData, error: chatsError, isLoading: chatsLoading } = useChatsQuery({
     variables: { projectId: id }
   })
@@ -49,8 +53,8 @@ export function ProjectIndex({ id }: { id: string }) {
     () => chatsData?.pages.flatMap((page) => page.data) ?? [],
     [chatsData],
   );
-  const isDataLoading = projectLoading || chatsLoading
-  const dataError = projectError || chatsError;
+  const isDataLoading = projectLoading || filesLoading || chatsLoading
+  const dataError = projectError || filesError || chatsError;
 
   if (isDataLoading) {
     return (
@@ -60,7 +64,7 @@ export function ProjectIndex({ id }: { id: string }) {
     )
   }
 
-  if (dataError || !project || !chatsData) {
+  if (dataError || !project || !files || !chatsData) {
     return (
       <ConversationEmptyState
         className='text-destructive'
@@ -88,12 +92,12 @@ export function ProjectIndex({ id }: { id: string }) {
           </ItemTitle>
           <DropdownMenu>
             <ItemActions>
-              {project.files.length ? (
+              {files.length ? (
                 <Button variant="outline" onClick={() => upsertDialog.open(project)}>
                   <FilesIcon />
                   <span>Files</span>
                   <Badge className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums">
-                    {project.files.length}
+                    {files.length}
                   </Badge>
                 </Button>
               ) : (

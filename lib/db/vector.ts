@@ -56,20 +56,20 @@ export class VectorNamespace<Metadata extends Record<string, unknown>> {
 
 export class VectorDb {
   index: Index;
-  content: VectorNamespace<FileLoaderDoc['metadata']>;
+  files: VectorNamespace<FileLoaderDoc['metadata']>;
 
   constructor(env: Env) {
     this.index = Index.fromEnv(env);
-    this.content = new VectorNamespace(this.index, 'content');
+    this.files = new VectorNamespace(this.index, 'files:v1');
   }
 
-  reset(mode: 'content' | 'all') {
-    if (mode === 'all') {
+  reset(namespace: 'files' | 'all') {
+    if (namespace === 'all') {
       return this.index.reset({ all: true })
     }
-    if (mode === 'content') {
-      return this.index.reset({ namespace: mode })
+    if (namespace === 'files') {
+      return this.index.reset({ namespace })
     }
-    throw new Error(`Invalid reset mode: ${String(mode)}`)
+    throw new Error(`Invalid namespace to reset: ${String(namespace)}`)
   }
 }

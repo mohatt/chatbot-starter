@@ -49,6 +49,7 @@
     "@upstash/vector": "^1.2.2",
     "@vercel/analytics": "^1.6.1",
     "@vercel/functions": "^3.3.4",
+    "@vercel/blob": "^2.0.0",
     "@xyflow/react": "^12.10.0",
     "ai": "^5.0.115",
     "better-auth": "^1.4.7",

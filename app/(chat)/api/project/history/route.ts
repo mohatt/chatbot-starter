@@ -15,7 +15,7 @@ export const DELETE = createApiHandler<RouteContext<'/api/project/history'>>(asy
   const { user } = await session()
   const deletedIds = await db.projects.deleteMany({ userId :user.id });
   if (deletedIds.length) {
-    await vectorDb.content.deleteByFilter(`projectId IN ('${deletedIds.join(`', '`)}')`)
+    await vectorDb.files.deleteByFilter(`projectId IN ('${deletedIds.join(`', '`)}')`)
   }
   return NextResponse.json(deletedIds);
 });

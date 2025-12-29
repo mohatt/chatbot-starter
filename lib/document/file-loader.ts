@@ -5,7 +5,7 @@ import { parse as parseCSV } from "csv-parse";
 import { htmlToText } from 'html-to-text'
 import { extractText, getMeta, getDocumentProxy } from 'unpdf'
 import { extractRawText } from 'mammoth'
-import type { FileUpload } from '@/lib/upload'
+import type { FileUpload } from '@/lib/schema'
 import type { DocumentInterface } from './types'
 
 interface FileLoaderTypeDef<Options extends Record<string, any> = {}, Metadata extends Record<string, any> = {}> {
@@ -33,8 +33,7 @@ interface FileLoaderTypeMap {
 export type FileLoaderType = Extract<keyof FileLoaderTypeMap, string>
 
 type FileLoaderDocMap = {
-  [Type in FileLoaderType]: DocumentInterface<FileLoaderTypeMap[Type]['metadata'] & {
-    projectId: string
+  [Type in FileLoaderType]: DocumentInterface<FileLoaderTypeMap[Type]['metadata'] & FileLoaderMetadata & {
     file: {
       id: string
       name: string
@@ -52,11 +51,13 @@ export type FileLoaderResult<Type extends FileLoaderType = FileLoaderType> = {
   tokens: number
 }
 
-export interface FileLoaderMetadata {
-  projectId: string
+export type FileLoaderMetadata = {
+  userId: string
+  chatId?: string
+  projectId?: string
 }
 
-export interface FileLoaderOptions {
+export type FileLoaderOptions = {
   chunks?: BaseChunkOptions
 }
 

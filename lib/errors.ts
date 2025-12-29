@@ -10,6 +10,7 @@ export type ErrorType =
 export type Surface =
   | "project"
   | "chat"
+  | "file"
   | "api"
   | "database"
   | "activate_gateway";
@@ -22,6 +23,7 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   database: "log",
   project: "response",
   chat: "response",
+  file: "response",
   api: "response",
   activate_gateway: "response",
 };

@@ -1,22 +1,22 @@
 import { tool, type ToolSet } from 'ai'
 import { z } from 'zod'
 import { formatFileSize } from '@/lib/util'
-import type { ChatProjectRecordFile } from '@/lib/db'
+import type { FileRecord } from '@/lib/db'
 import type { FileLoaderDoc } from '@/lib/document'
 import type { ChatToolContext } from './types'
 
 export type ListFilesOutput = {
-  files: Pick<ChatProjectRecordFile, 'id' | 'name'>[]
-  getOutput: () => ChatProjectRecordFile[]
+  files: Pick<FileRecord, 'id' | 'url' | 'metadata'>[]
+  getOutput: () => FileRecord[]
 }
 
-export function listFiles({ project }: ChatToolContext) {
+export function listFiles({ project, api }: ChatToolContext) {
   if (!project) {
     return null
   }
   return {
     listFiles: tool({
-      description: 'Lists user-uploaded files and metadata in the current session.',
+      description: 'Lists user-uploaded files and metadata in the current project.',
       inputSchema: z.object({}),
       toModelOutput(result: ListFilesOutput) {
         const fileList = result.getOutput()
@@ -26,11 +26,10 @@ export function listFiles({ project }: ChatToolContext) {
             {
               type: 'text',
               text: [
-                'Files in session:',
-                ...fileList.map(({ id, name, mimeType, size }, i) => {
-                  return `${i + 1}. ${name} (id: ${id}, type: ${mimeType}, size: ${formatFileSize(size)})`
+                ...fileList.map(({ id, url, metadata: { name, mimeType, size} }, i) => {
+                  return `${i + 1}. ${name} (id: ${id}, type: ${mimeType}, size: ${formatFileSize(size)}, url: ${url})`
                 }),
-                '\nYou can refer to file IDs when calling queryFileContents.'
+                '\nYou can refer to file IDs when calling queryFileContents to narrow down query results.'
               ].join('\n')
             }
           ]
@@ -38,9 +37,9 @@ export function listFiles({ project }: ChatToolContext) {
       },
       async execute(): Promise<ListFilesOutput> {
         // console.log('listFiles-tool-call')
-        const { files } = project
+        const files = await api.db.files.findByProject({ projectId: project.id })
         return {
-          files: files.map(({ id, name }) => ({ id, name })),
+          files: files.map(({ id, url, metadata }) => ({ id, url, metadata })),
           getOutput: () => files
         }
       },
@@ -80,7 +79,7 @@ export function queryFileContents({ api, project, dataStream }: ChatToolContext)
         if (fileIds?.length) {
           filter += `AND file.id IN ('${fileIds.join(`', '`)}')`
         }
-        const relevantChunks = await api.vectorDb.content.query(query || 'any', Math.min(10, topK), filter);
+        const relevantChunks = await api.vectorDb.files.query(query || 'any', Math.min(10, topK), filter);
         // console.log('queryFileContents-tool-call', { query, fileIds }, filter)
         return {
           count: relevantChunks.length,
