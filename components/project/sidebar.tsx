@@ -108,6 +108,13 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
                 </div>
               </SidebarMenuItem>
             )}
+            {error && (
+              <SidebarMenuItem>
+                <div className="text-xs text-destructive px-2 py-1">
+                  Failed loading projects.
+                </div>
+              </SidebarMenuItem>
+            )}
             {isFetchingNextPage && (
               <SidebarMenuItem>
                 <SidebarMenuSkeleton showIcon />

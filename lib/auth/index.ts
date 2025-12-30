@@ -10,13 +10,12 @@ export class Auth {
   constructor(
     db: Db,
     env: Pick<Env, 'BETTER_AUTH_SECRET' | 'BETTER_AUTH_URL'>,
-    private readonly request?: NextRequest,
   ) {
     this.client = createAuthClient(db, env)
   }
 
-  async getSession() {
-    return this.client.api.getSession(this.request ?? { headers: await headers() })
+  async getSession(request?: NextRequest) {
+    return this.client.api.getSession(request ?? { headers: await headers() })
   }
 }
 

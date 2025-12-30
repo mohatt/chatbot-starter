@@ -46,7 +46,7 @@ export function billing(db: Db) {
         fields: {
           billingId: {
             type: 'string',
-            required: true,
+            required: false,
             input: false,
             references: {
               model: 'billing',

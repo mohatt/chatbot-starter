@@ -11,7 +11,7 @@ export class Api {
   private static instance?: Api
   readonly env: Env
 
-  private constructor(private readonly request?: NextRequest) {
+  private constructor() {
     this.env = loadEnv()
   }
 
@@ -28,7 +28,7 @@ export class Api {
   }
 
   get auth(): Auth {
-    return this.set('auth', new Auth(this.db, this.env, this.request))
+    return this.set('auth', new Auth(this.db, this.env))
   }
 
   get authz(): Authorizer {
@@ -44,8 +44,8 @@ export class Api {
     return value
   }
 
-  static getInstance(request?: NextRequest) {
-    return this.instance ??= new Api(request)
+  static getInstance() {
+    return this.instance ??= new Api()
   }
 }
 
@@ -60,14 +60,14 @@ export interface ApiHandlerParams<T extends RouteContext<any>> {
 export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>) {
   return async (request: NextRequest, ctx: T): Promise<Response> => {
     try {
-      const api = Api.getInstance(request);
+      const api = Api.getInstance();
       const params = await ctx.params
       return await fn({
         api,
         request,
         params,
         session: async (mode?: 'optional') => {
-          const session = await api.auth.getSession()
+          const session = await api.auth.getSession(request)
           if (!session && mode !== 'optional') {
             throw new AppError('unauthorized:api')
           }

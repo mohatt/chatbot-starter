@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createAuthClient } from "better-auth/react"
 import { anonymousClient } from "better-auth/client/plugins"
+import { useQueryClient } from '@tanstack/react-query'
 import { billingClient } from '@/lib/auth/plugins/billing/client'
 import { AuthUIProvider, useAuthenticate } from "@daveyplate/better-auth-ui"
 import { LoadingDots } from '@/components/loading'
@@ -14,13 +15,19 @@ export const authClient = createAuthClient({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
+
+  const handleSessionChange = useCallback(() => {
+    queryClient.clear()
+    router.refresh()
+  }, [queryClient, router])
+
   return (
     <AuthUIProvider
       authClient={authClient}
       navigate={router.push}
       replace={router.replace}
-      // Clear router cache (protected routes)
-      onSessionChange={router.refresh}
+      onSessionChange={handleSessionChange}
       changeEmail={false}
       deleteUser
       Link={Link}
