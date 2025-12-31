@@ -93,8 +93,11 @@ CREATE TABLE "projects" (
 --> statement-breakpoint
 CREATE TABLE "files" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"type" varchar NOT NULL,
+	"name" varchar(256) NOT NULL,
+	"mimeType" varchar(128) NOT NULL,
+	"size" integer NOT NULL,
 	"metadata" jsonb NOT NULL,
+	"bucket" varchar NOT NULL,
 	"userId" uuid NOT NULL,
 	"projectId" uuid,
 	"chatId" uuid,

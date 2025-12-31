@@ -5,6 +5,7 @@ import { Db } from './db'
 import { VectorDb } from './db/vector'
 import { Auth, type AuthSession } from './auth'
 import { Authorizer } from './authz'
+import { Storage } from './storage'
 import { AppError } from './errors'
 
 export class Api {
@@ -33,6 +34,10 @@ export class Api {
 
   get authz(): Authorizer {
     return this.set('authz', new Authorizer())
+  }
+
+  get storage(): Storage {
+    return this.set('storage', new Storage(this.env))
   }
 
   private set<K extends keyof this, V extends this[K]>(key: K, value: V): V {

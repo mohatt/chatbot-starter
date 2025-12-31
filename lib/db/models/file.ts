@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
 import { files, type FileRecordMetadata } from '../schema'
@@ -20,37 +20,54 @@ export class FileModel extends DbModel {
 
   async findById(id: string): Promise<FileRecord | null> {
     try {
-      const [selectedFile] = await this.db.select().from(files).where(eq(files.id, id));
-      if (!selectedFile) {
-        return null;
-      }
-      return selectedFile;
+      const [selectedFile] = await this.db
+        .select()
+        .from(files)
+        .where(eq(files.id, id));
+      return selectedFile ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to fetch file by id");
     }
   }
 
-  async findByProject({ projectId }: { projectId: string }): Promise<FileRecord[]> {
+  async findMany(filters: { projectId: string } | { ephemeral: boolean }, limit = 50): Promise<FileRecord[]> {
+    const where = 'projectId' in filters
+      ? eq(files.projectId, filters.projectId)
+      : and(isNull(files.projectId), isNull(files.chatId))
+
     try {
-      const rows = await this.db
+      const selectedFiles = await this.db
         .select()
         .from(files)
-        .where(and(eq(files.projectId, projectId)))
+        .where(where)
         .orderBy(desc(files.id))
-        .limit(50)
-      return rows
+        .limit(limit)
+      return selectedFiles
     } catch (_error) {
-      throw new AppError('bad_request:database', 'Failed to fetch project files')
+      throw new AppError('bad_request:database', 'Failed to fetch files')
     }
   }
 
-  async deleteByIdForUser(id: string, userId: string): Promise<FileRecord | undefined> {
+  async updateByIdsForUser(ids: string[], userId: string, values: Pick<FileRecordInput, 'chatId'>): Promise<FileRecord[]> {
+    try {
+      const updatedFiles = await this.db
+        .update(files)
+        .set(values)
+        .where(and(inArray(files.id, ids), eq(files.userId, userId)))
+        .returning();
+      return updatedFiles;
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to update ephemeral files for user");
+    }
+  }
+
+  async deleteByIdForUser(id: string, userId: string): Promise<FileRecord | null> {
     try {
       const [deletedFile] = await this.db
         .delete(files)
         .where(and(eq(files.id, id), eq(files.userId, userId)))
         .returning();
-      return deletedFile;
+      return deletedFile ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to delete user file by id");
     }

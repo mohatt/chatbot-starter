@@ -2,45 +2,26 @@ import z from 'zod'
 import { jsonString, fileUpload, uuidV7 } from '@/lib/schema'
 import { config } from '@/lib/config'
 import { AppError } from '@/lib/errors'
+import { chatStorageMetadataSchema, projectStorageMetadataSchema } from '@/lib/storage/schema'
 
-const baseMetadataSchema = z.object({
-  namespace: z.string(),
-})
-
-const chatMetadataSchema = baseMetadataSchema
+const chatMetadataSchema = chatStorageMetadataSchema
+  .omit({ bucket: true })
   .extend({
-    namespace: z.literal('chat'),
-    chatId: z.uuid({ version: 'v7' }),
+    isEphemeral: z.boolean().default(false),
   })
-  .strict()
 
-const projectMetadataSchema = baseMetadataSchema
-  .extend({
-      namespace: z.literal('project'),
-      projectId: z.uuid({ version: 'v7' }),
-    })
-  .strict()
+const projectMetadataSchema = projectStorageMetadataSchema
+  .omit({ bucket: true })
 
-const userMetadataSchema = baseMetadataSchema
-  .extend({
-    namespace: z.literal('user'),
-  })
-  .strict()
-
-const fileUploadSchema = z.discriminatedUnion('type', [
+const fileUploadSchema = z.discriminatedUnion('bucket', [
   z.strictObject({
-    type: z.literal('avatar'),
     file: fileUpload(config.project.uploads.images.rules),
-    metadata: userMetadataSchema
-  }),
-  z.strictObject({
-    type: z.literal('image'),
-    file: fileUpload(config.project.uploads.images.rules),
+    bucket: z.literal('images'),
     metadata: chatMetadataSchema
   }),
   z.strictObject({
-    type: z.literal('retrieval'),
     file: fileUpload(config.project.uploads.files.rules),
+    bucket: z.literal('retrieval'),
     metadata: z.discriminatedUnion('namespace', [
       chatMetadataSchema,
       projectMetadataSchema,
@@ -53,15 +34,15 @@ export type FileUploadRequest = z.input<typeof fileUploadSchema>
 const formDataFileUploadSchema = z.instanceof(FormData)
   .transform((val) => {
     return {
-      type: val.get('type'),
-      metadata: val.get('metadata'),
       file: val.get('file'),
+      bucket: val.get('bucket'),
+      metadata: val.get('metadata'),
     }
   })
   .pipe(z.object({
-    type: z.string(),
-    metadata: jsonString(z.unknown()),
-    file: z.file()
+    file: z.file(),
+    bucket: z.string(),
+    metadata: jsonString(z.unknown())
   }))
   .pipe(fileUploadSchema)
 

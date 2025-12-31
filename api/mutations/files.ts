@@ -8,9 +8,9 @@ export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],
   mutationFn: async (vars: FileUploadRequest) => {
     const formData = new FormData();
-    formData.append('type', vars.type);
-    formData.append('metadata', JSON.stringify(vars.metadata));
     formData.append('file', vars.file);
+    formData.append('bucket', vars.bucket);
+    formData.append('metadata', JSON.stringify(vars.metadata));
     return fetcher<FileRecord>(`/api/files`, {
       method: 'POST',
       body: formData

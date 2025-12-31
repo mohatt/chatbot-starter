@@ -1,10 +1,9 @@
 import { relations } from 'drizzle-orm'
-import { index, jsonb, pgTable, timestamp, uuid, varchar, text } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgTable, timestamp, uuid, varchar, integer, text } from 'drizzle-orm/pg-core'
 import { chats, projects } from './chat'
 import { users } from './auth'
-import type { FileUpload } from '@/lib/schema'
 
-export type FileRecordMetadata = Pick<FileUpload, 'name' | 'type' | 'mimeType' | 'size'> & {
+export interface FileRecordMetadata {
   retrieval?: {
     vectors: number;
     tokens: number;
@@ -13,8 +12,11 @@ export type FileRecordMetadata = Pick<FileUpload, 'name' | 'type' | 'mimeType' |
 
 export const files = pgTable("files", {
   id: uuid("id").primaryKey().notNull(),
-  type: varchar("type", { enum: ["image", "retrieval", "avatar"] }).notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
+  mimeType: varchar("mimeType", { length: 128 }).notNull(),
+  size: integer("size").notNull(),
   metadata: jsonb("metadata").notNull().$type<FileRecordMetadata>(),
+  bucket: varchar("bucket", { enum: ["images", "retrieval"] }).notNull(),
   userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

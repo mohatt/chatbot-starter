@@ -16,6 +16,7 @@ import { useChatQuery, useChatHistoryQuery } from '@/api/queries/chats'
 import { useNewChatMutation } from '@/api/mutations/chats'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
+import type { PostRequestBody } from '@/app/(chat)/api/chat/[id]/schema'
 
 export function Chat(props: ChatIdProps) {
   const { id, projectId } = props;
@@ -50,16 +51,15 @@ export function Chat(props: ChatIdProps) {
       api: `/api/chat/${id}`,
       fetch: fetchWithOfflineHandler,
       prepareSendMessagesRequest: useEventCallback((request) => {
-        return {
-          body: {
-            message: request.messages.at(-1),
-            timeZone: getTimeZone(),
-            create: !isStoredChat,
-            regenerate: request.trigger === 'regenerate-message',
-            projectId,
-            ...request.body
-          },
+        const body: PostRequestBody = {
+          message: request.messages.at(-1) as any,
+          timeZone: getTimeZone(),
+          createChat: !isStoredChat,
+          regenerate: request.trigger === 'regenerate-message',
+          projectId,
+          ...request.body
         }
+        return { body }
       })
     }),
     onData: useEventCallback(({ type, data }) => {

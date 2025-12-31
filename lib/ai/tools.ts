@@ -6,7 +6,7 @@ import type { FileLoaderDoc } from '@/lib/document'
 import type { ChatToolContext } from './types'
 
 export type ListFilesOutput = {
-  files: Pick<FileRecord, 'id' | 'url' | 'metadata'>[]
+  files: Pick<FileRecord, 'id' | 'url' | 'name' | 'mimeType' | 'size'>[]
   getOutput: () => FileRecord[]
 }
 
@@ -26,7 +26,7 @@ export function listFiles({ project, api }: ChatToolContext) {
             {
               type: 'text',
               text: [
-                ...fileList.map(({ id, url, metadata: { name, mimeType, size} }, i) => {
+                ...fileList.map(({ id, url, name, mimeType, size }, i) => {
                   return `${i + 1}. ${name} (id: ${id}, type: ${mimeType}, size: ${formatFileSize(size)}, url: ${url})`
                 }),
                 '\nYou can refer to file IDs when calling queryFileContents to narrow down query results.'
@@ -37,9 +37,9 @@ export function listFiles({ project, api }: ChatToolContext) {
       },
       async execute(): Promise<ListFilesOutput> {
         // console.log('listFiles-tool-call')
-        const files = await api.db.files.findByProject({ projectId: project.id })
+        const files = await api.db.files.findMany({ projectId: project.id })
         return {
-          files: files.map(({ id, url, metadata }) => ({ id, url, metadata })),
+          files: files.map(({ id, url, name, mimeType, size }) => ({ id, url, name, mimeType, size })),
           getOutput: () => files
         }
       },

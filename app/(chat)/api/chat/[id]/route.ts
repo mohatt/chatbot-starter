@@ -11,21 +11,40 @@ import type { ChatMessage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
-  const { db, ai, authz } = api;
+  const { db, ai, authz, storage } = api;
   const id = validateUUIDv7(params.id)
   const body = validatePostRequest(await request.json())
   const { user } = await session()
-  const { message, projectId, timeZone, regenerate, create } = body;
+  const { message, projectId, timeZone, regenerate, createChat } = body;
   let chat: ChatRecord
-  if (create) {
+  if (createChat) {
+    const fileIds: string[] = []
     chat = await db.chats.create({
       id,
       title: message.parts
-        .map((part) => part.type === 'text' ? part.text : `[File: ${part.name}]`)
+        .map((part) => {
+          if (part.type === 'text') {
+            return part.text
+          }
+          const file = storage.parseUrl(part.url)
+          if (file?.metadata.namespace !== 'chat' || file.metadata.chatId !== id) {
+            throw new AppError('bad_request:chat')
+          }
+          fileIds.push(file.id)
+          return `[File: ${part.name}]`
+        })
         .join('\n'),
       userId: user.id,
       projectId,
     })
+
+    if (fileIds.length > 0) {
+      const updatedFiles = await db.files.updateByIdsForUser(fileIds, user.id, { chatId: id })
+      if (updatedFiles.length !== fileIds.length) {
+        // Guards against file urls from other chats/users being sent
+        throw new AppError('bad_request:chat')
+      }
+    }
   } else {
     const dbChat = await db.chats.findById(id);
     if(!authz.can(user, 'write:chat', dbChat) || dbChat.projectId !== projectId) {

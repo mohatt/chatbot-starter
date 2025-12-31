@@ -1,5 +1,5 @@
 {
-  "id": "31274a06-a07b-4a5b-88d2-3d7322bc57e5",
+  "id": "8d95e98a-75ea-4a57-be58-5db560f6db3b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -844,15 +844,33 @@
           "primaryKey": true,
           "notNull": true
         },
-        "type": {
-          "name": "type",
-          "type": "varchar",
+        "name": {
+          "name": "name",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mimeType": {
+          "name": "mimeType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "metadata": {
           "name": "metadata",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bucket": {
+          "name": "bucket",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },

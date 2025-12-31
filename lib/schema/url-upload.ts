@@ -1,9 +1,8 @@
 import { z } from 'zod'
-import { randomUUID } from 'node:crypto'
 import { posix } from 'node:path'
 import { extension as mimeExtension, lookup as mimeLookup } from 'mime-types'
 import { AsyncCaller, AsyncCallerOptions } from '@/lib/async-caller'
-import { formatFileSize } from '@/lib/util'
+import { formatFileSize, generateUUID } from '@/lib/util'
 import type { FileUpload, FileUploadRules } from './file-upload'
 
 export interface UrlUploadOptions {
@@ -91,7 +90,7 @@ export function urlUpload<Type extends string = string>(rules: FileUploadRules<T
     }
 
     return {
-      id: randomUUID(),
+      id: generateUUID(),
       name: fileName || url,
       url,
       size,

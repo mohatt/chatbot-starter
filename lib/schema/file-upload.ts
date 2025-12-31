@@ -1,10 +1,9 @@
 import { z } from 'zod'
-import { randomUUID, type UUID } from 'node:crypto'
 import { extension as mimeExtension, lookup as mimeLookup } from 'mime-types'
-import { formatFileSize } from '@/lib/util'
+import { formatFileSize, generateUUID } from '@/lib/util'
 
 export interface FileUpload<Type extends string = string> {
-  id: UUID
+  id: string
   name: string
   url?: string
   size: number
@@ -94,7 +93,7 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
     }
 
     return {
-      id: randomUUID(),
+      id: generateUUID(),
       name,
       size,
       mimeType,
@@ -118,4 +117,3 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
       }
     })
 }
-

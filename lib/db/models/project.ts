@@ -28,10 +28,7 @@ export class ChatProjectModel extends DbModel {
   async findById(id: string): Promise<ChatProjectRecord | null> {
     try {
       const [selectedProject] = await this.db.select().from(projects).where(eq(projects.id, id));
-      if (!selectedProject) {
-        return null;
-      }
-      return selectedProject;
+      return selectedProject ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to fetch project by id");
     }
@@ -46,14 +43,14 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async updateByIdForUser(id: string, userId: string, project: Partial<Pick<ChatProjectRecordInput, 'name' | 'prompt'>>): Promise<ChatProjectRecord> {
+  async updateByIdForUser(id: string, userId: string, project: Partial<Pick<ChatProjectRecordInput, 'name' | 'prompt'>>): Promise<ChatProjectRecord | null> {
     try {
       const [updatedProject] = await this.db
         .update(projects)
         .set(project)
         .where(and(eq(projects.id, id), eq(projects.userId, userId)))
         .returning();
-      return updatedProject
+      return updatedProject ?? null
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to update project");
     }

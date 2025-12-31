@@ -7,6 +7,8 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().trim().nonempty(),
   UPSTASH_VECTOR_REST_URL: z.string().trim().nonempty(),
   UPSTASH_VECTOR_REST_TOKEN: z.string().trim().nonempty(),
+  BLOB_READ_WRITE_TOKEN: z.string().trim().nonempty(),
+  BLOB_BASE_URL: z.string().trim().nonempty(),
   HUGGING_FACE_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().optional(),

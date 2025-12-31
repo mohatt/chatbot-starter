@@ -11,12 +11,12 @@ const filePartSchema = z.object({
   type: z.enum(["file"]),
   mediaType: z.string().nonempty().max(32),
   name: z.string().trim().nonempty().max(128),
-  url: z.string().url(),
+  url: z.url(),
 });
 
 const partSchema = z.union([textPartSchema, filePartSchema]);
 
-export const postRequestBodySchema = z.object({
+const postRequestBodySchema = z.object({
   message: z.object({
     id: uuidV7,
     role: z.enum(["user"]),
@@ -24,9 +24,8 @@ export const postRequestBodySchema = z.object({
   }),
   timeZone,
   regenerate: z.boolean().default(false),
-  create: z.boolean().default(false),
+  createChat: z.boolean().default(false),
   projectId: uuidV7.nullable().default(null),
-  // privacy: z.enum(["public", "private"]),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

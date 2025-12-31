@@ -1,87 +1,88 @@
 import { NextResponse } from 'next/server';
 import { createApiHandler } from '@/lib/api'
-import { del, put } from '@vercel/blob';
-import { pick } from 'lodash-es'
 import { config } from '@/lib/config'
-import { FileLoader } from '@/lib/document'
+import { FileLoader, type FileLoaderMetadata } from '@/lib/document'
 import { validatePostRequest, validateGetRequest, validateDeleteRequest } from './schema'
 import { AppError } from '@/lib/errors'
-import type { FileRecordMetadata } from '@/lib/db'
+import type { FileRecordInput } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
-  const { authz, db, vectorDb } = api;
+  const { authz, db, vectorDb, storage } = api;
   const { user } = await session()
   const formData = await request.formData();
-  const { file, type, metadata } = validatePostRequest(formData)
+  const { file, bucket, metadata } = validatePostRequest(formData)
 
-  const pathParts = ['v1', user.id]
+  // External refs passed to file loader and stored in db
+  const fileLoaderMetadata: FileLoaderMetadata = {
+    userId: user.id,
+    projectId: metadata.namespace === 'project' ? metadata.projectId : undefined,
+    chatId: metadata.namespace === 'chat' ? metadata.chatId : undefined,
+  }
+
+  // DB file record input
+  const dbFile: FileRecordInput = {
+    ...fileLoaderMetadata,
+    id: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    size: file.size,
+    storageKey: '',
+    url: '',
+    bucket,
+    metadata: {},
+  }
+
   if (metadata.namespace === 'chat') {
-    const chat = await db.chats.findById(metadata.chatId)
-    if (!authz.can(user, 'write:chat', chat)) {
-      throw new AppError('not_found:chat')
+    if (metadata.isEphemeral) {
+      // Ephemeral chats are not yet persisted to db
+      dbFile.chatId = null
+    } else {
+      const chat = await db.chats.findById(metadata.chatId)
+      if (!authz.can(user, 'write:chat', chat)) {
+        throw new AppError('not_found:file')
+      }
     }
-    pathParts.push('c', metadata.chatId)
   } else if (metadata.namespace === 'project') {
     const project = await db.projects.findById(metadata.projectId)
     if (!authz.can(user, 'write:project', project)) {
-      throw new AppError('not_found:project')
+      throw new AppError('not_found:file')
     }
-    pathParts.push('p', metadata.projectId)
   }
-  pathParts.push(type, `${file.id}.${file.type}`)
 
+  // Cleanup logic
   const cleanupStack: Array<() => Promise<any>> = []
   const cleanup = async () => {
     await Promise.allSettled(cleanupStack.map(async (fn) => { await fn() }))
   }
 
-  const blob = await put(pathParts.join('/'), file.blob, { access: 'public' })
-    .catch((err) => {
-      throw new AppError('internal:file', err)
-    });
-  cleanupStack.unshift(() => del(blob.pathname))
+  // Upload the file to storage
+  const blob = await storage.upload(file, { bucket, ...metadata })
+  dbFile.url = blob.url
+  dbFile.storageKey = blob.pathname
+  cleanupStack.unshift(() => storage.delete(blob.pathname))
 
-  const dbFileRefs = {
-    userId: user.id,
-    projectId: metadata.namespace === 'project' ? metadata.projectId : undefined,
-    chatId: metadata.namespace === 'chat' ? metadata.chatId : undefined,
-  } as const
-  const dbFileMetadata: FileRecordMetadata = pick(file, 'name', 'type', 'size', 'mimeType')
-
-  if (type === 'retrieval') {
+  if (bucket === 'retrieval') {
     try {
-      const loader = new FileLoader(dbFileRefs, config.fileLoader)
+      const loader = new FileLoader(fileLoaderMetadata, config.fileLoader)
       const { docs, tokens } = await loader.load(file)
-
       if (docs.length && tokens) {
         cleanupStack.unshift(() => vectorDb.files.deleteByFilter(`file.id='${file.id}'`))
         await vectorDb.files.insert(docs)
       }
-
-      dbFileMetadata.retrieval = {
-        vectors: docs.length,
-        tokens,
-      }
+      dbFile.metadata.retrieval = { vectors: docs.length, tokens }
     } catch (err) {
       await cleanup()
       throw new AppError('internal:file', err as Error)
     }
   }
 
-  try {
-    const dbFile = await db.files.create({
-      ...dbFileRefs,
-      id: file.id,
-      type,
-      storageKey: blob.pathname,
-      url: blob.url,
-      metadata: dbFileMetadata,
+  const storedFile = await db.files.create(dbFile)
+    .catch(async (err) => {
+      await cleanup()
+      throw err
     })
-    return NextResponse.json(dbFile)
-  } catch (err) {
-    await cleanup()
-    throw new AppError('internal:file', err as Error)
-  }
+
+  return NextResponse.json(storedFile)
 })
 
 export const GET = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
@@ -92,12 +93,12 @@ export const GET = createApiHandler<RouteContext<'/api/files'>>(async ({ api, se
   if (!authz.can(user, 'read:project', project)) {
     throw new AppError('not_found:project')
   }
-  const result = await db.files.findByProject({ projectId });
+  const result = await db.files.findMany({ projectId });
   return NextResponse.json(result);
 })
 
 export const DELETE = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
-  const { db, vectorDb } = api;
+  const { db, storage, vectorDb } = api;
   const { id } = validateDeleteRequest(request.nextUrl.searchParams);
   const { user } = await session()
   const file = await db.files.deleteByIdForUser(id, user.id);
@@ -105,8 +106,8 @@ export const DELETE = createApiHandler<RouteContext<'/api/files'>>(async ({ api,
     throw new AppError('not_found:file')
   }
 
-  const cleanupStack: Array<() => Promise<any>> = [() => del(file.storageKey)]
-  if (file.type === 'retrieval') {
+  const cleanupStack: Array<() => Promise<any>> = [() => storage.delete(file.storageKey)]
+  if (file.bucket === 'retrieval') {
     cleanupStack.unshift(() => vectorDb.files.deleteByFilter(`file.id='${file.id}'`))
   }
   await Promise.allSettled(cleanupStack.map(async (fn) => { await fn() }))
