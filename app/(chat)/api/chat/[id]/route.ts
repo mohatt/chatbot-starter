@@ -71,7 +71,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   }
 
   const { city, country } = geolocation(request)
-  const location = city && country ?  `${city}, ${country}` : 'Dubai, UAE' // @todo change
+  const location = city && country ?  `${city}, ${country}` : 'Dubai, UAE' // @todo change to null
 
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,

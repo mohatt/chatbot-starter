@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react'
+import { useStickToBottomContext } from 'use-stick-to-bottom'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import {
   Message,
   MessageContent,
@@ -24,11 +27,8 @@ import {
 } from "@/components/ui/input-group"
 import { AlertCircleIcon, RefreshCwIcon, CopyIcon, PencilIcon, MessageSquareMoreIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { toast } from 'sonner'
-import { UseChatResult } from './hooks'
-import { cn } from '@/lib/utils'
 import { LoadingDots } from '@/components/loading'
-import { useStickToBottomContext } from 'use-stick-to-bottom'
+import type { UseChatResult } from './hooks'
 
 export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
   isReadonly: boolean;
@@ -42,9 +42,31 @@ export function ChatMessages(props: ChatMessagesProps) {
   return (
     <>
       {messages.map((message, index) => {
+        const { id, parts, role } = message
+        const isEmpty = !parts.length
+        const isAssistant = role === 'assistant'
+
+        if (isEmpty && isAssistant) {
+          if (isStreaming) {
+            return <ThinkingMessage key={id} />
+          }
+
+          if (!error && index === totalCount - 1) {
+            return (
+              <ErrorMessage
+                key={id}
+                error={new Error('Stream aborted')}
+                regenerate={regenerate}
+              />
+            )
+          }
+
+          return null
+        }
+
         return (
           <ChatMessage
-            key={message.id}
+            key={id}
             message={message}
             editorId={editorId}
             isReadonly={isReadonly}
@@ -73,7 +95,6 @@ function ChatMessage(props: ChatMessageProps) {
   const { message, editorId, isReadonly, isStreaming, regenerate, sendMessage, setEditorId } = props
   const { id, role, parts } = message
   const scrollContext = useStickToBottomContext()
-  const isEmpty = !parts.length
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
 
@@ -113,12 +134,6 @@ function ChatMessage(props: ChatMessageProps) {
     navigator.clipboard.writeText(textParts.map(({ text }) => text).join('\n\n'))
       .then(() => toast.success('Copied to clipboard'))
       .catch(() => toast.error('Failed to copy to clipboard'))
-  }
-
-  if (isEmpty && isAssistant) {
-    return isStreaming
-      ? <ThinkingMessage />
-      : <ErrorMessage error={new Error('Stream aborted')} regenerate={regenerate} />
   }
 
   return (
