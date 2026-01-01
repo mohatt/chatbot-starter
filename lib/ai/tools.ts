@@ -37,10 +37,10 @@ export function listFiles({ project, api }: ChatToolContext) {
       },
       async execute(): Promise<ListFilesOutput> {
         // console.log('listFiles-tool-call')
-        const files = await api.db.files.findMany({ projectId: project.id })
+        const { data } = await api.db.files.findMany({ projectId: project.id })
         return {
-          files: files.map(({ id, url, name, mimeType, size }) => ({ id, url, name, mimeType, size })),
-          getOutput: () => files
+          files: data.map(({ id, url, name, mimeType, size }) => ({ id, url, name, mimeType, size })),
+          getOutput: () => data
         }
       },
     })

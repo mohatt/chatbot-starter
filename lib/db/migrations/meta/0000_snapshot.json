@@ -1,5 +1,5 @@
 {
-  "id": "8d95e98a-75ea-4a57-be58-5db560f6db3b",
+  "id": "1e070a2d-9f51-4ab6-9581-0ca173468ca4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -878,7 +878,7 @@
           "name": "userId",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "projectId": {
           "name": "projectId",
@@ -988,7 +988,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "files_projectId_projects_id_fk": {
@@ -1001,7 +1001,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "files_chatId_chats_id_fk": {
@@ -1014,7 +1014,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

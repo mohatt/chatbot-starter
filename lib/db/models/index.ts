@@ -1,3 +1,4 @@
+export type { PaginatedResult } from './base'
 export * from './message'
 export * from './chat'
 export * from './file'

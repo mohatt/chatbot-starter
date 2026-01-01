@@ -40,15 +40,16 @@ function PromptInputAttachmentButton({ disabled }: { disabled?: boolean }) {
 }
 
 export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'stop' | 'status'> {
+  chatId: string;
   input: string
   model: string
   setInput: (value: string) => void
   setModel: (value: string) => void
-  isNew?: boolean
+  isEphemeral?: boolean
 }
 
 export const ChatPrompt = (props: ChatPromptProps) => {
-  const { input, model, setInput, setModel, sendMessage, status } = props;
+  const { chatId, input, model, setInput, setModel, sendMessage, status, isEphemeral } = props;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const handleSubmit = (message: PromptInputMessage) => {
     const text = message.text.trim()
@@ -58,6 +59,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     void sendMessage({ text });
     setInput('');
   };
+  const isSubmitDisabled = !input.trim() || status !== 'ready';
   return (
     <div className="size-full mt-4">
       <PromptInput onSubmit={handleSubmit}>
@@ -97,7 +99,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
               </SelectContent>
             </Select>
           </PromptInputTools>
-          <PromptInputSubmit disabled={!input.trim() || status !== 'ready'} status={status} />
+          <PromptInputSubmit disabled={isSubmitDisabled} status={status} />
         </PromptInputFooter>
       </PromptInput>
     </div>

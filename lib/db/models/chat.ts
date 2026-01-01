@@ -1,15 +1,10 @@
 import { and, desc, eq, lt, isNull } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
-import { DbModel } from './base'
+import { DbModel, type PaginatedResult } from './base'
 import { chats } from '../schema'
 
 export type ChatRecord = typeof chats.$inferSelect;
 export type ChatRecordInput = Omit<typeof chats.$inferInsert, 'createdAt'>;
-
-export interface ChatsResult {
-  data: ChatRecord[]
-  nextCursor?: string | null
-}
 
 export class ChatModel extends DbModel {
   readonly schema = chats;
@@ -75,7 +70,7 @@ export class ChatModel extends DbModel {
     }
   }
 
-  async findMany({ userId, projectId }: { userId: string; projectId?: string | null }, limit: number, cursor?: string): Promise<ChatsResult> {
+  async findMany({ userId, projectId }: { userId: string; projectId?: string | null }, limit: number, cursor?: string): Promise<PaginatedResult<ChatRecord>> {
     try {
       const rows = await this.db
         .select()

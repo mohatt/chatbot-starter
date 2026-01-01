@@ -1,10 +1,10 @@
-import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, or, desc, eq, inArray, isNull, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
-import { DbModel } from './base'
+import { DbModel, type PaginatedResult } from './base'
 import { files, type FileRecordMetadata } from '../schema'
 
 export type FileRecord = typeof files.$inferSelect;
-export type FileRecordInput = Omit<typeof files.$inferInsert, 'createdAt'>;
+export type FileRecordInput = Omit<typeof files.$inferInsert, 'createdAt'> & { userId: string };
 
 export class FileModel extends DbModel {
   readonly schema = files;
@@ -30,19 +30,24 @@ export class FileModel extends DbModel {
     }
   }
 
-  async findMany(filters: { projectId: string } | { ephemeral: boolean }, limit = 50): Promise<FileRecord[]> {
+  async findMany(filters: { projectId: string } | { orphan: boolean }, limit = 50, cursor?: string): Promise<PaginatedResult<FileRecord>> {
     const where = 'projectId' in filters
       ? eq(files.projectId, filters.projectId)
-      : and(isNull(files.projectId), isNull(files.chatId))
+      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.chatId)))
 
     try {
-      const selectedFiles = await this.db
+      const rows = await this.db
         .select()
         .from(files)
-        .where(where)
+        .where(and(where, cursor ? lt(files.id, cursor) : undefined))
         .orderBy(desc(files.id))
-        .limit(limit)
-      return selectedFiles
+        .limit(limit + 1)
+      const hasMore = rows.length > limit
+      const data = hasMore ? rows.slice(0, limit) : rows
+      return {
+        data,
+        nextCursor: hasMore ? data[data.length - 1].id : null,
+      }
     } catch (_error) {
       throw new AppError('bad_request:database', 'Failed to fetch files')
     }

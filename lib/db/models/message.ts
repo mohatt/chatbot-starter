@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, lt } from 'drizzle-orm'
 import { isTextUIPart, isFileUIPart, isDataUIPart, type UIMessage } from 'ai'
 import { AppError } from '@/lib/errors'
-import { DbModel } from './base'
+import { DbModel, type PaginatedResult } from './base'
 import { messages } from '../schema'
 
 export type ChatMessageRecord = typeof messages.$inferSelect;
@@ -11,10 +11,7 @@ export interface ChatMessageMetadata {
   createdAt: string
 }
 
-export interface ChatMessagesResult {
-  data: UIMessage<ChatMessageMetadata, Record<string, unknown>, {}>[]
-  nextCursor?: string | null
-}
+export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, unknown>, {}>;
 
 export class ChatMessageModel extends DbModel {
   readonly schema = messages;
@@ -28,7 +25,7 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  async findMany(chatId: string, limit: number, cursor?: string): Promise<ChatMessagesResult> {
+  async findMany(chatId: string, limit: number, cursor?: string): Promise<PaginatedResult<ChatUIMessageRecord>> {
     try {
       const data = await this.db.select()
         .from(messages)
@@ -87,7 +84,7 @@ export class ChatMessageModel extends DbModel {
     }).filter(Boolean)
   }
 
-  private toUIMessages(dbMessages: ChatMessageRecord[]): ChatMessagesResult['data'] {
+  private toUIMessages(dbMessages: ChatMessageRecord[]): ChatUIMessageRecord[] {
     return dbMessages.map(({ chatId, createdAt, ...message }) => ({ ...message, metadata: { createdAt: createdAt.toISOString() } }))
   }
 }

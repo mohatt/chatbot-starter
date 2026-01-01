@@ -8,3 +8,8 @@ export abstract class DbModel<S extends TableConfig = any> {
   abstract readonly schema: PgTable<S>;
   constructor(protected readonly db: DbClient) {}
 }
+
+export interface PaginatedResult<T> {
+  readonly data: T[];
+  readonly nextCursor?: string | null
+}

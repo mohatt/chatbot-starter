@@ -31,7 +31,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
             throw new AppError('bad_request:chat')
           }
           fileIds.push(file.id)
-          return `[File: ${part.name}]`
+          return `[File: ${part.filename}]`
         })
         .join('\n'),
       userId: user.id,

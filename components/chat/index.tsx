@@ -165,6 +165,7 @@ export function Chat(props: ChatIdProps) {
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
+            chatId={id}
             input={input}
             model={model}
             setInput={setInput}
@@ -172,6 +173,7 @@ export function Chat(props: ChatIdProps) {
             sendMessage={sendMessageWithScroll}
             stop={stop}
             status={isDataLoading ? 'submitted' : status}
+            isEphemeral={!isStoredChat}
           />
         </div>
       </div>

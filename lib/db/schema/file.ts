@@ -18,12 +18,11 @@ export const files = pgTable("files", {
   metadata: jsonb("metadata").notNull().$type<FileRecordMetadata>(),
   bucket: varchar("bucket", { enum: ["images", "retrieval"] }).notNull(),
   userId: uuid("userId")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  projectId: uuid("projectId") // project specific files
-    .references(() => projects.id, { onDelete: "cascade" }),
-  chatId: uuid("chatId") // Chat specific files
-    .references(() => chats.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "set null" }),
+  projectId: uuid("projectId")
+    .references(() => projects.id, { onDelete: "set null" }),
+  chatId: uuid("chatId")
+    .references(() => chats.id, { onDelete: "set null" }),
   storageKey: varchar("storageKey", { length: 256 }).notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -1,5 +1,13 @@
-import { useState } from 'react'
-import { Message, MessageContent, MessageResponse, MessageActions, MessageAction } from '@/components/ai-elements/message';
+import { useMemo, useState } from 'react'
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+  MessageActions,
+  MessageAction,
+  MessageAttachments,
+  MessageAttachment,
+} from '@/components/ai-elements/message'
 import {
   Item,
   ItemActions,
@@ -68,21 +76,52 @@ function ChatMessage(props: ChatMessageProps) {
   const isEmpty = !parts.length
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
-  if (isEmpty && isAssistant) {
-    return isStreaming ? <ThinkingMessage /> : null
-  }
 
+  const { groupedParts, textParts } = useMemo(() => {
+    type Part = typeof message['parts'][number]
+    type FilePart = Extract<Part, { type: 'file' }>
+    type TextPart = Extract<Part, { type: 'text' }>
+    const $newParts: Array<Exclude<Part, { type: 'file' }> | { type: 'file', group: FilePart[] }> = []
+    const $textParts: TextPart[] = []
+
+    let filesGroup: FilePart[] = []
+    const groupFiles = () => {
+      if (!filesGroup.length) return
+      $newParts.push({ type: 'file', group: filesGroup })
+      filesGroup = []
+    }
+
+    for (const part of parts) {
+      if (part.type === 'file') {
+        filesGroup.push(part)
+        continue
+      }
+      groupFiles()
+      if (part.type === 'text') {
+        $textParts.push(part)
+      }
+      $newParts.push(part)
+    }
+    groupFiles()
+
+    return { groupedParts: $newParts, textParts: $textParts }
+  }, [parts])
+
+  const hasTextParts = textParts.length > 0
   const handleCopy = () => {
-    const textPart = parts.find((part) => part.type == 'text')
-    if (!textPart) return
-    navigator.clipboard.writeText(textPart.text)
+    if (!hasTextParts) return
+    navigator.clipboard.writeText(textParts.map(({ text }) => text).join('\n\n'))
       .then(() => toast.success('Copied to clipboard'))
       .catch(() => toast.error('Failed to copy to clipboard'))
   }
 
+  if (isEmpty && isAssistant) {
+    return isStreaming ? <ThinkingMessage /> : null
+  }
+
   return (
     <Message from={role} className={cn('justify-start', (isAssistant || isEditMode) && 'max-w-full')}>
-      {parts.map((part, i) => {
+      {groupedParts.map((part, i) => {
         switch (part.type) {
           case 'text':
             return isEditMode ? (
@@ -112,20 +151,30 @@ function ChatMessage(props: ChatMessageProps) {
                 </MessageResponse>
               </MessageContent>
             );
+          case 'file':
+            return (
+              <MessageAttachments key={`${i}-files`}>
+                {part.group.map((filePart, j) => (
+                  <MessageAttachment key={`${i}-file-${j}`} data={filePart} />
+                ))}
+              </MessageAttachments>
+            )
           default:
             return null;
         }
       })}
       {!isStreaming && !isEditMode && (
         <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
-          <MessageAction
-            onClick={handleCopy}
-            label="Copy"
-            title="Copy"
-            size='icon-sm'
-          >
-            <CopyIcon className="size-3.5" />
-          </MessageAction>
+          {hasTextParts && (
+            <MessageAction
+              onClick={handleCopy}
+              label="Copy"
+              title="Copy"
+              size='icon-sm'
+            >
+              <CopyIcon className="size-3.5" />
+            </MessageAction>
+          )}
           {!isReadonly && (
             isAssistant ? (
               <>
@@ -140,18 +189,20 @@ function ChatMessage(props: ChatMessageProps) {
               </>
             ) : (
               <>
-                <MessageAction
-                  onClick={() => {
-                    // prevent auto-scroll to bottom when editor is opened
-                    scrollContext.stopScroll()
-                    setEditorId(id)
-                  }}
-                  label="Edit"
-                  title="Edit"
-                  size='icon-sm'
-                >
-                  <PencilIcon className="size-3.5" />
-                </MessageAction>
+                {hasTextParts && (
+                  <MessageAction
+                    onClick={() => {
+                      // prevent auto-scroll to bottom when editor is opened
+                      scrollContext.stopScroll()
+                      setEditorId(id)
+                    }}
+                    label="Edit"
+                    title="Edit"
+                    size='icon-sm'
+                  >
+                    <PencilIcon className="size-3.5" />
+                  </MessageAction>
+                )}
               </>
             )
           )}

@@ -53,6 +53,7 @@ export function NewChat(props: NewChatProps) {
         </div>
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
+            chatId={props.id}
             input={input}
             model={model}
             setInput={setInput}
@@ -60,7 +61,7 @@ export function NewChat(props: NewChatProps) {
             sendMessage={sendMessage}
             stop={async () => {}}
             status={query ? 'submitted' : 'ready'}
-            isNew
+            isEphemeral
           />
         </div>
       </div>

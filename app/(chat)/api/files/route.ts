@@ -94,7 +94,7 @@ export const GET = createApiHandler<RouteContext<'/api/files'>>(async ({ api, se
     throw new AppError('not_found:project')
   }
   const result = await db.files.findMany({ projectId });
-  return NextResponse.json(result);
+  return NextResponse.json(result.data);
 })
 
 export const DELETE = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {

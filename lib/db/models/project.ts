@@ -1,25 +1,15 @@
 import { and, desc, eq, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
-import { DbModel } from './base'
+import { DbModel, type PaginatedResult } from './base'
 import { projects } from '../schema'
-import type { ChatsResult } from './chat'
+import type { ChatRecord } from './chat'
 
 export type ChatProjectRecord = typeof projects.$inferSelect;
 export type ChatProjectRecordInput = Omit<typeof projects.$inferInsert, 'createdAt'>;
 
-export interface ProjectsResult {
-  data: ChatProjectRecord[]
-  nextCursor?: string | null
-}
-
 export interface ChatsByProjectRecord {
   project: ChatProjectRecord
-  chats: ChatsResult
-}
-
-export interface ChatsByProjectResult {
-  data: ChatsByProjectRecord[]
-  nextCursor?: string | null
+  chats: PaginatedResult<ChatRecord>
 }
 
 export class ChatProjectModel extends DbModel {
@@ -77,7 +67,7 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async findMany({ userId }: { userId: string }, limit: number, cursor?: string): Promise<ProjectsResult> {
+  async findMany({ userId }: { userId: string }, limit: number, cursor?: string): Promise<PaginatedResult<ChatProjectRecord>> {
     try {
       const rows = await this.db
         .select()
@@ -101,7 +91,7 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async findManyWithChats({ userId }: { userId: string }, limit: number, chatsLimit: number, cursor?: string): Promise<ChatsByProjectResult> {
+  async findManyWithChats({ userId }: { userId: string }, limit: number, chatsLimit: number, cursor?: string): Promise<PaginatedResult<ChatsByProjectRecord>> {
     try {
       const projectRows = await this.db.query.projects.findMany({
         where: (fields, $) =>

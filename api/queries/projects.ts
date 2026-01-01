@@ -1,6 +1,6 @@
 import { createInfiniteQuery, createQuery } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
-import type { ChatProjectRecord, ProjectsResult } from '@/lib/db'
+import type { ChatProjectRecord, PaginatedResult } from '@/lib/db'
 
 export const useProjectQuery = createQuery({
   queryKey: ['project'],
@@ -14,7 +14,7 @@ export const useProjectsQuery = createInfiniteQuery({
     const query = new URLSearchParams({ limit: String(5) });
     if (pageParam) query.set('cursor', pageParam);
     const url = `/api/project/history${query.size > 0 ? `?${query.toString()}` : ''}`;
-    const result = await fetcher<ProjectsResult>(url)
+    const result = await fetcher<PaginatedResult<ChatProjectRecord>>(url)
     for (const project of result.data) {
       client.setQueryData(useProjectQuery.getKey({ id: project.id }), project)
     }
