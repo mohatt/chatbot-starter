@@ -116,7 +116,9 @@ function ChatMessage(props: ChatMessageProps) {
   }
 
   if (isEmpty && isAssistant) {
-    return isStreaming ? <ThinkingMessage /> : null
+    return isStreaming
+      ? <ThinkingMessage />
+      : <ErrorMessage error={new Error('Stream aborted')} regenerate={regenerate} />
   }
 
   return (
