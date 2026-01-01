@@ -42,11 +42,8 @@ export function ChatMessages(props: ChatMessagesProps) {
   return (
     <>
       {messages.map((message, index) => {
-        const { id, parts, role } = message
-        const isEmpty = !parts.length
-        const isAssistant = role === 'assistant'
-
-        if (isEmpty && isAssistant) {
+        const { id, role, parts } = message
+        if (!parts.length && role === 'assistant') {
           if (isStreaming) {
             return <ThinkingMessage key={id} />
           }

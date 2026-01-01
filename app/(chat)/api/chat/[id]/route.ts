@@ -66,7 +66,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   if (chat.projectId) {
     project = await db.projects.findById(chat.projectId)
     if(!project) {
-      throw new AppError('internal:chat', 'The project associated with this chat no longer exists.')
+      throw new AppError('internal:chat')
     }
   }
 

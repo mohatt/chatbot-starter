@@ -60,12 +60,12 @@ export class AppError extends Error {
       });
 
       return Response.json(
-        { code: "", message: "Something went wrong. Please try again later." },
+        { code, message: "Something went wrong. Please try again later." },
         { status: statusCode }
       );
     }
 
-    return Response.json({ code, message, cause: String(cause) }, { status: statusCode });
+    return Response.json({ code, message, cause: cause != null ? String(cause) : undefined }, { status: statusCode });
   }
 }
 

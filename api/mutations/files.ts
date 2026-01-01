@@ -2,7 +2,7 @@ import { createMutation } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
 import { useFilesQuery } from '../queries/files'
 import type { FileRecord } from '@/lib/db'
-import type { FileUploadRequest } from '@/app/(chat)/api/files/schema'
+import type { FileUploadRequest } from '@/app/(core)/api/files/schema'
 
 export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],

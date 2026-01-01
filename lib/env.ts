@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   NODE_ENV: z.string().optional(),
+  CRON_SECRET: z.string().trim().nonempty(),
   POSTGRES_URL: z.string().trim().nonempty(),
   BETTER_AUTH_SECRET: z.string().trim().nonempty(),
   BETTER_AUTH_URL: z.string().trim().nonempty(),
