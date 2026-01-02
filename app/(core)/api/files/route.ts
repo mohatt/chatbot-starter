@@ -33,8 +33,11 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
   }
 
   if (metadata.namespace === 'chat') {
+    // We set only chatId when the chat endpoint is called, if not called,
+    // the file is considered orphan and will be removed during the next cleanup run
+    dbFile.chatId = null
+    // Make sure the user has access to existing chats, non-existing chats are considered new
     const chat = await db.chats.findById(metadata.chatId)
-    // Ignore checking non-existing chats
     if (chat && !authz.can(user, 'write:chat', chat)) {
       throw new AppError('not_found:file')
     }
