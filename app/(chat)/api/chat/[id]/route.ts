@@ -16,41 +16,44 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const body = validatePostRequest(await request.json())
   const { user } = await session()
   const { message, projectId, timeZone, regenerate, createChat } = body;
+  const messageText: string[] = []
+  const messageFiles: string[] = []
+  for (const part of message.parts) {
+    if (part.type === 'text') {
+      messageText.push(part.text)
+      continue
+    }
+    const file = storage.parseUrl(part.url)
+    if (file?.metadata.namespace !== 'chat' || file.metadata.chatId !== id) {
+      throw new AppError('bad_request:chat')
+    }
+    messageFiles.push(file.id)
+    messageText.push(`[File: ${part.filename}`)
+  }
+
   let chat: ChatRecord
   if (createChat) {
-    const fileIds: string[] = []
     chat = await db.chats.create({
       id,
-      title: message.parts
-        .map((part) => {
-          if (part.type === 'text') {
-            return part.text
-          }
-          const file = storage.parseUrl(part.url)
-          if (file?.metadata.namespace !== 'chat' || file.metadata.chatId !== id) {
-            throw new AppError('bad_request:chat')
-          }
-          fileIds.push(file.id)
-          return `[File: ${part.filename}]`
-        })
-        .join('\n'),
+      title: messageText.join('\n'),
       userId: user.id,
       projectId,
     })
-
-    if (fileIds.length > 0) {
-      const updatedFiles = await db.files.updateByIdsForUser(fileIds, user.id, { chatId: id })
-      if (updatedFiles.length !== fileIds.length) {
-        // Guards against file urls from other chats/users being sent
-        throw new AppError('bad_request:chat')
-      }
-    }
   } else {
     const dbChat = await db.chats.findById(id);
     if(!authz.can(user, 'write:chat', dbChat) || dbChat.projectId !== projectId) {
       throw new AppError('not_found:chat')
     }
     chat = dbChat
+  }
+
+  // Update attached files if any
+  if (messageFiles.length > 0) {
+    const updatedFiles = await db.files.updateByIdsForUser(messageFiles, user.id, { chatId: id })
+    if (updatedFiles.length !== messageFiles.length) {
+      // Guards against file urls from other chats/users being sent
+      throw new AppError('bad_request:chat')
+    }
   }
 
   if (regenerate) {

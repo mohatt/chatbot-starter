@@ -6,9 +6,6 @@ import { chatStorageMetadataSchema, projectStorageMetadataSchema } from '@/lib/s
 
 const chatMetadataSchema = chatStorageMetadataSchema
   .omit({ bucket: true })
-  .extend({
-    isEphemeral: z.boolean().default(false),
-  })
 
 const projectMetadataSchema = projectStorageMetadataSchema
   .omit({ bucket: true })

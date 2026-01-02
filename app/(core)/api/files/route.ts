@@ -33,14 +33,10 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
   }
 
   if (metadata.namespace === 'chat') {
-    if (metadata.isEphemeral) {
-      // Ephemeral chats are not yet persisted to db
-      dbFile.chatId = null
-    } else {
-      const chat = await db.chats.findById(metadata.chatId)
-      if (!authz.can(user, 'write:chat', chat)) {
-        throw new AppError('not_found:file')
-      }
+    const chat = await db.chats.findById(metadata.chatId)
+    // Ignore checking non-existing chats
+    if (chat && !authz.can(user, 'write:chat', chat)) {
+      throw new AppError('not_found:file')
     }
   } else if (metadata.namespace === 'project') {
     const project = await db.projects.findById(metadata.projectId)
