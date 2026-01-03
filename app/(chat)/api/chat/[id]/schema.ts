@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { config } from '@/lib/config'
 import { uuidV7, timeZone } from '@/lib/schema'
 
 const textPartSchema = z.object({
@@ -19,7 +20,9 @@ export const postRequestBodySchema = z.object({
   message: z.object({
     id: uuidV7,
     role: z.enum(["user"]),
-    parts: z.array(messagePartSchema).nonempty().max(10),
+    parts: z.array(messagePartSchema)
+      .nonempty()
+      .max(config.chat.message.maxParts),
   }),
   timeZone,
   regenerate: z.boolean().default(false),

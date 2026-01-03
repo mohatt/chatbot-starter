@@ -14,6 +14,10 @@ export const config = {
       fallback: 'New Chat',
       maxGeneratedLength: 40
     },
+    message: {
+      maxParts: 10,
+      maxFileParts: 3,
+    },
     history: {
       defaultLimit: 100,
       maxLimit: 100

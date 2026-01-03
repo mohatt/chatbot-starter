@@ -30,6 +30,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     messageText.push(`[File: ${part.filename}`)
   }
 
+  if (messageFiles.length > config.chat.message.maxFileParts) {
+    throw new AppError('bad_request:chat')
+  }
+
   let chat: ChatRecord
   if (createChat) {
     chat = await db.chats.create({

@@ -10,6 +10,10 @@ export interface AppConfig {
       fallback: string,
       maxGeneratedLength: number
     }
+    message: {
+      maxParts: number
+      maxFileParts: number
+    }
     history: {
       defaultLimit: number
       maxLimit: number
