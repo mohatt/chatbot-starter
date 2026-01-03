@@ -7,57 +7,51 @@ export type ErrorType =
   | "rate_limit"
   | "offline";
 
-export type Surface =
+export type ErrorNamespace =
   | "project"
   | "chat"
   | "file"
   | "api"
-  | "database"
-  | "activate_gateway";
+  | "database";
 
-export type ErrorCode = `${ErrorType}:${Surface}`;
+export type ErrorCode = `${ErrorType}:${ErrorNamespace}`;
 
 export type ErrorVisibility = "response" | "log" | "none";
 
-export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
+export const visibilityByNamespace: Record<ErrorNamespace, ErrorVisibility> = {
   database: "log",
   project: "response",
   chat: "response",
   file: "response",
   api: "response",
-  activate_gateway: "response",
 };
 
 export class AppError extends Error {
   type: ErrorType;
   cause?: Error | string;
-  surface: Surface;
+  namespace: ErrorNamespace;
   statusCode: number;
 
   constructor(errorCode: ErrorCode, cause?: Error | string) {
     super();
 
-    const [type, surface] = errorCode.split(":");
+    const [type, namespace] = errorCode.split(":");
 
     this.type = type as ErrorType;
     this.cause = cause;
-    this.surface = surface as Surface;
+    this.namespace = namespace as ErrorNamespace;
     this.message = getMessageByErrorCode(errorCode);
     this.statusCode = getStatusCodeByType(this.type);
   }
 
   toResponse() {
-    const code: ErrorCode = `${this.type}:${this.surface}`;
-    const visibility = visibilityBySurface[this.surface];
+    const code: ErrorCode = `${this.type}:${this.namespace}`;
+    const visibility = visibilityByNamespace[this.namespace];
 
     const { message, cause, statusCode } = this;
 
     if (this.type === "internal" || visibility === "log") {
-      console.error({
-        code,
-        message,
-        cause,
-      });
+      console.error({ code, message, cause });
 
       return Response.json(
         { code, message: "Something went wrong. Please try again later." },
@@ -65,7 +59,7 @@ export class AppError extends Error {
       );
     }
 
-    return Response.json({ code, message, cause: cause != null ? String(cause) : undefined }, { status: statusCode });
+    return Response.json({ code, message, cause }, { status: statusCode });
   }
 }
 
@@ -77,9 +71,6 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
   switch (errorCode) {
     case "bad_request:api":
       return "The request couldn't be processed. Please check your input and try again.";
-
-    case "bad_request:activate_gateway":
-      return "AI Gateway requires a valid credit card on file to service requests. Please visit https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card to add a card and unlock your free credits.";
 
     case "rate_limit:chat":
       return "You have exceeded your maximum number of messages for the day. Please try again later.";

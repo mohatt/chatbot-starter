@@ -2,11 +2,11 @@ import { createMutation } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
 import { useFilesQuery } from '../queries/files'
 import type { FileRecord } from '@/lib/db'
-import type { FileUploadRequest } from '@/app/(core)/api/files/schema'
+import type { PostRequestBody } from '@/app/(core)/api/files/schema'
 
 export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],
-  mutationFn: async (vars: FileUploadRequest) => {
+  mutationFn: async (vars: PostRequestBody) => {
     const formData = new FormData();
     formData.append('file', vars.file);
     formData.append('bucket', vars.bucket);

@@ -11,5 +11,5 @@ export abstract class DbModel<S extends TableConfig = any> {
 
 export interface PaginatedResult<T> {
   readonly data: T[];
-  readonly nextCursor?: string | null
+  readonly nextCursor: string | null
 }

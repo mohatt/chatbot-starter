@@ -30,7 +30,7 @@ export class FileModel extends DbModel {
     }
   }
 
-  async findMany(filters: { projectId: string } | { orphan: boolean }, limit = 50, cursor?: string): Promise<PaginatedResult<FileRecord>> {
+  async findMany(filters: { projectId: string } | { orphan: boolean }, limit = 50, cursor?: string | null): Promise<PaginatedResult<FileRecord>> {
     const where = 'projectId' in filters
       ? eq(files.projectId, filters.projectId)
       : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.chatId)))
@@ -39,7 +39,7 @@ export class FileModel extends DbModel {
       const rows = await this.db
         .select()
         .from(files)
-        .where(and(where, cursor ? lt(files.id, cursor) : undefined))
+        .where(and(where, cursor != null ? lt(files.id, cursor) : undefined))
         .orderBy(desc(files.id))
         .limit(limit + 1)
       const hasMore = rows.length > limit
@@ -75,6 +75,18 @@ export class FileModel extends DbModel {
       return deletedFile ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to delete user file by id");
+    }
+  }
+
+  async deleteByIds(ids: string[]): Promise<string[]> {
+    try {
+      const deletedRows = await this.db
+        .delete(files)
+        .where(inArray(files.id, ids))
+        .returning({ id: files.id })
+      return deletedRows.map((row) => row.id)
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to batch delete files by ids");
     }
   }
 }

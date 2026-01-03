@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { z } from 'zod'
 import { loadEnv, type Env } from './env'
 import { AI } from './ai'
 import { Db } from './db'
@@ -6,7 +7,7 @@ import { VectorDb } from './db/vector'
 import { Auth, type AuthSession } from './auth'
 import { Authorizer } from './authz'
 import { Storage } from './storage'
-import { AppError } from './errors'
+import { AppError, type ErrorNamespace } from './errors'
 
 export class Api {
   private static instance?: Api
@@ -62,7 +63,12 @@ export interface ApiHandlerParams<T extends RouteContext<any>> {
   session(mode: 'optional'): Promise<AuthSession | null>
 }
 
-export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>) {
+export interface ApiHandlerOptions {
+  namespace?: ErrorNamespace
+}
+
+export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>, options?: ApiHandlerOptions) {
+  const ns = options?.namespace ?? 'api'
   return async (request: NextRequest, ctx: T): Promise<Response> => {
     try {
       const api = Api.getInstance();
@@ -74,7 +80,7 @@ export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHa
         session: async (mode?: 'optional') => {
           const session = await api.auth.getSession(request)
           if (!session && mode !== 'optional') {
-            throw new AppError('unauthorized:api')
+            throw new AppError(`unauthorized:${ns}`)
           }
           return session as AuthSession
         }
@@ -83,7 +89,10 @@ export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHa
       if (error instanceof AppError) {
         return error.toResponse();
       }
-      return new AppError('internal:api', error as Error).toResponse()
+      if (error instanceof z.ZodError) {
+        return new AppError(`bad_request:${ns}`, error.issues[0].message).toResponse()
+      }
+      return new AppError(`internal:${ns}`, error as Error).toResponse()
     }
   }
 }

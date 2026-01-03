@@ -1,7 +1,6 @@
-import z from 'zod'
+import { z } from 'zod'
 import { jsonString, fileUpload, uuidV7 } from '@/lib/schema'
 import { config } from '@/lib/config'
-import { AppError } from '@/lib/errors'
 import { chatStorageMetadataSchema, projectStorageMetadataSchema } from '@/lib/storage/schema'
 
 const chatMetadataSchema = chatStorageMetadataSchema
@@ -26,9 +25,9 @@ const fileUploadSchema = z.discriminatedUnion('bucket', [
   }),
 ])
 
-export type FileUploadRequest = z.input<typeof fileUploadSchema>
+export type PostRequestBody = z.input<typeof fileUploadSchema>
 
-const formDataFileUploadSchema = z.instanceof(FormData)
+export const postRequestBodySchema = z.instanceof(FormData)
   .transform((val) => {
     return {
       file: val.get('file'),
@@ -45,36 +44,8 @@ const formDataFileUploadSchema = z.instanceof(FormData)
 
 export const getRequestBodySchema = z.object({
   projectId: uuidV7,
-}).strict();
+});
 
 export const deleteRequestBodySchema = z.object({
   id: uuidV7,
-}).strict();
-
-export function validatePostRequest(formData: FormData) {
-  const result = formDataFileUploadSchema.safeParse(formData)
-  if (!result.success) {
-    throw new AppError('bad_request:file', result.error)
-  }
-  return result.data
-}
-
-export function validateGetRequest(params: URLSearchParams) {
-  const result = getRequestBodySchema.safeParse({
-    projectId: params.get('projectId') || undefined,
-  })
-  if (!result.success) {
-    throw new AppError('bad_request:file', result.error)
-  }
-  return result.data
-}
-
-export function validateDeleteRequest(params: URLSearchParams) {
-  const result = deleteRequestBodySchema.safeParse({
-    id: params.get('id') || undefined,
-  })
-  if (!result.success) {
-    throw new AppError('bad_request:file', result.error)
-  }
-  return result.data
-}
+});
