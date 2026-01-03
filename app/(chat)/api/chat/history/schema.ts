@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { AppError } from '@/lib/errors'
 import { uuidV7 } from '@/lib/schema'
 
 export const getRequestBodySchema = z.object({
@@ -14,32 +13,10 @@ export const getRequestBodySchema = z.object({
     .default(25),
 });
 
-export type GetRequestBody = z.infer<typeof getRequestBodySchema>;
-
-export function validateGetRequest(params: URLSearchParams) {
-  const result = getRequestBodySchema.safeParse({
-    projectId: params.get('projectId') || undefined,
-    cursor: params.get('cursor') || undefined,
-    limit: params.get('limit') || undefined,
-  })
-  if (!result.success) {
-    throw new AppError('bad_request:chat')
-  }
-  return result.data
-}
+export type GetRequestBody = z.input<typeof getRequestBodySchema>;
 
 export const deleteRequestBodySchema = z.object({
   projectId: uuidV7.optional(),
 });
 
-export type DeleteRequestBody = z.infer<typeof deleteRequestBodySchema>;
-
-export function validateDeleteRequest(params: URLSearchParams) {
-  const result = deleteRequestBodySchema.safeParse({
-    projectId: params.get('projectId') || undefined,
-  })
-  if (!result.success) {
-    throw new AppError('bad_request:chat')
-  }
-  return result.data
-}
+export type DeleteRequestBody = z.input<typeof deleteRequestBodySchema>;

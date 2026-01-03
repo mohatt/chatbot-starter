@@ -9,8 +9,7 @@ import type { FileRecordInput } from '@/lib/db'
 export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
   const { authz, db, vectorDb, storage } = api;
   const { user } = await session()
-  const formData = await request.formData();
-  const { file, bucket, metadata } = postRequestBodySchema.parse(formData)
+  const { file, bucket, metadata } = postRequestBodySchema.parse(await request.formData())
 
   // External refs passed to file loader and stored in db
   const fileLoaderMetadata: FileLoaderMetadata = {
@@ -86,8 +85,9 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
 
 export const GET = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
   const { db, authz } = api;
+  const { searchParams } = request.nextUrl
   const { projectId } = getRequestBodySchema.parse({
-    projectId: request.nextUrl.searchParams.get('projectId') || undefined,
+    projectId: searchParams.get('projectId') || undefined,
   })
   const { user } = await session()
   const project = await db.projects.findById(projectId);
@@ -100,8 +100,9 @@ export const GET = createApiHandler<RouteContext<'/api/files'>>(async ({ api, se
 
 export const DELETE = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
   const { db, storage, vectorDb } = api;
+  const { searchParams } = request.nextUrl
   const { id } = deleteRequestBodySchema.parse({
-    id: request.nextUrl.searchParams.get('id') || undefined,
+    id: searchParams.get('id') || undefined,
   })
   const { user } = await session()
   const file = await db.files.deleteByIdForUser(id, user.id);

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { jsonString, fileUpload, uuidV7 } from '@/lib/schema'
 import { config } from '@/lib/config'
+import { jsonString, fileUpload, uuidV7 } from '@/lib/schema'
 import { chatStorageMetadataSchema, projectStorageMetadataSchema } from '@/lib/storage/schema'
 
 const chatMetadataSchema = chatStorageMetadataSchema
@@ -25,8 +25,6 @@ const fileUploadSchema = z.discriminatedUnion('bucket', [
   }),
 ])
 
-export type PostRequestBody = z.input<typeof fileUploadSchema>
-
 export const postRequestBodySchema = z.instanceof(FormData)
   .transform((val) => {
     return {
@@ -42,10 +40,16 @@ export const postRequestBodySchema = z.instanceof(FormData)
   }))
   .pipe(fileUploadSchema)
 
+export type PostRequestBody = z.input<typeof fileUploadSchema>
+
 export const getRequestBodySchema = z.object({
   projectId: uuidV7,
 });
 
+export type GetRequestBody = z.input<typeof getRequestBodySchema>
+
 export const deleteRequestBodySchema = z.object({
   id: uuidV7,
 });
+
+export type DeleteRequestBody = z.input<typeof deleteRequestBodySchema>

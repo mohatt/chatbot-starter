@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createApiHandler } from '@/lib/api'
-import { validateGetRequest } from './schema'
+import { getRequestBodySchema } from './schema'
 
 export const GET = createApiHandler<RouteContext<'/api/project/history'>>(async ({ api, session, request }) => {
   const { db } = api;
-  const { limit, cursor } = validateGetRequest(request.nextUrl.searchParams);
+  const { searchParams } = request.nextUrl;
+  const { limit, cursor } = getRequestBodySchema.parse({
+    cursor: searchParams.get('cursor') || undefined,
+    limit: searchParams.get('limit') || undefined,
+  })
   const { user } = await session()
   const result = await db.projects.findMany({ userId :user.id }, limit, cursor);
   return NextResponse.json(result);
-})
+}, { namespace: 'project' })
 
 export const DELETE = createApiHandler<RouteContext<'/api/project/history'>>(async ({ api, session }) => {
   const { db, vectorDb } = api;
@@ -18,4 +22,4 @@ export const DELETE = createApiHandler<RouteContext<'/api/project/history'>>(asy
     await vectorDb.files.deleteByFilter(`projectId IN ('${deletedIds.join(`', '`)}')`)
   }
   return NextResponse.json(deletedIds);
-});
+}, { namespace: 'project' });

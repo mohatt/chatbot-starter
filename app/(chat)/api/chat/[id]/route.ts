@@ -4,18 +4,17 @@ import { geolocation } from "@vercel/functions";
 import { generateUUID } from '@/lib/util'
 import { createApiHandler } from '@/lib/api'
 import { AppError } from '@/lib/errors'
-import { validateUUIDv7 } from '@/lib/schema'
-import { validatePatchRequest, validatePostRequest } from './schema'
 import { config } from '@/lib/config'
+import { uuidV7 } from '@/lib/schema'
+import { postRequestBodySchema, patchRequestBodySchema } from './schema'
 import type { ChatMessage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai, authz, storage } = api;
-  const id = validateUUIDv7(params.id)
-  const body = validatePostRequest(await request.json())
+  const id = uuidV7.parse(params.id)
   const { user } = await session()
-  const { message, projectId, timeZone, regenerate, createChat } = body;
+  const { message, projectId, timeZone, regenerate, createChat } = postRequestBodySchema.parse(await request.json())
   const messageText: string[] = []
   const messageFiles: string[] = []
   for (const part of message.parts) {
@@ -119,19 +118,19 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   })
 
   return createUIMessageStreamResponse({ stream });
-});
+}, { namespace: 'chat' });
 
 export const PATCH = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, request, params }) => {
-  const id = validateUUIDv7(params.id)
-  const body = validatePatchRequest(await request.json())
+  const id = uuidV7.parse(params.id)
   const { user } = await session()
+  const body = patchRequestBodySchema.parse(await request.json())
   const updatedChat = await api.db.chats.updateByIdForUser(id, user.id, body);
   return NextResponse.json(updatedChat);
-});
+}, { namespace: 'chat' });
 
 export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const { db, ai, authz } = api;
-  const id = validateUUIDv7(params.id)
+  const id = uuidV7.parse(params.id)
   const { user } = await session()
   let chat = await db.chats.findById(id);
   if(!authz.can(user, 'read:chat', chat)) {
@@ -156,11 +155,11 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api
   }
 
   return NextResponse.json(chat);
-});
+}, { namespace: 'chat' });
 
 export const DELETE = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, session, params }) => {
   const { authz, db } = api;
-  const id = validateUUIDv7(params.id)
+  const id = uuidV7.parse(params.id)
   const { user } = await session()
   const chat = await db.chats.findById(id);
   if(!authz.can(user, 'delete:chat', chat)) {
@@ -168,4 +167,4 @@ export const DELETE = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ 
   }
   const deletedChat = await db.chats.deleteById(id);
   return NextResponse.json(deletedChat);
-});
+}, { namespace: 'chat' });

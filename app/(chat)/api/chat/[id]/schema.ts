@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { AppError } from '@/lib/errors'
 import { uuidV7, timeZone } from '@/lib/schema'
 
 const textPartSchema = z.object({
@@ -14,13 +13,13 @@ const filePartSchema = z.object({
   url: z.url(),
 });
 
-const partSchema = z.union([textPartSchema, filePartSchema]);
+const messagePartSchema = z.union([textPartSchema, filePartSchema]);
 
-const postRequestBodySchema = z.object({
+export const postRequestBodySchema = z.object({
   message: z.object({
     id: uuidV7,
     role: z.enum(["user"]),
-    parts: z.array(partSchema).nonempty().max(10),
+    parts: z.array(messagePartSchema).nonempty().max(10),
   }),
   timeZone,
   regenerate: z.boolean().default(false),
@@ -28,27 +27,11 @@ const postRequestBodySchema = z.object({
   projectId: uuidV7.nullable().default(null),
 });
 
-export type PostRequestBody = z.infer<typeof postRequestBodySchema>;
+export type PostRequestBody = z.input<typeof postRequestBodySchema>;
 
 export const patchRequestBodySchema = z.object({
   title: z.string().trim().nonempty(),
   privacy: z.enum(["public", "private"]),
 }).strict().partial().refine((obj) => Object.keys(obj).length > 0)
 
-export type PatchRequestBody = z.infer<typeof patchRequestBodySchema>;
-
-export function validatePostRequest(body: unknown) {
-  const result = postRequestBodySchema.safeParse(body)
-  if (!result.success) {
-    throw new AppError('bad_request:chat')
-  }
-  return result.data
-}
-
-export function validatePatchRequest(body: unknown) {
-  const result = patchRequestBodySchema.safeParse(body)
-  if (!result.success) {
-    throw new AppError('bad_request:chat')
-  }
-  return result.data
-}
+export type PatchRequestBody = z.input<typeof patchRequestBodySchema>;

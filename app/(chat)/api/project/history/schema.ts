@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { AppError } from '@/lib/errors'
 import { uuidV7 } from '@/lib/schema'
 
 export const getRequestBodySchema = z.object({
@@ -13,13 +12,4 @@ export const getRequestBodySchema = z.object({
     .default(5),
 });
 
-export function validateGetRequest(params: URLSearchParams) {
-  const result = getRequestBodySchema.safeParse({
-    cursor: params.get('cursor') || undefined,
-    limit: params.get('limit') || undefined,
-  })
-  if (!result.success) {
-    throw new AppError('bad_request:project')
-  }
-  return result.data
-}
+export type GetRequestBody = z.input<typeof getRequestBodySchema>

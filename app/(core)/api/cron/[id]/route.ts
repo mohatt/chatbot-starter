@@ -5,12 +5,12 @@ import { handlers } from './handlers'
 
 export const GET = createApiHandler<RouteContext<'/api/cron/[id]'>>(async ({ api, request, params }) => {
   const { env } = api
-  const { id } = params;
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
     throw new AppError('unauthorized:api');
   }
 
+  const { id } = params;
   const handler = handlers.get(id);
   if (!handler) {
     throw new AppError('not_found:api');
