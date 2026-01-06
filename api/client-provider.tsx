@@ -1,18 +1,25 @@
 "use client";
 import { type ReactNode, useEffect } from 'react'
 import { isServer, QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-const retryStatuses = [408, 429, 500, 502, 503, 504]
+import { config } from '@/lib/config'
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
+      mutations: {
+        retry: (failures, error) => {
+          if (error.statusCode && !config.retryStatusCodes.includes(+error.statusCode)) {
+            return false
+          }
+          return failures < 3
+        }
+      },
       queries: {
         // With SSR, we usually want to set some default staleTime
         // above 0 to avoid refetching immediately on the client
         staleTime: 60 * 1000,
         retry: (failures, error) => {
-          if (error.statusCode && !retryStatuses.includes(error.statusCode)) {
+          if (error.statusCode && !config.retryStatusCodes.includes(+error.statusCode)) {
             return false
           }
           return failures < 3

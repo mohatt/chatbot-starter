@@ -11,12 +11,12 @@ const projectMetadataSchema = projectStorageMetadataSchema
 
 const fileUploadSchema = z.discriminatedUnion('bucket', [
   z.strictObject({
-    file: fileUpload(config.project.uploads.images.rules),
+    file: fileUpload(config.uploads.images.rules),
     bucket: z.literal('images'),
     metadata: chatMetadataSchema
   }),
   z.strictObject({
-    file: fileUpload(config.project.uploads.files.rules),
+    file: fileUpload(config.uploads.retrieval.rules),
     bucket: z.literal('retrieval'),
     metadata: z.discriminatedUnion('namespace', [
       chatMetadataSchema,

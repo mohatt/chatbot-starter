@@ -90,7 +90,8 @@ export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHa
         return error.toResponse();
       }
       if (error instanceof z.ZodError) {
-        return new AppError(`bad_request:${ns}`, error.issues[0].message).toResponse()
+        const firstIssue = error.issues[0]
+        return new AppError(`bad_request:${ns}`, firstIssue.message).toResponse()
       }
       return new AppError(`internal:${ns}`, error as Error).toResponse()
     }

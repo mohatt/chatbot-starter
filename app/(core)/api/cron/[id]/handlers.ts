@@ -41,7 +41,7 @@ handlers.set('cleanup-orphan-files', async ({ db, vectorDb }) => {
         await del(storageKeys);
         await db.files.deleteByIds(fileIds);
         totalCount += currBatchSize;
-        console.log(`Deleted ${currBatchSize} files (${totalCount} total)`);
+        console.log(`Deleted ${currBatchSize}/${totalCount} files`);
         break; // Success, exit retry loop
       } catch (error) {
         retries++;

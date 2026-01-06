@@ -20,14 +20,13 @@ export interface AppConfig {
     }
   }
   fileLoader: FileLoaderOptions
-  project: {
-    uploads: {
-      images: {
-        rules: FileUploadRules<'png' | 'jpg' | 'webp'>
-      }
-      files: {
-        rules: FileUploadRules<FileLoaderType>
-      }
+  uploads: {
+    images: {
+      rules: FileUploadRules<'png' | 'jpg' | 'webp'>
+    }
+    retrieval: {
+      rules: FileUploadRules<FileLoaderType>
     }
   }
+  retryStatusCodes: number[]
 }

@@ -1,17 +1,6 @@
 import PQueue, { type QueueAddOptions } from "p-queue";
 import pRetry, { type RetryContext } from "p-retry";
-
-const STATUS_NO_RETRY = [
-  400, // Bad Request
-  401, // Unauthorized
-  402, // Payment Required
-  403, // Forbidden
-  404, // Not Found
-  405, // Method Not Allowed
-  406, // Not Acceptable
-  407, // Proxy Authentication Required
-  409, // Conflict
-];
+import { config } from '@/lib/config'
 
 const defaultFailedAttemptHandler = ({ error }: RetryContext) => {
   if (
@@ -26,7 +15,7 @@ const defaultFailedAttemptHandler = ({ error }: RetryContext) => {
   }
   const status =
     (error as any)?.response?.status ?? (error as any)?.status;
-  if (status && STATUS_NO_RETRY.includes(+status)) {
+  if (status && !config.retryStatusCodes.includes(+status)) {
     throw error;
   }
   if ((error as any)?.error?.code === "insufficient_quota") {
@@ -64,7 +53,7 @@ export interface AsyncCallerOptions {
  * Concurrent calls are limited by the `maxConcurrency` parameter, which defaults
  * to `Infinity`. This means that by default, all calls will be made in parallel.
  *
- * Retries are limited by the `maxRetries` parameter, which defaults to 6. This
+ * Retries are limited by the `maxRetries` parameter, which defaults to 3. This
  * means that by default, each call will be retried up to 6 times, with an
  * exponential backoff between each attempt.
  */
@@ -79,7 +68,7 @@ export class AsyncCaller {
       onFailedAttempt: defaultFailedAttemptHandler,
       ...options,
     }
-    this.queue = new PQueue({ concurrency: this.options.maxConcurrency });
+    this.queue = new PQueue({ concurrency: this.options.maxConcurrency, });
   }
 
   async call<A extends any[], T extends (...args: A) => Promise<any>>(
