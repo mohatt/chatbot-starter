@@ -44,18 +44,20 @@ export function ChatMessages(props: ChatMessagesProps) {
       {messages.map((message, index) => {
         const { id, role, parts } = message
         if (!parts.length && role === 'assistant') {
-          if (isStreaming) {
-            return <ThinkingMessage key={id} />
-          }
+          if (index === totalCount - 1) {
+            if (isStreaming) {
+              return <ThinkingMessage key={id} />
+            }
 
-          if (!error && index === totalCount - 1) {
-            return (
-              <ErrorMessage
-                key={id}
-                error={new Error('Stream aborted')}
-                regenerate={regenerate}
-              />
-            )
+            if (!error) {
+              return (
+                <ErrorMessage
+                  key={id}
+                  error={new Error('Stream aborted')}
+                  regenerate={regenerate}
+                />
+              )
+            }
           }
 
           return null
@@ -264,7 +266,7 @@ function ErrorMessage(props: Pick<UseChatResult, 'error' | 'regenerate'>){
   return (
     <Message from='assistant'>
       <MessageContent>
-        <Item variant="outline">
+        <Item variant="outline" className='min-w-md'>
           <ItemMedia variant="icon">
             <AlertCircleIcon className='text-destructive' />
           </ItemMedia>

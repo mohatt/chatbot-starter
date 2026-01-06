@@ -121,6 +121,15 @@ export function Chat(props: ChatIdProps) {
     })
   }, [historyData])
 
+  // Abort current chat request on unmount
+  useEffect(() => {
+    // Abort only on unmount; this has no effect if no active chat request
+    return () => {
+      void stop()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   if (dataError) {
     return (
       <ConversationEmptyState
