@@ -1,45 +1,45 @@
 import { z } from 'zod'
-import { extension as mimeExtension, lookup as mimeLookup } from 'mime-types'
+import { extension as mimeExtension, lookup as mimeLookup, extensions as mimeExtensions } from 'mime-types'
 import { formatFileSize, generateUUID } from '@/lib/util'
 
-export interface FileUpload<Type extends string = string> {
+export interface FileUpload<Ext extends string = string> {
   id: string
   name: string
   url?: string
   size: number
-  type: Type
+  mimeExt: Ext
   mimeType: string
-  blob: Blob
+  blob: File
 }
 
-export interface FileUploadRules<Type extends string = string> {
-  /**
-   * Allowed file types.
-   * Examples: ['png', 'jpg', 'jpeg'], ['pdf', 'doc']
-   */
-  readonly types?: Type[]
-
+export interface FileUploadRules<Ext extends string = string> {
   /**
    * Allowed MIME types. Supports wildcards like `image/*`.
    * Examples: ['image/*'], ['image/png', 'image/jpeg']
    */
   readonly accept?: string[]
 
+  /**
+   * Allowed file extensions.
+   * Examples: ['png', 'jpg', 'jpeg'], ['pdf', 'doc']
+   */
+  readonly extensions?: Ext[]
+
   /** Default max size in bytes (applies when no per-type / accept override exists) */
   readonly maxSize?: number
-
-  /** Optional per-type max size in bytes (e.g. { png: 2_000_000, pdf: 10_000_000 }) */
-  readonly maxSizeByType?: Partial<Record<Type, number>>
 
   /**
    * Optional max size overrides by MIME rule.
    * Keys can be exact MIME types (e.g. 'image/png') or wildcards (e.g. 'image/*').
    */
   readonly maxSizeByAccept?: Partial<Record<string, number>>
+
+  /** Optional per-type max size in bytes (e.g. { png: 2_000_000, pdf: 10_000_000 }) */
+  readonly maxSizeByExt?: Partial<Record<Ext, number>>
 }
 
-export function fileUpload<Type extends string = string>(rules: FileUploadRules<Type> = {}) {
-  const { maxSize = Infinity, maxSizeByType, maxSizeByAccept, accept, types } = rules
+export function fileUpload<Ext extends string = string>(rules: FileUploadRules<Ext> = {}) {
+  const { maxSize = Infinity, maxSizeByExt, maxSizeByAccept, accept, extensions } = rules
 
   function matchesAccept(mimeType: string, rule: string){
     if (rule.endsWith('/*')) {
@@ -49,12 +49,12 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
     return mimeType === rule
   }
 
-  function resolveMaxSize(mimeType: string, ext: Type) {
+  function resolveMaxSize(mimeType: string, ext: Ext) {
     const exact = maxSizeByAccept?.[mimeType]
     if (exact != null) return exact
 
-    const byType = maxSizeByType?.[ext]
-    if (byType != null) return byType
+    const byExt = maxSizeByExt?.[ext]
+    if (byExt != null) return byExt
 
     const wildcardKey = Object
       .keys(maxSizeByAccept ?? {})
@@ -63,7 +63,7 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
     return wildcard ?? maxSize
   }
 
-  function transform(file: File): FileUpload<Type> {
+  function transform(file: File): FileUpload<Ext> {
     const { name, size, type } = file
     if (!name) {
       throw new Error('Invalid file metadata.')
@@ -82,12 +82,12 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
       throw new Error('File type is not supported.')
     }
 
-    const defaultExt = mimeExtension(mimeType) as Type | false
-    if(!defaultExt || (types && !types.includes(defaultExt))) {
+    const mimeExt = mimeExtension(mimeType) as Ext | false
+    if(!mimeExt || (extensions && !extensions.includes(mimeExt))) {
       throw new Error(`File type is not supported.`)
     }
 
-    const maxSizeForType = resolveMaxSize(mimeType, defaultExt)
+    const maxSizeForType = resolveMaxSize(mimeType, mimeExt)
     if (size > maxSizeForType) {
       throw new Error(`File exceeds ${formatFileSize(maxSizeForType)} limit.`)
     }
@@ -97,7 +97,7 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
       name,
       size,
       mimeType,
-      type: defaultExt,
+      mimeExt,
       blob: file
     }
   }
@@ -116,4 +116,27 @@ export function fileUpload<Type extends string = string>(rules: FileUploadRules<
         return z.NEVER
       }
     })
+}
+
+export function getAllowedTypes(rules: Pick<FileUploadRules, 'accept' | 'extensions'>) {
+  const accept = rules.accept ?? []
+  rules.extensions?.forEach((ext) => {
+    const mimeType = mimeLookup(ext)
+    if(mimeType) accept.push(mimeType)
+  })
+
+  const extensions = rules.extensions ?? []
+  rules.accept?.forEach((mimeType) => {
+    if(mimeType.endsWith('/*')) {
+      const mimePrefix = mimeType.slice(0, -1)
+      for(const type in mimeExtensions) {
+        if(type.startsWith(mimePrefix)) extensions.push(...mimeExtensions[type])
+      }
+      return
+    }
+    const ext = mimeExtension(mimeType)
+    if(ext) extensions.push(ext)
+  })
+
+  return { accept, extensions }
 }

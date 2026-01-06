@@ -37,7 +37,7 @@ type FileLoaderDocMap = {
     file: {
       id: string
       name: string
-      type: Type
+      type: string
     }
   }>
 }
@@ -77,10 +77,10 @@ export class FileLoader {
   }
 
   async load(file: FileLoaderInput): Promise<FileLoaderResult> {
-    const typeUpper = file.type.toUpperCase() as Uppercase<typeof file.type>
+    const typeUpper = file.mimeExt.toUpperCase() as Uppercase<typeof file.mimeExt>
     const loadMethod = `load${typeUpper}` as const
     if(!(loadMethod in this)) {
-      throw new Error(`Unsupported file type: ${file.type}`)
+      throw new Error(`Unsupported file type: ${file.mimeExt}`)
     }
     return await this[loadMethod](file as any)
   }
@@ -203,7 +203,7 @@ export class FileLoader {
             ...('file' in docMeta ? docMeta.file as {} : {}),
             id: file.id,
             name: file.name,
-            type: file.type,
+            type: file.mimeType,
           },
         },
       }

@@ -15,7 +15,7 @@ export interface UrlUploadOptions {
 }
 
 export function urlUpload<Type extends string = string>(rules: FileUploadRules<Type>, options?: UrlUploadOptions) {
-  const { maxSize = Infinity, accept, types } = rules
+  const { maxSize = Infinity, accept, extensions } = rules
 
   const opts = {
     fetch: {
@@ -66,7 +66,7 @@ export function urlUpload<Type extends string = string>(rules: FileUploadRules<T
     }
 
     const defaultExt = mimeExtension(mimeType) as Type | false
-    if(!defaultExt || (types && !types.includes(defaultExt))) {
+    if(!defaultExt || (extensions && !extensions.includes(defaultExt))) {
       await res.body.cancel();
       throw new Error(`Content type is not supported.`)
     }
@@ -95,8 +95,8 @@ export function urlUpload<Type extends string = string>(rules: FileUploadRules<T
       url,
       size,
       mimeType,
-      type: defaultExt,
-      blob: new Blob(chunks, { type: mimeType })
+      mimeExt: defaultExt,
+      blob: new File(chunks, fileName || url, { type: mimeType }),
     }
   }
 

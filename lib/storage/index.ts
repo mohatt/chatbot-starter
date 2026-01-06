@@ -30,7 +30,7 @@ export class Storage {
     } else if (metadata.namespace === 'project') {
       pathParts.push('p', metadata.projectId)
     }
-    pathParts.push(metadata.bucket, `${file.id}.${file.type}`)
+    pathParts.push(metadata.bucket, `${file.id}.${file.mimeExt}`)
     return pathParts.join('/')
   }
 
