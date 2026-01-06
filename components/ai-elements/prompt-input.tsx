@@ -278,15 +278,20 @@ export const usePromptInputAttachments = () => {
 
 export type PromptInputAttachmentProps = HTMLAttributes<HTMLDivElement> & {
   data: FileUIPart & { id: string };
+  onRemove: (id: string) => void;
+  isPending?: boolean;
+  error?: string | null;
   className?: string;
 };
 
 export function PromptInputAttachment({
   data,
+  onRemove,
+  isPending,
+  error,
   className,
   ...props
 }: PromptInputAttachmentProps) {
-  const attachments = usePromptInputAttachments();
 
   const filename = data.filename || "";
 
@@ -302,6 +307,7 @@ export function PromptInputAttachment({
         <div
           className={cn(
             "group relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border px-1.5 font-medium text-sm transition-all hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+            error != null && "border-destructive/70 text-destructive",
             className
           )}
           key={data.id}
@@ -323,22 +329,31 @@ export function PromptInputAttachment({
                 </div>
               )}
             </div>
-            <Button
-              aria-label="Remove attachment"
-              className="absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                attachments.remove(data.id);
-              }}
-              type="button"
-              variant="ghost"
-            >
-              <XIcon />
-              <span className="sr-only">Remove</span>
-            </Button>
+            {isPending ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-background/80">
+                <Loader2Icon className="size-3 animate-spin text-foreground" />
+              </div>
+            ) : (
+              <Button
+                aria-label="Remove attachment"
+                className="absolute inset-0 size-5 cursor-pointer rounded p-0 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 [&>svg]:size-2.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(data.id)
+                }}
+                type="button"
+                variant="ghost"
+              >
+                <XIcon />
+                <span className="sr-only">Remove</span>
+              </Button>
+            )}
           </div>
 
           <span className="flex-1 truncate">{attachmentLabel}</span>
+          {error != null && (
+            <span className="text-destructive text-xs">Failed</span>
+          )}
         </div>
       </HoverCardTrigger>
       <PromptInputHoverCardContent className="w-auto p-2">
@@ -363,6 +378,9 @@ export function PromptInputAttachment({
                 <p className="truncate font-mono text-muted-foreground text-xs">
                   {data.mediaType}
                 </p>
+              )}
+              {error != null && (
+                <p className="text-destructive text-xs">{error}</p>
               )}
             </div>
           </div>
