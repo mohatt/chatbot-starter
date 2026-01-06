@@ -1,9 +1,8 @@
 import { z } from 'zod'
 import { extension as mimeExtension, lookup as mimeLookup, extensions as mimeExtensions } from 'mime-types'
-import { formatFileSize, generateUUID } from '@/lib/util'
+import { formatFileSize } from '@/lib/util'
 
 export interface FileUpload<Ext extends string = string> {
-  id: string
   name: string
   url?: string
   size: number
@@ -93,7 +92,6 @@ export function fileUpload<Ext extends string = string>(rules: FileUploadRules<E
     }
 
     return {
-      id: generateUUID(),
       name,
       size,
       mimeType,

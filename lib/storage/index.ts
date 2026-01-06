@@ -11,8 +11,8 @@ export class Storage {
     this.baseUrl = env.BLOB_BASE_URL
   }
 
-  async upload(file: FileUpload, metadata: StorageMetadata) {
-    const pathname = this.createPathname(file, metadata)
+  async upload(id: string, file: FileUpload, metadata: StorageMetadata) {
+    const pathname = this.createPathname(id, file, metadata)
     return put(pathname, file.blob, { access: 'public' })
       .catch((err) => {
         throw new AppError('internal:file', err)
@@ -23,14 +23,14 @@ export class Storage {
     return del(pathname)
   }
 
-  createPathname(file: FileUpload, metadata: StorageMetadata) {
+  createPathname(id: string, file: FileUpload, metadata: StorageMetadata) {
     const pathParts = ['v1']
     if (metadata.namespace === 'chat') {
       pathParts.push('c', metadata.chatId)
     } else if (metadata.namespace === 'project') {
       pathParts.push('p', metadata.projectId)
     }
-    pathParts.push(metadata.bucket, `${file.id}.${file.mimeExt}`)
+    pathParts.push(metadata.bucket, `${id}.${file.mimeExt}`)
     return pathParts.join('/')
   }
 

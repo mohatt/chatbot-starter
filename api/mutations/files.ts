@@ -7,14 +7,12 @@ import type { PostRequestBody } from '@/app/(core)/api/files/schema'
 export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],
   mutationFn: async (vars: PostRequestBody) => {
-    const formData = new FormData();
-    formData.append('file', vars.file);
-    formData.append('bucket', vars.bucket);
-    formData.append('metadata', JSON.stringify(vars.metadata));
-    return fetcher<FileRecord>(`/api/files`, {
-      method: 'POST',
-      body: formData
-    })
+    const body = new FormData();
+    body.append('id', vars.id);
+    body.append('file', vars.file);
+    body.append('bucket', vars.bucket);
+    body.append('metadata', JSON.stringify(vars.metadata));
+    return fetcher<FileRecord>(`/api/files`, { method: 'POST', body })
   },
   onSuccess: (file, { metadata }, _, { client }) => {
     if (metadata.namespace === 'project') {

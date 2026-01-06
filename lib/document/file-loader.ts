@@ -76,20 +76,20 @@ export class FileLoader {
     this.options = defaultsDeep({}, options, FileLoader.defaultOptions);
   }
 
-  async load(file: FileLoaderInput): Promise<FileLoaderResult> {
+  async load(id: string, file: FileLoaderInput): Promise<FileLoaderResult> {
     const typeUpper = file.mimeExt.toUpperCase() as Uppercase<typeof file.mimeExt>
     const loadMethod = `load${typeUpper}` as const
     if(!(loadMethod in this)) {
       throw new Error(`Unsupported file type: ${file.mimeExt}`)
     }
-    return await this[loadMethod](file as any)
+    return await this[loadMethod](id, file as any)
   }
 
   isDocType<K extends FileLoaderType>(doc: FileLoaderDoc, type: K): doc is FileLoaderDoc<K> {
     return doc.metadata.file.type === type
   }
 
-  private async loadPDF(file: FileLoaderInput<'pdf'>): Promise<FileLoaderResult<'pdf'>> {
+  private async loadPDF(id: string, file: FileLoaderInput<'pdf'>): Promise<FileLoaderResult<'pdf'>> {
     const proxy = await getDocumentProxy(new Uint8Array(await file.blob.arrayBuffer()))
     const { info } = await getMeta(proxy);
     const { text, totalPages } = await extractText(proxy);
@@ -106,7 +106,7 @@ export class FileLoader {
       strategy: 'recursive',
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks, (metadata) => ({
+    return this.transformDocuments(id, file, chunks, (metadata) => ({
       pageNumber: metadata.pageNumber,
       file: {
         totalPages,
@@ -117,27 +117,27 @@ export class FileLoader {
     }));
   }
 
-  private async loadDOCX(file: FileLoaderInput<'docx'>): Promise<FileLoaderResult<'docx'>> {
+  private async loadDOCX(id: string, file: FileLoaderInput<'docx'>): Promise<FileLoaderResult<'docx'>> {
     const docx = await extractRawText({ buffer: Buffer.from(await file.blob.arrayBuffer()) });
     const doc = MDocument.fromText(docx.value)
     const chunks = await doc.chunk({
       strategy: 'recursive',
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks)
+    return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadTXT(file: FileLoaderInput<'txt'>): Promise<FileLoaderResult<'txt'>> {
+  private async loadTXT(id: string, file: FileLoaderInput<'txt'>): Promise<FileLoaderResult<'txt'>> {
     const text = await file.blob.text()
     const doc = MDocument.fromText(text)
     const chunks = await doc.chunk({
       strategy: 'recursive',
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks)
+    return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadMD(file: FileLoaderInput<'md'>): Promise<FileLoaderResult<'md'>> {
+  private async loadMD(id: string, file: FileLoaderInput<'md'>): Promise<FileLoaderResult<'md'>> {
     const text = await file.blob.text()
     const doc = MDocument.fromMarkdown(text)
     const chunks = await doc.chunk({
@@ -145,10 +145,10 @@ export class FileLoader {
       joinThreshold: Math.round(this.options.chunks.maxSize / 4),
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks)
+    return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadCSV(file: FileLoaderInput<'csv'>): Promise<FileLoaderResult<'csv'>> {
+  private async loadCSV(id: string, file: FileLoaderInput<'csv'>): Promise<FileLoaderResult<'csv'>> {
     const text = await file.blob.text()
     const parser = parseCSV(text, {
       bom: true,
@@ -174,10 +174,10 @@ export class FileLoader {
       joinThreshold: Math.round(this.options.chunks.maxSize / 4),
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks)
+    return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadHTML(file: FileLoaderInput<'html'>): Promise<FileLoaderResult<'html'>> {
+  private async loadHTML(id: string, file: FileLoaderInput<'html'>): Promise<FileLoaderResult<'html'>> {
     const html = await file.blob.text()
     const text = htmlToText(html, { baseElements: { selectors: ['html'] } })
     const doc = MDocument.fromText(text)
@@ -185,10 +185,10 @@ export class FileLoader {
       strategy: 'recursive',
       ...this.options.chunks,
     })
-    return this.transformDocuments(file, chunks)
+    return this.transformDocuments(id, file, chunks)
   }
 
-  private transformDocuments<T extends FileLoaderType>(file: FileLoaderInput<T>, chunks: { text: string, metadata: Record<string, any> }[], metaFn: (metadata: Record<string, any>, index: number) => FileLoaderTypeMap[T]['metadata'] = () => ({})) {
+  private transformDocuments<T extends FileLoaderType>(id: string, file: FileLoaderInput<T>, chunks: { text: string, metadata: Record<string, any> }[], metaFn: (metadata: Record<string, any>, index: number) => FileLoaderTypeMap[T]['metadata'] = () => ({})) {
     let charCount = 0;
     const docs = chunks.map(({ text, metadata }, index) => {
       charCount += text.length;
@@ -201,7 +201,7 @@ export class FileLoader {
           ...this.metadata,
           file: {
             ...('file' in docMeta ? docMeta.file as {} : {}),
-            id: file.id,
+            id,
             name: file.name,
             type: file.mimeType,
           },

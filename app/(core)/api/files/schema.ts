@@ -11,11 +11,13 @@ const projectMetadataSchema = projectStorageMetadataSchema
 
 const fileUploadSchema = z.discriminatedUnion('bucket', [
   z.strictObject({
+    id: uuidV7,
     file: fileUpload(config.uploads.images.rules),
     bucket: z.literal('images'),
     metadata: chatMetadataSchema
   }),
   z.strictObject({
+    id: uuidV7,
     file: fileUpload(config.uploads.retrieval.rules),
     bucket: z.literal('retrieval'),
     metadata: z.discriminatedUnion('namespace', [
@@ -28,12 +30,14 @@ const fileUploadSchema = z.discriminatedUnion('bucket', [
 export const postRequestBodySchema = z.instanceof(FormData)
   .transform((val) => {
     return {
+      id: val.get('id'),
       file: val.get('file'),
       bucket: val.get('bucket'),
       metadata: val.get('metadata'),
     }
   })
   .pipe(z.object({
+    id: z.string(),
     file: z.file(),
     bucket: z.string(),
     metadata: jsonString(z.unknown())

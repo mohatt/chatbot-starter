@@ -9,7 +9,7 @@ import type { FileRecordInput } from '@/lib/db'
 export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, session, request }) => {
   const { authz, db, vectorDb, storage } = api;
   const { user } = await session()
-  const { file, bucket, metadata } = postRequestBodySchema.parse(await request.formData())
+  const { id, file, bucket, metadata } = postRequestBodySchema.parse(await request.formData())
 
   // External refs passed to file loader and stored in db
   const fileLoaderMetadata: FileLoaderMetadata = {
@@ -21,7 +21,7 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
   // DB file record input
   const dbFile: FileRecordInput = {
     ...fileLoaderMetadata,
-    id: file.id,
+    id,
     name: file.name,
     mimeType: file.mimeType,
     size: file.size,
@@ -54,7 +54,7 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
   }
 
   // Upload the file to storage
-  const blob = await storage.upload(file, { bucket, ...metadata })
+  const blob = await storage.upload(id, file, { bucket, ...metadata })
   dbFile.url = blob.url
   dbFile.storageKey = blob.pathname
   cleanupStack.unshift(() => storage.delete(blob.pathname))
@@ -62,9 +62,9 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
   if (bucket === 'retrieval') {
     try {
       const loader = new FileLoader(fileLoaderMetadata, config.fileLoader)
-      const { docs, tokens } = await loader.load(file)
+      const { docs, tokens } = await loader.load(id, file)
       if (docs.length && tokens) {
-        cleanupStack.unshift(() => vectorDb.files.deleteByFilter(`file.id='${file.id}'`))
+        cleanupStack.unshift(() => vectorDb.files.deleteByFilter(`file.id='${id}'`))
         await vectorDb.files.insert(docs)
       }
       dbFile.metadata.retrieval = { vectors: docs.length, tokens }

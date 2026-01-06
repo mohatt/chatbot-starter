@@ -5,19 +5,23 @@ import { useUploadFileMutation } from '@/api/mutations/files'
 import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
-import { fileUpload, getAllowedTypes, type FileUpload } from '@/lib/schema/file-upload'
+import { generateUUID } from '@/lib/util'
+import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
 import type { inferVariables } from 'react-query-kit'
 import type { AppError } from '@/lib/errors'
 
-export type ClientUpload<B extends string> = Pick<FileUpload, 'id' | 'name' | 'mimeType'> & {
-  status: "idle" | "uploading" | "uploaded" | "error";
+export interface ClientUpload<B extends string> {
+  id: string
+  name: string;
+  mimeType: string;
   bucket: B;
+  status: "idle" | "uploading" | "uploaded" | "error";
   url?: string | null;
   previewUrl?: string | null;
   error?: string | null;
-};
+}
 
-export type ClientErrorProps<B extends string> = {
+export interface ClientErrorProps<B extends string> {
   message: string;
   bucket?: B
   file?: File;
@@ -132,7 +136,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
 
         const [fileBucket, fileResult] = result
         if (fileResult.success) {
-          return [fileBucket, fileResult.data] as const
+          return [generateUUID(), fileBucket, fileResult.data] as const
         }
 
         onError?.({
@@ -167,7 +171,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     }
 
     setFiles((prev) => prev.concat(
-      capped.map(([fileBucket, { id, name, mimeType, blob }]) => {
+      capped.map(([id, fileBucket, { name, mimeType, blob }]) => {
         const previewUrl = mimeType.startsWith('image/')
           ? URL.createObjectURL(blob)
           : null
@@ -185,11 +189,11 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     ))
 
     // Queue files for upload
-    for (const [fileBucket, { id, blob }] of capped) {
+    for (const [id, fileBucket, { blob }] of capped) {
       queueRef.current
         .call(async () => {
           updateFile(id, { status: "uploading" })
-          return mutateAsync({ file: blob, bucket: fileBucket, metadata } as any)
+          return mutateAsync({ id, file: blob, bucket: fileBucket as any, metadata })
         })
         .then((uploadedFile) => {
           updateFile(id, {
