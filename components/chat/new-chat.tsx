@@ -16,12 +16,12 @@ export function NewChat(props: NewChatProps) {
   const router = useRouter()
   const searchParams = useSearchParams();
   const query = searchParams.get("query")?.trim();
-
-  const [input, setInput] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
   const [model, setModel] = useState('gpt-4o');
 
   const sendMessage = useCallback<UseChatResult['sendMessage']>(async (...args) => {
     const { url } = createNewChat(args)
+    setIsNavigating(true)
     router.push(url)
   }, [router, createNewChat])
 
@@ -30,6 +30,7 @@ export function NewChat(props: NewChatProps) {
     if (query && !isQuerySent.current) {
       isQuerySent.current = true;
       const { url } = createNewChat([{ text: query }])
+      setIsNavigating(true)
       router.replace(url)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,13 +55,12 @@ export function NewChat(props: NewChatProps) {
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
             chatId={props.id}
-            input={input}
             model={model}
-            setInput={setInput}
             setModel={setModel}
             sendMessage={sendMessage}
             stop={async () => {}}
-            status={query ? 'submitted' : 'ready'}
+            status='ready'
+            isPending={isNavigating}
             isEphemeral
           />
         </div>

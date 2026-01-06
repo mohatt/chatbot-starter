@@ -23,7 +23,6 @@ export function Chat(props: ChatIdProps) {
   const newChat = useNewChatRef(props)
   const isNewChat = newChat.current != null
   const [isStoredChat, setIsStoredChat] = useState(!isNewChat)
-  const [input, setInput] = useState<string>("");
   const [model, setModel] = useState('gpt-4o');
   const scrollRef = useRef<StickToBottomContext>(null)
 
@@ -166,13 +165,12 @@ export function Chat(props: ChatIdProps) {
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
             chatId={id}
-            input={input}
             model={model}
-            setInput={setInput}
             setModel={setModel}
             sendMessage={sendMessageWithScroll}
             stop={stop}
-            status={isDataLoading ? 'submitted' : status}
+            status={status}
+            isPending={isDataLoading}
             isEphemeral={!isStoredChat}
           />
         </div>

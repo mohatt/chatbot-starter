@@ -29,7 +29,7 @@ export function ToasterProvider(props: ToasterProps) {
   return (
     <Toaster
       theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+      className="toaster group **:data-icon:mt-0.5 **:data-icon:self-start"
       icons={icons}
       style={style}
       {...props}
