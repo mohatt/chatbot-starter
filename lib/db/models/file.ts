@@ -1,4 +1,4 @@
-import { and, or, asc, eq, inArray, isNull, lt } from 'drizzle-orm'
+import { and, or, asc, eq, inArray, isNull, lt, count } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { files, type FileRecordMetadata } from '../schema'
@@ -50,6 +50,21 @@ export class FileModel extends DbModel {
       }
     } catch (_error) {
       throw new AppError('bad_request:database', 'Failed to fetch files')
+    }
+  }
+
+  async countMany(filters: { projectId: string } | { orphan: boolean }): Promise<number> {
+    const where = 'projectId' in filters
+      ? eq(files.projectId, filters.projectId)
+      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.chatId)))
+    try {
+      const [result] = await this.db
+        .select({ value: count() })
+        .from(files)
+        .where(where)
+      return result.value
+    } catch (_error) {
+      throw new AppError('bad_request:database', 'Failed to count files')
     }
   }
 

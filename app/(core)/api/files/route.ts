@@ -45,6 +45,10 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(async ({ api, s
     if (!authz.can(user, 'write:project', project)) {
       throw new AppError('not_found:file')
     }
+    const fileCount = await db.files.countMany({ projectId: project.id })
+    if (fileCount >= config.project.maxFiles) {
+      throw new AppError('bad_request:file', 'Project has reached the maximum number of files.')
+    }
   }
 
   // Cleanup logic
