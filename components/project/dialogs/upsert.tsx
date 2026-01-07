@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api/mutations/projects'
+import { useSidebar } from '@/components/ui/sidebar'
 import { generateUUID, getProjectUrl } from '@/lib/util'
 import { toast } from 'sonner'
 import {
@@ -16,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FormDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
 import type { ChatProjectRecord } from '@/lib/db'
+import type { AppError } from '@/lib/errors'
 
 export interface ProjectUpsertDialogProps extends BaseDialogProps {
   project: ChatProjectRecord | null;
@@ -27,7 +29,8 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   const [prompt, setPrompt] = useState(project?.prompt ?? '');
   const createMutation = useCreateProjectMutation()
   const updateMutation = useUpdateProjectMutation()
-  const { mutate, reset, error, isPending } = project ? updateMutation : createMutation
+  const { mutateAsync, reset, error, isPending } = project ? updateMutation : createMutation
+  const { setOpenMobile } = useSidebar();
   const router = useRouter()
 
   // handle project object updated due to cache invalidation
@@ -40,28 +43,24 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   const handleSubmit = () => {
     if(isPending) return
 
-    mutate(
-      {
-        id: project?.id ?? generateUUID(),
-        name,
-        prompt,
-      },
-      {
-        onSuccess: (result) => {
-          onOpenChange(false)
-          if(!project) {
-            router.push(getProjectUrl(result))
-          }
-          setTimeout(() => {
-            toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
-          }, 100);
-          return
-        },
-        onError: (err) => {
-          toast.error(err.message)
-        },
-      },
-    )
+    mutateAsync({
+      id: project?.id ?? generateUUID(),
+      name,
+      prompt,
+    })
+      .then((result) => {
+        onOpenChange(false)
+        if(!project) {
+          router.push(getProjectUrl(result))
+        }
+        setTimeout(() => {
+          setOpenMobile(false) // new project dialogs are open from the sidebar
+          toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
+        }, 100);
+      })
+      .catch((err: AppError) => {
+        toast.error(err.message)
+      })
   }
 
   return (

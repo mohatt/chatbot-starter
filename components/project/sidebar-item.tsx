@@ -44,7 +44,7 @@ export interface ProjectsSidebarItemProps {
 
 export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
   const { project, onEdit, onDelete, onChatEdit, onChatDelete, onChatSettings, activeChatEditId } = props
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { activeProjectId, activeChatId } = useChatParams();
   const { data } = useChatsQuery({
     variables: { projectId: project.id },
@@ -70,7 +70,11 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
               <Folder className="size-4 group-data-[state=open]/collapsible-sub:hidden" />
               <FolderOpen className="size-4 group-data-[state=closed]/collapsible-sub:hidden" />
             </CollapsibleTrigger>
-            <Link href={getProjectUrl(project)} className='min-w-0 inline-flex grow'>
+            <Link
+              className='min-w-0 inline-flex grow'
+              onClick={() => setOpenMobile(false)}
+              href={getProjectUrl(project)}
+            >
               <span className='truncate'>{project.name}</span>
             </Link>
           </div>

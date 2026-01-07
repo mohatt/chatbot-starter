@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { motion } from "framer-motion";
 import { Suggestion } from '@/components/ai-elements/suggestion'
 import { cn } from '@/lib/utils'
@@ -47,14 +48,16 @@ export interface ChatSuggestionsProps extends Pick<UseChatResult, 'sendMessage'>
 }
 
 export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps) {
-  const randomSuggestions = suggestions
-    .slice()
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 4);
+  const randomSuggestions = useRef(
+    suggestions
+      .slice()
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4)
+  );
 
   return (
     <div className={cn("grid w-full gap-3 sm:grid-cols-2", className)}>
-      {randomSuggestions.map((suggestion, index) => (
+      {randomSuggestions.current.map((suggestion, index) => (
         <motion.div
           key={suggestion}
           animate={{ opacity: 1, y: 0 }}

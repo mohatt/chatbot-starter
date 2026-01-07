@@ -87,7 +87,7 @@ export function FormDialog(props: FormDialogProps) {
   const { open, onOpenChange, title, description, submit = 'Save', cancel = 'Cancel', children, onSubmit, error, isPending, isReady = true } = props
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

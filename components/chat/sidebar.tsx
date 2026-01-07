@@ -103,14 +103,14 @@ export function ChatsSidebar() {
             ))}
             {isEmpty && (
               <SidebarMenuItem>
-                <div className="text-xs text-sidebar-foreground/70 px-2 py-1">
+                <div className="text-xs text-sidebar-foreground/70 px-2 py-1 whitespace-nowrap">
                   Start a chat to see it listed here.
                 </div>
               </SidebarMenuItem>
             )}
             {error && (
               <SidebarMenuItem>
-                <div className="text-xs text-destructive px-2 py-1">
+                <div className="text-xs text-destructive px-2 py-1 whitespace-nowrap">
                   Failed loading chats.
                 </div>
               </SidebarMenuItem>

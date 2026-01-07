@@ -73,6 +73,8 @@ export function Chat(props: ChatIdProps) {
       })
     })
   });
+  const statusRef = useRef(status)
+  statusRef.current = status
 
   const sendMessageWithScroll: typeof sendMessage = useEventCallback((...args) => {
     setTimeout(() => {
@@ -125,7 +127,9 @@ export function Chat(props: ChatIdProps) {
   useEffect(() => {
     // Abort only on unmount; this has no effect if no active chat request
     return () => {
-      void stop()
+      if (statusRef.current === 'streaming') {
+        void stop()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

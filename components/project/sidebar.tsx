@@ -103,7 +103,7 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
             ))}
             {isEmpty && (
               <SidebarMenuItem>
-                <div className="text-xs text-sidebar-foreground/70 px-2 py-1">
+                <div className="text-xs text-sidebar-foreground/70 px-2 py-1 whitespace-nowrap">
                   Create a project to organize chats.
                 </div>
               </SidebarMenuItem>

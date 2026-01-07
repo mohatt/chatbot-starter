@@ -1,4 +1,6 @@
 "use client";
+import { UserSidebar } from "@/components/user/sidebar";
+import { useProjectUpsertDialog } from '@/components/project/dialogs/upsert'
 import {
   Sidebar,
   SidebarContent,
@@ -11,16 +13,14 @@ import {
   SidebarRail, SidebarMenuAction,
   SidebarTrigger
 } from '@/components/ui/sidebar'
-import { useProjectUpsertDialog } from '@/components/project/dialogs/upsert'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChatsSidebar } from "@/components/chat/sidebar"
 import { ProjectsSidebar } from "@/components/project/sidebar"
-import { UserSidebar } from "@/components/user/sidebar";
-import { SquarePen, FolderPlus, Sparkles, MoreHorizontal, PanelLeftIcon } from 'lucide-react'
+import { SquarePen, FolderPlus, Sparkles } from 'lucide-react'
 import Link from "next/link";
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export function AppSidebar() {
-  const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  const { setOpenMobile } = useSidebar();
   const projectDialog = useProjectUpsertDialog()
   return (
     <Sidebar collapsible='icon'>
