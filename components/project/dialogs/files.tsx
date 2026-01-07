@@ -175,7 +175,11 @@ function ProjectFileItem(props: ProjectFileItemProps) {
   const isPending = file.status === 'pending'
   const isImage = file.mimeType.startsWith('image/')
   return (
-    <Item variant='outline' size='sm' className='hover:bg-accent/50'>
+    <Item
+      size='sm'
+      variant='outline'
+      className={cn(isPending ? 'bg-accent/50 animate-pulse' : 'hover:bg-accent/50')}
+    >
       {isImage ? (
         <ItemMedia variant='image'>
           <Image src={file.previewUrl ?? file.url ?? ''} alt={file.name} />
