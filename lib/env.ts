@@ -25,6 +25,6 @@ export function loadEnv(input = noop): Env {
   return envSchema.parse(input === noop ? process.env : input);
 }
 
-export function loadPartialEnv<T extends z.util.Mask<keyof Env>>(pick: T, input = noop) {
+export function loadPartialEnv<T extends z.util.Mask<keyof Env>>(pick: T & Record<Exclude<keyof T, keyof Env>, never>, input = noop) {
   return envSchema.pick(pick).parse(input === noop ? process.env : input);
 }
