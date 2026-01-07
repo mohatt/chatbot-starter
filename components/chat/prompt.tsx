@@ -54,8 +54,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     hasFailedFiles,
     hasMaxFiles,
     openFileDialog,
-    renderFileInput,
-    getDnDProps,
+    renderUpload,
   } = useFileUpload({
     limit: config.chat.message.maxFileParts,
     buckets: ['images', 'retrieval'],
@@ -137,113 +136,121 @@ export const ChatPrompt = (props: ChatPromptProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="size-full mt-4">
-      {renderFileInput()}
-      <InputGroup {...getDnDProps("overflow-hidden")}>
-        {files.length > 0 && (
-          <div className='flex flex-wrap items-center gap-2 p-3 w-full'>
-            {files.map((file) => (
-              <PromptInputAttachment
-                key={file.id}
-                data={{
-                  id: file.id,
-                  type: 'file',
-                  url: file.previewUrl ?? file.url ?? '',
-                  filename: file.name,
-                  mediaType: file.mimeType,
-                }}
-                isPending={file.status === 'idle' || file.status === 'uploading'}
-                error={file.error}
-                onRemove={removeFile}
-              />
-            ))}
-          </div>
-        )}
-        <PromptInputBody>
-          <InputGroupTextarea
-            name="message"
-            className="field-sizing-content max-h-48 min-h-16"
-            placeholder='What’s on your mind today?'
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            onCompositionStart={() => {
-              isComposingRef.current = true
-            }}
-            onCompositionEnd={() => {
-              isComposingRef.current = false
-            }}
-          />
-        </PromptInputBody>
-        <PromptInputFooter>
-          <PromptInputTools>
-            <PromptInputActionMenu>
-              <PromptInputActionMenuTrigger
-                title='Attach files'
-                disabled={isPending || isStreaming}
-              />
-              <PromptInputActionMenuContent>
-                <PromptInputActionMenuItem disabled={hasMaxFiles} onClick={() => openFileDialog('images')}>
-                  <ImageIcon className="size-4" /> Add photos
-                </PromptInputActionMenuItem>
-                <PromptInputActionMenuItem disabled={hasMaxFiles} onClick={() => openFileDialog('retrieval')}>
-                  <PaperclipIcon className="size-4" /> Add documents
-                </PromptInputActionMenuItem>
-              </PromptInputActionMenuContent>
-            </PromptInputActionMenu>
-            <Select
-              onValueChange={(value) => {
-                setModel(value);
-              }}
-              value={model}
-            >
-              <SelectTrigger size='sm' title='Select AI Model' disabled={isPending || isStreaming}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Select AI Model</SelectLabel>
-                  {models.map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      <ModelSelectorLogo provider={model.logo} />
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </PromptInputTools>
-          {isStreaming ? (
-            <InputGroupButton
-              type="button"
-              variant='default'
-              size="icon-sm"
-              className='cursor-pointer'
-              title="Stop"
-              aria-label="Stop"
-              onClick={stop}
-            >
-              <SquareIcon className="size-4" />
-            </InputGroupButton>
-          ) : (
-            <InputGroupButton
-              type="submit"
-              variant='default'
-              size="icon-sm"
-              className='cursor-pointer'
-              title="Submit"
-              aria-label="Submit"
-              disabled={isSubmitDisabled}
-            >
-              {isPending ? (
-                <Loader2Icon className="size-4 animate-spin" />
-              ) : (
-                <CornerDownLeftIcon className="size-4" />
-              )}
-            </InputGroupButton>
+      {renderUpload(
+        <InputGroup>
+          {files.length > 0 && (
+            <div className='flex flex-wrap items-center gap-2 p-3 w-full'>
+              {files.map((file) => (
+                <PromptInputAttachment
+                  key={file.id}
+                  data={{
+                    id: file.id,
+                    type: 'file',
+                    url: file.previewUrl ?? file.url ?? '',
+                    filename: file.name,
+                    mediaType: file.mimeType,
+                  }}
+                  isPending={file.status === 'idle' || file.status === 'uploading'}
+                  error={file.error}
+                  onRemove={removeFile}
+                />
+              ))}
+            </div>
           )}
-        </PromptInputFooter>
-      </InputGroup>
+          <PromptInputBody>
+            <InputGroupTextarea
+              name="message"
+              className="field-sizing-content max-h-48 min-h-16"
+              placeholder='What’s on your mind today?'
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              onCompositionStart={() => {
+                isComposingRef.current = true
+              }}
+              onCompositionEnd={() => {
+                isComposingRef.current = false
+              }}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools>
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger
+                  title='Attach files'
+                  disabled={isPending || isStreaming}
+                />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionMenuItem
+                    onClick={() => openFileDialog('images')}
+                    disabled={hasMaxFiles}
+                  >
+                    <ImageIcon className="size-4" /> Add photos
+                  </PromptInputActionMenuItem>
+                  <PromptInputActionMenuItem
+                    onClick={() => openFileDialog('retrieval')}
+                    disabled={hasMaxFiles}
+                  >
+                    <PaperclipIcon className="size-4" /> Add documents
+                  </PromptInputActionMenuItem>
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
+              <Select
+                name='model'
+                onValueChange={(value) => {
+                  setModel(value);
+                }}
+                value={model}
+              >
+                <SelectTrigger size='sm' title='Select AI Model' disabled={isPending || isStreaming}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Select AI Model</SelectLabel>
+                    {models.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        <ModelSelectorLogo provider={model.logo} />
+                        {model.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </PromptInputTools>
+            {isStreaming ? (
+              <InputGroupButton
+                type="button"
+                variant='default'
+                size="icon-sm"
+                className='cursor-pointer'
+                title="Stop"
+                aria-label="Stop"
+                onClick={stop}
+              >
+                <SquareIcon className="size-4" />
+              </InputGroupButton>
+            ) : (
+              <InputGroupButton
+                type="submit"
+                variant='default'
+                size="icon-sm"
+                className='cursor-pointer'
+                title="Submit"
+                aria-label="Submit"
+                disabled={isSubmitDisabled}
+              >
+                {isPending ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <CornerDownLeftIcon className="size-4" />
+                )}
+              </InputGroupButton>
+            )}
+          </PromptInputFooter>
+        </InputGroup>
+      )}
     </form>
   );
 };

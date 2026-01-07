@@ -29,12 +29,14 @@ import { useDeleteChatDialog } from '@/components/chat/dialogs/delete'
 import { useDeleteAllChatsDialog } from '@/components/chat/dialogs/delete-all'
 import { useDeleteProjectDialog } from './dialogs/delete'
 import { useProjectUpsertDialog } from './dialogs/upsert'
+import { useProjectFilesDialog } from './dialogs/files'
 import type { ChatRecord } from '@/lib/db'
 
 export function ProjectIndex({ id }: { id: string }) {
   const isMobile = useIsMobile();
   const deleteDialog = useDeleteProjectDialog()
   const upsertDialog = useProjectUpsertDialog()
+  const filesDialog = useProjectFilesDialog()
   const deleteAllChatsDialog = useDeleteAllChatsDialog()
   const chatSettingsDialog = useChatSettingsDialog();
   const deleteChatDialog = useDeleteChatDialog();
@@ -93,7 +95,7 @@ export function ProjectIndex({ id }: { id: string }) {
           <DropdownMenu>
             <ItemActions>
               {files.length ? (
-                <Button variant="outline" onClick={() => upsertDialog.open(project)}>
+                <Button variant="outline" onClick={() => filesDialog.open(project)}>
                   <FilesIcon />
                   <span>Files</span>
                   <Badge className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums">
@@ -101,7 +103,7 @@ export function ProjectIndex({ id }: { id: string }) {
                   </Badge>
                 </Button>
               ) : (
-                <Button variant="outline" onClick={() => upsertDialog.open(project)}>
+                <Button variant="outline" onClick={() => filesDialog.open(project)}>
                   <FilePlusCorner />
                   <span>Add files</span>
                 </Button>
@@ -150,6 +152,7 @@ export function ProjectIndex({ id }: { id: string }) {
           ))}
         </div>
       </div>
+      {filesDialog.render()}
       {upsertDialog.render()}
       {deleteDialog.render()}
       {deleteChatDialog.render()}

@@ -1,4 +1,4 @@
-import { and, or, desc, eq, inArray, isNull, lt } from 'drizzle-orm'
+import { and, or, asc, eq, inArray, isNull, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { files, type FileRecordMetadata } from '../schema'
@@ -40,7 +40,7 @@ export class FileModel extends DbModel {
         .select()
         .from(files)
         .where(and(where, cursor != null ? lt(files.id, cursor) : undefined))
-        .orderBy(desc(files.id))
+        .orderBy(asc(files.id))
         .limit(limit + 1)
       const hasMore = rows.length > limit
       const data = hasMore ? rows.slice(0, limit) : rows

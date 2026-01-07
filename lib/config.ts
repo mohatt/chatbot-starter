@@ -23,6 +23,9 @@ export const config = {
       maxLimit: 100
     }
   },
+  project: {
+    maxFiles: 12,
+  },
   fileLoader: {},
   uploads: {
     images: {

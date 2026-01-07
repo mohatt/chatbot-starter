@@ -1,4 +1,4 @@
-import { useCallback, createRef, useMemo, useRef, useState, useEffect, type DragEvent } from 'react'
+import { useCallback, createRef, useMemo, useRef, useState, useEffect, type DragEvent, type ReactElement } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useLazyRef } from '@/hooks/use-lazy-ref'
 import { useUploadFileMutation } from '@/api/mutations/files'
@@ -7,12 +7,15 @@ import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
 import { generateUUID } from '@/lib/util'
 import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
+import { Slot, Slottable } from "@radix-ui/react-slot"
+import { CloudUploadIcon } from "lucide-react"
 import type { inferVariables } from 'react-query-kit'
 import type { AppError } from '@/lib/errors'
 
 export interface ClientUpload<B extends string> {
   id: string
   name: string;
+  size: number
   mimeType: string;
   bucket: B;
   status: "idle" | "uploading" | "uploaded" | "error";
@@ -180,6 +183,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
           status: "idle",
           bucket: fileBucket,
           name,
+          size: blob.size,
           mimeType,
           previewUrl,
           url: null,
@@ -211,11 +215,21 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     }
   })
 
-  const addFile = useCallback((file: ClientUpload<B>) => {
-    setFiles((prev) => prev.concat([file]))
+  const upsertFile = useCallback((file: ClientUpload<B>, overwrite = false) => {
+    setFiles((prev) => {
+      let updated = false;
+      const next = prev.map((f) => {
+        if (f.id === file.id) {
+          updated = true;
+          return overwrite ? file : { ...f, ...file }
+        }
+        return f;
+      })
+      return updated ? next : prev.concat([file])
+    })
   }, []);
 
-  const updateFile = useCallback((id: string, data: Partial<ClientUpload<never>>) => {
+  const updateFile = useCallback((id: string, data: Partial<Omit<ClientUpload<never>, 'id'>>) => {
     setFiles((prev) => prev.map((f) => f.id === id
       ? { ...f, ...data }
       : f
@@ -277,27 +291,24 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     }
   }, []);
 
-  const renderFileInput = () => {
-    return (
-      <div className="hidden">
-        {bucketRefs.current.map(({ id, inputRef, types, title }) => (
-          <input
-            key={id ?? null}
-            type="file"
-            ref={inputRef}
-            accept={types.accept.join(', ')}
-            multiple={!isSingle}
-            onChange={(e) => {
-              if (e.currentTarget.files) uploadFiles(e.currentTarget.files, id);
-              // Reset input value to allow selecting files that were previously removed
-              e.currentTarget.value = "";
-            }}
-            title={title}
-            aria-label={title}
-          />
-        ))}
-      </div>
-    )
+  const getFileInputs = () => {
+    return bucketRefs.current.map(({ id, inputRef, types, title }) => (
+      <input
+        key={id ?? null}
+        type="file"
+        ref={inputRef}
+        accept={types.accept.join(', ')}
+        multiple={!isSingle}
+        onChange={(e) => {
+          if (e.currentTarget.files) uploadFiles(e.currentTarget.files, id);
+          // Reset input value to allow selecting files that were previously removed
+          e.currentTarget.value = "";
+        }}
+        title={title}
+        aria-label={title}
+        className='hidden'
+      />
+    ))
   }
 
   const handleDragEnter = useCallback((e: DragEvent<HTMLElement>) => {
@@ -329,14 +340,42 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     }
   }, [uploadFiles]);
 
-  const getDnDProps = (className?: string) => {
+  const getDnDProps = () => {
     return {
-      className: cn(className, isDragging && 'border-dashed border-primary'),
       onDragEnter: handleDragEnter,
       onDragLeave: handleDragLeave,
       onDragOver: handleDragOver,
       onDrop: handleDrop
     }
+  }
+
+  const renderUpload = (children: ReactElement) => {
+    return (
+      <Slot
+        data-slot="upload-container"
+        className={cn(
+          'relative overflow-hidden transition-colors',
+          isDragging && 'border-dashed border-primary',
+        )}
+        {...getDnDProps()}
+      >
+        <div data-slot="upload-inputs" className="hidden">
+          {getFileInputs()}
+        </div>
+        <div
+          data-slot="upload-overlay"
+          className={cn(
+            'absolute inset-0 flex flex-col gap-2 items-center justify-center z-10',
+            'invisible opacity-0 text-muted-foreground transition-colors',
+            isDragging && 'visible opacity-100 bg-accent/50 backdrop-blur-xs',
+          )}
+        >
+          <CloudUploadIcon className='size-8' />
+          Drop your files here
+        </div>
+        <Slottable>{children}</Slottable>
+      </Slot>
+    )
   }
 
   return {
@@ -346,11 +385,13 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     hasMaxFiles,
     isDragging,
     bucketRefs,
-    renderFileInput,
+    renderUpload,
+    getFileInputs,
     getDnDProps,
     openFileDialog,
     uploadFiles,
-    addFile,
+    upsertFile,
+    updateFile,
     removeFile,
     clearFiles,
   }

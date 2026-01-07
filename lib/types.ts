@@ -19,6 +19,9 @@ export interface AppConfig {
       maxLimit: number
     }
   }
+  project: {
+    maxFiles: number
+  }
   fileLoader: FileLoaderOptions
   uploads: {
     images: {

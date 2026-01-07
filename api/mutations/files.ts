@@ -20,8 +20,8 @@ export const useUploadFileMutation = createMutation({
         if(!prevData?.length) return [file];
         // Dedupe based on file id
         const nextFiles = prevData.filter((f) => f.id !== file.id)
-        // Prepend new file to files array
-        return [file, ...nextFiles]
+        // Append new file to files array (files use asc ordering)
+        return [...nextFiles, file]
       })
     }
   },
