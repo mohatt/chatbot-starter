@@ -5,7 +5,7 @@
 @import "@daveyplate/better-auth-ui/css";
 
 /* include utility classes in streamdown */
-@source "../node_modules/streamdown/dist/index.js";
+@source "../node_modules/streamdown/dist/*.js";
 
 /* include plugins */
 @plugin "@tailwindcss/typography";

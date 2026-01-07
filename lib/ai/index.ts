@@ -34,7 +34,7 @@ export class AI {
       ? createHuggingFace({ apiKey: HUGGING_FACE_API_KEY })(AI_MODEL ?? defaults.hf.chat)
       : gateway(AI_MODEL ?? defaults.gateway.chat)
 
-    this.embedding = gateway.textEmbeddingModel(EMBEDDING_MODEL ?? defaults.gateway.embedding);
+    this.embedding = gateway.embeddingModel(EMBEDDING_MODEL ?? defaults.gateway.embedding);
   }
 
   async embed(value: string): Promise<number[]> {

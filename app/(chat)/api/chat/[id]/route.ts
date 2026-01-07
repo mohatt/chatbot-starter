@@ -81,11 +81,11 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
 
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
-    execute: ({ writer: dataStream }) => {
+    execute: async ({ writer: dataStream }) => {
       const result = streamText({
         model: ai.chat,
         system: ai.prompts.chatPrompt.toString({ timeZone, location }),
-        messages: convertToModelMessages(uiMessages),
+        messages: await convertToModelMessages(uiMessages),
         temperature: 0.2,
         maxOutputTokens: 800,
         tools: ai.createChatTools({ api, dataStream, chat, project }),

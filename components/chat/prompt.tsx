@@ -146,7 +146,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                   data={{
                     id: file.id,
                     type: 'file',
-                    url: file.previewUrl ?? file.url ?? '',
+                    url: file.url ?? file.previewUrl ?? '',
                     filename: file.name,
                     mediaType: file.mimeType,
                   }}

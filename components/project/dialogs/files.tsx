@@ -182,7 +182,7 @@ function ProjectFileItem(props: ProjectFileItemProps) {
     >
       {isImage ? (
         <ItemMedia variant='image'>
-          <Image src={file.previewUrl ?? file.url ?? ''} alt={file.name} />
+          <Image src={file.url ?? file.previewUrl ?? ''} alt={file.name} />
         </ItemMedia>
       ) : (
         <ItemMedia variant='icon'>

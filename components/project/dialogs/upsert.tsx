@@ -54,7 +54,10 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
           router.push(getProjectUrl(result))
         }
         setTimeout(() => {
-          setOpenMobile(false) // new project dialogs are open from the sidebar
+          if(!project) {
+            // New project dialogs are opened from the sidebar
+            setOpenMobile(false)
+          }
           toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
         }, 100);
       })

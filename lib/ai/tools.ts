@@ -18,8 +18,9 @@ export function listFiles({ project, api }: ChatToolContext) {
     listFiles: tool({
       description: 'Lists user-uploaded files and metadata in the current project.',
       inputSchema: z.object({}),
-      toModelOutput(result: ListFilesOutput) {
-        const fileList = result.getOutput()
+      strict: true,
+      toModelOutput({ output }) {
+        const fileList = (output as ListFilesOutput).getOutput()
         return {
           type: 'content',
           value: [
@@ -65,13 +66,14 @@ export function queryFileContents({ api, project, dataStream }: ChatToolContext)
       description: 'Queries file text chunks and returns results sorted based on the distance metric score.',
       inputSchema: z.object({
         query: z.string().describe('The query to use for vector similarity search (Optional).').nullish(),
-        topK: z.number().int().describe('The total number of the results that you want to receive (Default: 5; Max: 10).').default(5),
-        fileIds: z.array(z.string().uuid()).describe('The file ids to use for content search (Optional; Accepts an array of UUID strings).').nullish(),
+        topK: z.number().int().describe('The total number of the results that you want to receive (Default: 5; Max: 25).').default(5),
+        fileIds: z.array(z.uuid()).describe('The file ids to use for content search (Optional; Accepts an array of UUID strings).').nullish(),
       }),
-      toModelOutput({ getOutput }: QueryFileContentsOutput) {
+      strict: true,
+      toModelOutput({ output }) {
         return {
           type: 'json',
-          value: getOutput(),
+          value: (output as QueryFileContentsOutput).getOutput(),
         }
       },
       async execute({ query, topK, fileIds }): Promise<QueryFileContentsOutput> {
