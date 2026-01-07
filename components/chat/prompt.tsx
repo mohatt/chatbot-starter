@@ -150,7 +150,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                     filename: file.name,
                     mediaType: file.mimeType,
                   }}
-                  isPending={file.status === 'idle' || file.status === 'uploading'}
+                  isPending={file.status === 'idle' || file.status === 'pending'}
                   error={file.error}
                   onRemove={removeFile}
                 />

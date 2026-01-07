@@ -18,7 +18,7 @@ export interface ClientUpload<B extends string> {
   size: number
   mimeType: string;
   bucket: B;
-  status: "idle" | "uploading" | "uploaded" | "error";
+  status: "idle" | "pending" | "uploaded" | "error";
   url?: string | null;
   previewUrl?: string | null;
   error?: string | null;
@@ -196,7 +196,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     for (const [id, fileBucket, { blob }] of capped) {
       queueRef.current
         .call(async () => {
-          updateFile(id, { status: "uploading" })
+          updateFile(id, { status: "pending" })
           return mutateAsync({ id, file: blob, bucket: fileBucket as any, metadata })
         })
         .then((uploadedFile) => {
@@ -263,7 +263,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     let hasPending = false
     let hasFailed = false
     for (const file of files) {
-      if (file.status === "uploading" || file.status === "idle") {
+      if (file.status === "pending" || file.status === "idle") {
         hasPending = true;
       } else if (file.status === "error") {
         hasFailed = true;

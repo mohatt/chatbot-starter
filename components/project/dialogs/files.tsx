@@ -82,7 +82,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
   }, [dbFiles, upsertFile])
 
   const handleDelete = (id: string) => {
-    updateFile(id, { status: 'uploading' })
+    updateFile(id, { status: 'pending' })
     deleteDbFile({ id })
       .then(() => removeFile(id))
       .catch((err: AppError) => updateFile(id, { status: 'error', error: err.message }))
@@ -172,7 +172,7 @@ interface ProjectFileItemProps {
 
 function ProjectFileItem(props: ProjectFileItemProps) {
   const { file, onDelete } = props
-  const isPending = file.status === 'uploading'
+  const isPending = file.status === 'pending'
   const isImage = file.mimeType.startsWith('image/')
   return (
     <Item variant='outline' size='sm' className='hover:bg-accent/50'>
