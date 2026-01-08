@@ -30,7 +30,7 @@ export const config = {
   uploads: {
     images: {
       rules: {
-        extensions: ['png', 'jpg', 'webp'],
+        extensions: ['png', 'jpg', 'webp', 'gif'],
         maxSize: 5 * 1024 * 1024,
       }
     },

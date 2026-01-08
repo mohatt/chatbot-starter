@@ -34,7 +34,7 @@ export function DefaultVariant({ title, href, menu }: ChatListItemVariantProps) 
           <ItemContent className='min-w-0'>
             <ItemTitle className='w-full'>{title}</ItemTitle>
           </ItemContent>
-          <ItemActions className='pointer-fine:opacity-0 group-hover/item:opacity-100 group-has-data-[state=open]/item:opacity-100'>
+          <ItemActions className='pointer-fine:opacity-0 group-hover/item:opacity-100 group-focus-within/item:opacity-100 group-has-data-[state=open]/item:opacity-100'>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon-sm">
                 <MoreHorizontal />

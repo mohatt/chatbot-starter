@@ -25,7 +25,7 @@ export interface AppConfig {
   fileLoader: FileLoaderOptions
   uploads: {
     images: {
-      rules: FileUploadRules<'png' | 'jpg' | 'webp'>
+      rules: FileUploadRules<'png' | 'jpg' | 'webp' | 'gif'>
     }
     retrieval: {
       rules: FileUploadRules<FileLoaderType>

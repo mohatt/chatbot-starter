@@ -58,13 +58,17 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
     buckets: ['retrieval'],
     metadata: { namespace: 'project', projectId },
     limit: config.project.maxFiles,
-    onError: ({ message }) => {
-      toast.error(message)
+    onError: ({ file, message }) => {
+      toast.error(file?.name ?? 'Upload Error', {
+        description: message
+      })
     },
   })
 
   useEffect(() => {
+    dbFilesRef.current.clear()
     if (!dbFiles) return
+
     for (const dbFile of dbFiles) {
       const { id, bucket, name, size, mimeType, url } = dbFile
       upsertFile({
@@ -81,12 +85,12 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
     }
   }, [dbFiles, upsertFile])
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     updateFile(id, { status: 'pending' })
     deleteDbFile({ id })
       .then(() => removeFile(id))
       .catch((err: AppError) => updateFile(id, { status: 'error', error: err.message }))
-  }
+  }, [deleteDbFile, updateFile, removeFile])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,7 +153,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
                       key={file.id}
                       file={file}
                       dbFile={dbFilesRef.current.get(file.id)}
-                      onDelete={() => handleDelete(file.id)}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </ItemGroup>
@@ -165,7 +169,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
 interface ProjectFileItemProps {
   file: ClientUpload<string>;
   dbFile?: FileRecord;
-  onDelete: () => void;
+  onDelete: (id: string) => void;
 }
 
 function ProjectFileItem(props: ProjectFileItemProps) {
@@ -176,7 +180,7 @@ function ProjectFileItem(props: ProjectFileItemProps) {
     <Item
       size='sm'
       variant='outline'
-      className={cn(isPending ? 'bg-accent/50 animate-pulse' : 'hover:bg-accent/50')}
+      className={isPending ? 'bg-accent/50 animate-pulse' : 'hover:bg-accent/50'}
     >
       {isImage ? (
         <ItemMedia variant='image'>
@@ -194,18 +198,22 @@ function ProjectFileItem(props: ProjectFileItemProps) {
           </span>
         </ItemTitle>
         <ItemDescription>
-          {isImage ? 'Image' : 'Document'} · {formatFileSize(file.size)}
+          {file.error != null ? (
+            <span className='text-destructive'>{file.error}</span>
+          ) : (
+            <>{isImage ? 'Image' : 'Document'} · {formatFileSize(file.size)}</>
+          )}
         </ItemDescription>
       </ItemContent>
       <ItemActions>
-        {file.url && (
+        {file.url && !isPending && (
           <Button
             asChild
-            variant="ghost"
+            variant="outline"
             size="icon-sm"
             title="Download file"
             aria-label="Download file"
-            className={cn(isPending && 'pointer-events-none opacity-50')}
+            className='pointer-fine:opacity-0 md:opacity-100 group-hover/item:opacity-100 group-focus-within/item:opacity-100'
           >
             <Link href={file.url} target="_blank" rel="noopener noreferrer">
               <DownloadIcon className="size-4" />
@@ -220,11 +228,12 @@ function ProjectFileItem(props: ProjectFileItemProps) {
         ) : (
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon-sm"
-            onClick={onDelete}
+            onClick={() => onDelete(file.id)}
             title="Remove file"
             aria-label="Remove file"
+            className='pointer-fine:opacity-0 md:opacity-100 group-hover/item:opacity-100 group-focus-within/item:opacity-100'
           >
             <Trash2Icon className="size-4" />
           </Button>
