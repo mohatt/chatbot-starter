@@ -86,7 +86,7 @@ export function ProjectIndex({ id }: { id: string }) {
             <button
               name="project-title"
               aria-label="Edit the title of this project"
-              className='min-w-0 cursor-pointer truncate'
+              className='min-w-0 truncate'
               onClick={() => upsertDialog.open(project!)}
             >
               {project.name}

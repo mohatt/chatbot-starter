@@ -66,7 +66,7 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
       <SidebarMenuItem>
         <SidebarMenuButton isActive={project.id === activeProjectId} asChild>
           <div>
-            <CollapsibleTrigger className='cursor-pointer'>
+            <CollapsibleTrigger>
               <Folder className="size-4 group-data-[state=open]/collapsible-sub:hidden" />
               <FolderOpen className="size-4 group-data-[state=closed]/collapsible-sub:hidden" />
             </CollapsibleTrigger>

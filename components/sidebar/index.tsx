@@ -53,12 +53,12 @@ export function AppSidebar() {
             </Tooltip>
           </SidebarMenuItem>
           <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
-            <SidebarMenuButton className="group-hover:hidden cursor-pointer" asChild>
+            <SidebarMenuButton className="group-hover:hidden" asChild>
               <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
                 <Sparkles className="size-4" />
               </span>
             </SidebarMenuButton>
-            <SidebarMenuButton tooltip='Open sidebar' className="cursor-pointer hidden group-hover:flex" asChild>
+            <SidebarMenuButton tooltip='Open sidebar' className="hidden group-hover:flex" asChild>
               <SidebarTrigger />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -73,7 +73,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
-            <SidebarMenuButton tooltip='New project' className="cursor-pointer" onClick={() => projectDialog.open(null)}>
+            <SidebarMenuButton tooltip='New project' onClick={() => projectDialog.open(null)}>
               <FolderPlus />
               <span>New project</span>
             </SidebarMenuButton>

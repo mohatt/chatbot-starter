@@ -10,24 +10,16 @@ export function useCopyToClipboard({ timeout = 2000, onCopy }: UseCopyToClipboar
   const [isCopied, setIsCopied] = useState(false)
 
   const copyToClipboard = useCallback((value: string) => {
-    if (typeof window === "undefined" || !navigator.clipboard.writeText) {
+    if (typeof window === "undefined" || !navigator.clipboard.writeText || !value) {
       return
     }
 
-    if (!value) return
-
     navigator.clipboard.writeText(value).then(() => {
       setIsCopied(true)
-
-      if (onCopy) {
-        onCopy()
-      }
-
-      if (timeout !== 0) {
-        setTimeout(() => {
-          setIsCopied(false)
-        }, timeout)
-      }
+      onCopy?.()
+      setTimeout(() => {
+        setIsCopied(false)
+      }, timeout)
     }, console.error)
   }, [timeout, onCopy])
 

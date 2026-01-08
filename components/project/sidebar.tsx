@@ -77,7 +77,7 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
         <CollapsibleContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton className="cursor-pointer" onClick={() => onUpsert(null)}>
+              <SidebarMenuButton onClick={() => onUpsert(null)}>
                 <FolderPlus />
                 <span>New project</span>
               </SidebarMenuButton>

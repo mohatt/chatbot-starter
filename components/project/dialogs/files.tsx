@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/item'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { LoadingDots } from '@/components/loading'
-import { DownloadIcon, FilePlusCorner, FileTextIcon, Loader2Icon, Trash2Icon, XIcon } from 'lucide-react'
+import { DownloadIcon, FilePlusCorner, FileTextIcon, Trash2Icon, XIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import type { ChatProjectRecord, FileRecord } from '@/lib/db'
 import type { AppError } from '@/lib/errors'
@@ -90,13 +90,11 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl" showCloseButton={false}>
-        <DialogHeader className="flex flex-row items-center justify-between gap-4">
+      <DialogContent className="px-0 sm:max-w-3xl" showCloseButton={false}>
+        <DialogHeader className="px-6 flex flex-row items-center justify-between gap-4">
           <div className="text-left grow">
             <DialogTitle>Project files {files.length > 0 && `(${files.length})`}</DialogTitle>
-            <DialogDescription>
-              Manage files for <strong>{project.name}</strong>.
-            </DialogDescription>
+            <DialogDescription></DialogDescription>
           </div>
           <div className='flex gap-2'>
             <Button
@@ -119,8 +117,8 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
         </DialogHeader>
         {renderUpload(
           <div className={cn(
-            "flex flex-col items-center justify-center gap-3 min-h-[40vh] max-h-[80vh] rounded-lg",
-            !files.length && 'border border-border/70',
+            "flex flex-col items-center justify-center min-h-[40vh] max-h-[80vh]",
+            !files.length && 'mx-6 border border-border/70 rounded-lg',
           )}>
             {dbFilesLoading ? (
               <LoadingDots className='text-3xl' />
@@ -134,7 +132,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
                 type="button"
                 variant='ghost'
                 size='lg'
-                className="size-full flex-col whitespace-normal cursor-pointer"
+                className="size-full flex-col whitespace-normal"
                 onClick={() => openFileDialog()}
               >
                 <FilePlusCorner className='size-6' />
@@ -144,7 +142,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
                 </span>
               </Button>
             ) : (
-              <ScrollArea className="size-full">
+              <ScrollArea className="size-full px-6">
                 <ItemGroup className="gap-3 w-full">
                   {files.map((file) => (
                     <ProjectFileItem
@@ -189,7 +187,6 @@ function ProjectFileItem(props: ProjectFileItemProps) {
           <FileTextIcon />
         </ItemMedia>
       )}
-
       <ItemContent>
         <ItemTitle>
           <span className="truncate">
@@ -206,28 +203,32 @@ function ProjectFileItem(props: ProjectFileItemProps) {
             asChild
             variant="ghost"
             size="icon-sm"
-            title="Download"
+            title="Download file"
             aria-label="Download file"
-            className={isPending ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            className={cn(isPending && 'pointer-events-none opacity-50')}
           >
             <Link href={file.url} target="_blank" rel="noopener noreferrer">
               <DownloadIcon className="size-4" />
             </Link>
           </Button>
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className='cursor-pointer'
-          onClick={onDelete}
-          disabled={isPending}
-          title="Remove file"
-          aria-label="Remove file"
-        >
-          {isPending ? <Loader2Icon className="size-4 animate-spin" /> : <Trash2Icon className="size-4" />}
-          <span className="sr-only">Remove</span>
-        </Button>
+        {isPending ? (
+          <span className='inline-flex items-center font-medium size-8 px-2'>
+            <LoadingDots className='text-lg' />
+            <span className="sr-only">In progress</span>
+          </span>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={onDelete}
+            title="Remove file"
+            aria-label="Remove file"
+          >
+            <Trash2Icon className="size-4" />
+          </Button>
+        )}
       </ItemActions>
     </Item>
   )

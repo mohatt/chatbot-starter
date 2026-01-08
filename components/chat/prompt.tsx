@@ -224,7 +224,6 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                 type="button"
                 variant='default'
                 size="icon-sm"
-                className='cursor-pointer'
                 title="Stop"
                 aria-label="Stop"
                 onClick={stop}
@@ -236,7 +235,6 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                 type="submit"
                 variant='default'
                 size="icon-sm"
-                className='cursor-pointer'
                 title="Submit"
                 aria-label="Submit"
                 disabled={isSubmitDisabled}

@@ -88,7 +88,7 @@ export function UserSidebar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem className="w-full cursor-pointer" asChild>
+                    <DropdownMenuItem className="w-full" asChild>
                       {user.isAnonymous ? (
                         <Link href='/auth/sign-up'>
                           <UserRoundPlus />
@@ -113,7 +113,7 @@ export function UserSidebar() {
                         <DropdownMenuSubContent className='w-48' sideOffset={4}>
                           <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                             {themes.map(({ key, icon: Icon, label }) => (
-                              <DropdownMenuRadioItem key={key} value={key} className='cursor-pointer'>
+                              <DropdownMenuRadioItem key={key} value={key}>
                                 <Icon /> {label}
                               </DropdownMenuRadioItem>
                             ))}
@@ -122,7 +122,7 @@ export function UserSidebar() {
                       </DropdownMenuPortal>
                     </DropdownMenuSub>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer" asChild>
+                    <DropdownMenuItem asChild>
                       {user.isAnonymous ? (
                         <Link href='/auth/sign-in'>
                           <LogIn />
