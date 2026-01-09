@@ -30,9 +30,14 @@ import { useDeleteAllChatsDialog } from '@/components/chat/dialogs/delete-all'
 import { useDeleteProjectDialog } from './dialogs/delete'
 import { useProjectUpsertDialog } from './dialogs/upsert'
 import { useProjectFilesDialog } from './dialogs/files'
+import type { NewChatChildProps } from '@/components/chat/new-chat'
 import type { ChatRecord } from '@/lib/db'
 
-export function ProjectIndex({ id }: { id: string }) {
+export interface ProjectIndexProps extends Pick<NewChatChildProps, 'sendMessage'> {
+  id: string
+}
+
+export function ProjectIndex({ id }: ProjectIndexProps) {
   const isMobile = useIsMobile();
   const deleteDialog = useDeleteProjectDialog()
   const upsertDialog = useProjectUpsertDialog()
@@ -55,7 +60,7 @@ export function ProjectIndex({ id }: { id: string }) {
     () => chatsData?.pages.flatMap((page) => page.data) ?? [],
     [chatsData],
   );
-  const isDataLoading = projectLoading || filesLoading || chatsLoading
+  const isDataLoading = projectLoading || chatsLoading
   const dataError = projectError || filesError || chatsError;
 
   if (isDataLoading) {
@@ -66,7 +71,7 @@ export function ProjectIndex({ id }: { id: string }) {
     )
   }
 
-  if (dataError || !project || !files || !chatsData) {
+  if (dataError || !project || !chatsData) {
     return (
       <ConversationEmptyState
         className='text-destructive'
@@ -94,7 +99,7 @@ export function ProjectIndex({ id }: { id: string }) {
           </ItemTitle>
           <DropdownMenu>
             <ItemActions>
-              {files.length ? (
+              {files?.length ? (
                 <Button variant="outline" onClick={() => filesDialog.open(project)}>
                   <FilesIcon />
                   <span>Files</span>
@@ -103,9 +108,13 @@ export function ProjectIndex({ id }: { id: string }) {
                   </Badge>
                 </Button>
               ) : (
-                <Button variant="outline" onClick={() => filesDialog.open(project)}>
-                  <FilePlusCorner />
-                  <span>Add files</span>
+                <Button
+                  variant="outline"
+                  onClick={() => filesDialog.open(project)}
+                  disabled={filesLoading}
+                >
+                  {filesLoading ? <LoadingDots /> : <FilePlusCorner />}
+                  <span>{filesLoading ? 'Files' : 'Add files'}</span>
                 </Button>
               )}
               <DropdownMenuTrigger asChild>
@@ -150,6 +159,11 @@ export function ProjectIndex({ id }: { id: string }) {
               variant='item'
             />
           ))}
+          {chats.length === 0 && (
+            <div className="text-muted-foreground text-xl">
+              Chats in this project will appear here.
+            </div>
+          )}
         </div>
       </div>
       {filesDialog.render()}

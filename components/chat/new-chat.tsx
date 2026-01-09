@@ -7,12 +7,15 @@ import { ChatHeader } from './header'
 import { ChatGreeting, ChatSuggestions } from './greeting'
 import { ChatPrompt } from './prompt'
 
+export interface NewChatChildProps extends Pick<UseChatResult, 'sendMessage'> {}
+
 export interface NewChatProps extends ChatIdProps {
-  children?: ReactNode;
+  children?: ReactNode | ((props: NewChatChildProps) => ReactNode);
 }
 
 export function NewChat(props: NewChatProps) {
-  const createNewChat = useCreateNewChat(props)
+  const { children, ...newChatProps } = props;
+  const createNewChat = useCreateNewChat(newChatProps)
   const router = useRouter()
   const searchParams = useSearchParams();
   const query = searchParams.get("query")?.trim();
@@ -42,13 +45,15 @@ export function NewChat(props: NewChatProps) {
         <ChatHeader />
         <div className="relative flex-1">
           <div className="absolute inset-0">
-            {props.children ?? (
-              <div className='flex flex-col gap-8 h-full overflow-y-auto'>
+            {typeof children === 'function' ? (
+              children({ sendMessage })
+            ) : (
+              children ?? (
                 <ConversationEmptyState>
                   <ChatGreeting/>
                   <ChatSuggestions className='md:max-w-3xl mt-4' sendMessage={sendMessage} />
                 </ConversationEmptyState>
-              </div>
+              )
             )}
           </div>
         </div>

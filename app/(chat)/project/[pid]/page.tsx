@@ -9,7 +9,9 @@ export default function ChatPage(props: PageProps<'/project/[pid]'>) {
   const cid = generateUUID();
   return (
     <NewChat key={`${pid}/${cid}`} id={cid} projectId={pid}>
-      <ProjectIndex id={pid} />
+      {({ sendMessage }) => (
+        <ProjectIndex id={pid} sendMessage={sendMessage} />
+      )}
     </NewChat>
   );
 }
