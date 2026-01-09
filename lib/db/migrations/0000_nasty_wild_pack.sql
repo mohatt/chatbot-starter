@@ -91,6 +91,23 @@ CREATE TABLE "projects" (
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "configs" (
+	"key" varchar(128) NOT NULL,
+	"group" varchar(128) NOT NULL,
+	"value" jsonb,
+	"updatedAt" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "configs_group_key_pk" PRIMARY KEY("group","key")
+);
+--> statement-breakpoint
+CREATE TABLE "cronJobs" (
+	"id" varchar(128) PRIMARY KEY NOT NULL,
+	"status" varchar NOT NULL,
+	"lockId" uuid,
+	"lockedAt" timestamp,
+	"completedAt" timestamp,
+	"error" text
+);
+--> statement-breakpoint
 CREATE TABLE "files" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar(256) NOT NULL,
@@ -126,6 +143,8 @@ CREATE INDEX "chats_user_project_id_idx" ON "chats" USING btree ("userId","proje
 CREATE INDEX "chats_user_ungrouped_id_idx" ON "chats" USING btree ("userId","id" DESC NULLS LAST) WHERE "chats"."projectId" is null;--> statement-breakpoint
 CREATE INDEX "messages_chat_id_idx" ON "messages" USING btree ("chatId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "projects_user_id_idx" ON "projects" USING btree ("userId","id" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "configs_group_idx" ON "configs" USING btree ("group");--> statement-breakpoint
+CREATE INDEX "cronJobs_status_idx" ON "cronJobs" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "files_user_id_idx" ON "files" USING btree ("userId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "files_chat_id_idx" ON "files" USING btree ("chatId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "files_project_id_idx" ON "files" USING btree ("projectId","id" DESC NULLS LAST);

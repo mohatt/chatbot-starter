@@ -4,7 +4,7 @@ import { AppError } from '@/lib/errors'
 import { handlers } from './handlers'
 
 export const GET = createApiHandler<RouteContext<'/api/cron/[id]'>>(async ({ api, request, params }) => {
-  const { env } = api
+  const { env, db } = api
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
     throw new AppError('unauthorized:api');
@@ -16,7 +16,23 @@ export const GET = createApiHandler<RouteContext<'/api/cron/[id]'>>(async ({ api
     throw new AppError('not_found:api');
   }
 
-  // @todo use a locking mechanism to prevent concurrent runs with the same id
-  await handler(api);
-  return NextResponse.json({ success: true });
+  // TTL avoids stale locks if a run crashes or times out (10 minutes)
+  const lockTTL = 10 * 60 * 1000;
+  const lockRow = await db.cronJobs.acquireLock(id, lockTTL);
+  if (!lockRow) {
+    throw new AppError('rate_limit:api');
+  }
+
+  let error: string | null;
+  try {
+    await handler(api);
+    error = null;
+  } catch (err) {
+    error = String(err);
+  }
+
+  // Mark the cron job as complete and release the lock
+  await db.cronJobs.complete(id, lockRow.lockId!, error);
+
+  return NextResponse.json({ status: error ? 'error' : 'success' });
 })

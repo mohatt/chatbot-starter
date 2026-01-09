@@ -1,5 +1,5 @@
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { ChatModel, ChatProjectModel, ChatMessageModel, FileModel, BillingModel, BillingPeriodModel } from './models'
+import { ChatModel, ChatProjectModel, ChatMessageModel, FileModel, BillingModel, BillingPeriodModel, CronJobModel, ConfigModel } from './models'
 import type { Env } from '@/lib/env'
 import * as schema from './schema'
 
@@ -11,6 +11,8 @@ export class Db {
   readonly files: FileModel
   readonly billing: BillingModel
   readonly billingPeriods: BillingPeriodModel
+  readonly cronJobs: CronJobModel
+  readonly config: ConfigModel
 
   constructor(env: Pick<Env, 'POSTGRES_URL'>) {
     this.client = drizzle(env.POSTGRES_URL, { schema });
@@ -20,6 +22,8 @@ export class Db {
     this.files = new FileModel(this.client)
     this.billing = new BillingModel(this.client)
     this.billingPeriods = new BillingPeriodModel(this.client)
+    this.cronJobs = new CronJobModel(this.client)
+    this.config = new ConfigModel(this.client)
   }
 }
 
