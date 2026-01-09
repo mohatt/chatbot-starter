@@ -84,7 +84,14 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     execute: async ({ writer: dataStream }) => {
       const result = streamText({
         model: ai.chat,
-        system: ai.prompts.chatPrompt.toString({ timeZone, location }),
+        system: project != null
+          ? ai.prompts.projectChatPrompt.toString({
+            projectName: project.name,
+            projectPrompt: project.prompt,
+            timeZone,
+            location
+          })
+          : ai.prompts.chatPrompt.toString({ timeZone, location }),
         messages: await convertToModelMessages(uiMessages),
         temperature: 0.2,
         maxOutputTokens: 800,
