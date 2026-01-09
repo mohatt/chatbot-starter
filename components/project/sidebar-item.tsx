@@ -24,6 +24,7 @@ import {
   Trash2,
   Settings,
 } from 'lucide-react'
+import { LoadingDots } from '@/components/loading'
 import { ChatListItem } from '@/components/chat/list-item'
 import { getProjectUrl } from '@/lib/util'
 import { cn } from '@/lib/utils'
@@ -46,7 +47,7 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
   const { project, onEdit, onDelete, onChatEdit, onChatDelete, onChatSettings, activeChatEditId } = props
   const { isMobile, setOpenMobile } = useSidebar();
   const { activeProjectId, activeChatId } = useChatParams();
-  const { data } = useChatsQuery({
+  const { data, isLoading } = useChatsQuery({
     variables: { projectId: project.id },
   })
 
@@ -66,10 +67,14 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
       <SidebarMenuItem>
         <SidebarMenuButton isActive={project.id === activeProjectId} asChild>
           <div>
-            <CollapsibleTrigger>
-              <Folder className="size-4 group-data-[state=open]/collapsible-sub:hidden" />
-              <FolderOpen className="size-4 group-data-[state=closed]/collapsible-sub:hidden" />
-            </CollapsibleTrigger>
+            {isLoading ? (
+              <LoadingDots />
+            ) : (
+              <CollapsibleTrigger>
+                <Folder className="size-4 group-data-[state=open]/collapsible-sub:hidden" />
+                <FolderOpen className="size-4 group-data-[state=closed]/collapsible-sub:hidden" />
+              </CollapsibleTrigger>
+            )}
             <Link
               className='min-w-0 inline-flex grow'
               onClick={() => setOpenMobile(false)}
