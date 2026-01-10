@@ -221,7 +221,9 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
       const next = prev.map((f) => {
         if (f.id === file.id) {
           updated = true;
-          return overwrite ? file : { ...f, ...file }
+          if (overwrite) return file
+          if (f.status !== file.status) return f
+          return { ...f, ...file }
         }
         return f;
       })
