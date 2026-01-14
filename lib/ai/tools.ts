@@ -147,7 +147,7 @@ export function readFileText({ api, project }: ChatToolContext) {
   }
   return {
     readFileText: tool({
-      description: 'Reads all text chunks for a user file (shouldn\'t be used on images).',
+      description: 'Reads all text chunks for a user file (doesn\'t work on images).',
       inputSchema: z.object({
         fileId: z.uuid().describe('The file id to read.'),
       }),

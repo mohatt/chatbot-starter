@@ -6,17 +6,13 @@ import { cn } from '@/lib/utils'
 import {
   Message,
   MessageContent,
-  MessageResponse,
   MessageActions,
   MessageAction,
   MessageAttachments,
   MessageAttachment,
 } from '@/components/ai-elements/message'
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from '@/components/ai-elements/reasoning'
+import { Streamdown } from "streamdown";
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
 import {
   Item,
   ItemActions,
@@ -213,13 +209,13 @@ function ChatMessage(props: ChatMessageProps) {
                   if (tPart.type === 'reasoning') {
                     const isReasoningStreaming = tPart.state === 'streaming'
                     return (
-                      <MessageResponse
+                      <Streamdown
                         key={`${i}-${tPart.type}-${j}`}
                         mode={isReasoningStreaming ? 'streaming' : 'static'}
                         isAnimating={isReasoningStreaming}
                       >
                         {tPart.text}
-                      </MessageResponse>
+                      </Streamdown>
                     )
                   }
                   return (
@@ -262,12 +258,13 @@ function ChatMessage(props: ChatMessageProps) {
           return (
             <MessageContent className='max-w-full' key={`${i}-text`}>
               {isAssistant ? (
-                <MessageResponse
+                <Streamdown
+                  caret={isStreaming ? 'block' : undefined}
                   mode={isStreaming ? 'streaming' : 'static'}
                   isAnimating={isStreaming}
                 >
                   {part.text}
-                </MessageResponse>
+                </Streamdown>
               ) : (
                 <p className='whitespace-pre-wrap'>
                   {part.text}
