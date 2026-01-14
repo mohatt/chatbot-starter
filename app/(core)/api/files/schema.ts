@@ -14,7 +14,10 @@ const fileUploadSchema = z.discriminatedUnion('bucket', [
     id: uuidV7,
     file: fileUpload(config.uploads.images.rules),
     bucket: z.literal('images'),
-    metadata: chatMetadataSchema
+    metadata: z.discriminatedUnion('namespace', [
+      chatMetadataSchema,
+      projectMetadataSchema,
+    ])
   }),
   z.strictObject({
     id: uuidV7,

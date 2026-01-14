@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, lt } from 'drizzle-orm'
-import { isTextUIPart, isFileUIPart, isDataUIPart, type UIMessage } from 'ai'
+import { isTextUIPart, isFileUIPart, isDataUIPart, isStaticToolUIPart, type UIMessage } from 'ai'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { messages } from '../schema'
@@ -11,7 +11,7 @@ export interface ChatMessageMetadata {
   createdAt: string
 }
 
-export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, unknown>, {}>;
+export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, unknown>>;
 
 export class ChatMessageModel extends DbModel {
   readonly schema = messages;
@@ -67,16 +67,8 @@ export class ChatMessageModel extends DbModel {
         role,
         chatId,
         parts: parts.map((part) => {
-          if (isDataUIPart(part)) {
+          if (isTextUIPart(part) || isFileUIPart(part) || isDataUIPart(part) || isStaticToolUIPart(part)) {
             return part
-          }
-          if (isFileUIPart(part)) {
-            const { providerMetadata, ...filePart } = part;
-            return filePart
-          }
-          if (isTextUIPart(part)) {
-            const { state, providerMetadata, ...textPart } = part;
-            return textPart
           }
           return null!
         }).filter(Boolean)

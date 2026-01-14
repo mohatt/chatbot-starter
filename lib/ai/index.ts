@@ -3,7 +3,7 @@ import { createHuggingFace } from '@ai-sdk/huggingface';
 import { embed, embedMany, type ToolSet } from 'ai'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
-import { listFiles, queryFileContents } from './tools'
+import { listFiles, readFile, readFileText, fileTextSearch } from './tools'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 
 const defaults = {
@@ -61,7 +61,9 @@ export class AI {
   createChatTools(context: ChatToolContext) {
     return {
       ...listFiles(context),
-      ...queryFileContents(context),
+      ...readFile(context),
+      ...readFileText(context),
+      ...fileTextSearch(context),
     } satisfies ToolSet
   }
 }

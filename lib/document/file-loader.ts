@@ -34,10 +34,11 @@ export type FileLoaderType = Extract<keyof FileLoaderTypeMap, string>
 
 type FileLoaderDocMap = {
   [Type in FileLoaderType]: DocumentInterface<FileLoaderTypeMap[Type]['metadata'] & FileLoaderMetadata & {
+    index: number
     file: {
       id: string
       name: string
-      type: string
+      mimeType: string
     }
   }>
 }
@@ -83,10 +84,6 @@ export class FileLoader {
       throw new Error(`Unsupported file type: ${file.mimeExt}`)
     }
     return await this[loadMethod](id, file as any)
-  }
-
-  isDocType<K extends FileLoaderType>(doc: FileLoaderDoc, type: K): doc is FileLoaderDoc<K> {
-    return doc.metadata.file.type === type
   }
 
   private async loadPDF(id: string, file: FileLoaderInput<'pdf'>): Promise<FileLoaderResult<'pdf'>> {
@@ -162,7 +159,7 @@ export class FileLoader {
     let markdown = '';
     for await (const record of parser) {
       i++;
-      const content: string[] = [`## Record ${i}`]
+      const content: string[] = [`## Row ${i}`]
       Object.keys(record).forEach((key) => {
         content.push(`- ${key}: ${record[key]}`)
       })
@@ -199,11 +196,12 @@ export class FileLoader {
         metadata: {
           ...docMeta,
           ...this.metadata,
+          index,
           file: {
             ...('file' in docMeta ? docMeta.file as {} : {}),
             id,
             name: file.name,
-            type: file.mimeType,
+            mimeType: file.mimeType,
           },
         },
       }

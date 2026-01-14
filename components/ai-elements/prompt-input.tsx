@@ -69,7 +69,6 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from 'next/image'
 
 // ============================================================================
 // Provider Context & Types
@@ -317,7 +316,7 @@ export function PromptInputAttachment({
           <div className="relative size-5 shrink-0">
             <div className="absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0">
               {isImage ? (
-                <Image
+                <img
                   alt={filename || "attachment"}
                   className="size-5 object-cover"
                   height={20}

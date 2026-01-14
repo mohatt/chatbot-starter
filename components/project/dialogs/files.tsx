@@ -29,7 +29,6 @@ import { DownloadIcon, FilePlusCorner, FileTextIcon, Trash2Icon, XIcon } from 'l
 import { config } from '@/lib/config'
 import type { ChatProjectRecord, FileRecord } from '@/lib/db'
 import type { AppError } from '@/lib/errors'
-import Image from 'next/image'
 import Link from 'next/link'
 
 export interface ProjectFilesDialogProps extends BaseDialogProps {
@@ -55,7 +54,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
     removeFile,
     hasMaxFiles,
   } = useFileUpload({
-    buckets: ['retrieval'],
+    buckets: ['retrieval', 'images'],
     metadata: { namespace: 'project', projectId },
     limit: config.project.maxFiles,
     onError: ({ file, message }) => {
@@ -184,7 +183,7 @@ function ProjectFileItem(props: ProjectFileItemProps) {
     >
       {isImage ? (
         <ItemMedia variant='image'>
-          <Image src={file.url ?? file.previewUrl ?? ''} alt={file.name} />
+          <img src={file.url ?? file.previewUrl ?? ''} alt={file.name} />
         </ItemMedia>
       ) : (
         <ItemMedia variant='icon'>

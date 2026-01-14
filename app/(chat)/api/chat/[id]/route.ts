@@ -63,7 +63,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     await db.messages.deleteMany(id, message.id)
   }
 
-  const { data: dbMessages } = await db.messages.findMany(id, 10);
+  const { data: dbMessages } = await db.messages.findMany(id, 25);
   const uiMessages = [...dbMessages, message];
 
   await db.messages.insertMany(id, [message])
@@ -77,7 +77,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   }
 
   const { city, country } = geolocation(request)
-  const location = city && country ?  `${city}, ${country}` : 'Dubai, UAE' // @todo change to null
+  const location = city && country ?  `${city}, ${country}` : null
 
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
@@ -95,7 +95,12 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         messages: await convertToModelMessages(uiMessages),
         temperature: 0.2,
         maxOutputTokens: 800,
-        tools: ai.createChatTools({ api, dataStream, chat, project }),
+        tools: ai.createChatTools({
+          api,
+          chat,
+          project,
+          dataStream,
+        }),
         stopWhen: stepCountIs(5),
         abortSignal: request.signal,
         experimental_transform: smoothStream({ chunking: "word" }),

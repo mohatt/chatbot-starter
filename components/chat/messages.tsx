@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useStickToBottomContext } from 'use-stick-to-bottom'
+import { isStaticToolUIPart } from 'ai'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -11,6 +12,11 @@ import {
   MessageAttachments,
   MessageAttachment,
 } from '@/components/ai-elements/message'
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from '@/components/ai-elements/reasoning'
 import {
   Item,
   ItemActions,
@@ -25,9 +31,20 @@ import {
   InputGroupTextarea,
   InputGroupButton,
 } from "@/components/ui/input-group"
-import { AlertCircleIcon, RefreshCwIcon, CopyIcon, PencilIcon, MessageSquareMoreIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  RefreshCwIcon,
+  CopyIcon,
+  PencilIcon,
+  BrainIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+} from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { LoadingDots } from '@/components/loading'
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import { Carousel, CarouselContent, type CarouselApi } from '@/components/ui/carousel'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from '@/components/ui/badge'
 import type { UseChatResult } from './hooks'
 
 export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
@@ -97,34 +114,69 @@ function ChatMessage(props: ChatMessageProps) {
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
 
-  const { groupedParts, textParts } = useMemo(() => {
-    type Part = typeof message['parts'][number]
+  const { groupedParts, textParts, fileRefs } = useMemo(() => {
+    type Part = typeof message['parts'][0]
     type FilePart = Extract<Part, { type: 'file' }>
+    type ThinkPart = Extract<Part, { type: `tool-${string}` | 'reasoning' }>
     type TextPart = Extract<Part, { type: 'text' }>
-    const $newParts: Array<Exclude<Part, { type: 'file' }> | { type: 'file', group: FilePart[] }> = []
+    type GroupPart = { type: 'files', group: FilePart[] } | { type: 'thinking', group: ThinkPart[] }
+    const $newParts: Array<Exclude<Part, FilePart | ThinkPart> | GroupPart> = []
     const $textParts: TextPart[] = []
+    const $fileRefs: Record<string, Record<'id' | 'name' | 'mimeType', string>> = {}
 
-    let filesGroup: FilePart[] = []
-    const groupFiles = () => {
-      if (!filesGroup.length) return
-      $newParts.push({ type: 'file', group: filesGroup })
-      filesGroup = []
+    let current = null as GroupPart | null
+    const flush = () => {
+      if (!current) return
+      $newParts.push(current)
+      current = null
+    }
+    const addPart = <T extends GroupPart['type']>(type: T, part: Extract<GroupPart, { type: T }>['group'][0]) => {
+      if (current?.type !== type) {
+        flush()
+        current = { type, group: [part as any] }
+        return
+      }
+      current.group.push(part as any)
     }
 
     for (const part of parts) {
+      if (part.type === 'step-start') continue
       if (part.type === 'file') {
-        filesGroup.push(part)
+        addPart('files', part)
         continue
       }
-      groupFiles()
+      if (part.type === 'reasoning') {
+        addPart('thinking', part)
+        continue
+      }
+      if (isStaticToolUIPart(part)) {
+        if (part.state === 'output-available') {
+          if (part.type === 'tool-readFile' && part.output.data) {
+            $fileRefs[part.output.data.id] ??= part.output.data
+          } else if (part.type === 'tool-readFileText' && part.output) {
+            $fileRefs[part.output.id] ??= part.output
+          } else if (part.type === 'tool-fileTextSearch' && part.output.data) {
+            part.output.data.forEach(({ file }) => {
+              $fileRefs[file.id] ??= file
+            })
+          }
+        }
+        addPart('thinking', part)
+        continue
+      }
+      flush()
       if (part.type === 'text') {
         $textParts.push(part)
       }
       $newParts.push(part)
     }
-    groupFiles()
+    flush()
 
-    return { groupedParts: $newParts, textParts: $textParts }
+    return {
+      groupedParts: $newParts,
+      textParts: $textParts,
+      fileRefs: Object.values($fileRefs),
+    }
   }, [parts])
 
   const hasTextParts = textParts.length > 0
@@ -135,12 +187,59 @@ function ChatMessage(props: ChatMessageProps) {
       .catch(() => toast.error('Failed to copy to clipboard'))
   }
 
+  if (!groupedParts.length) {
+    return null
+  }
+
   return (
     <Message from={role} className={cn('justify-start', (isAssistant || isEditMode) && 'max-w-full')}>
       {groupedParts.map((part, i) => {
-        switch (part.type) {
-          case 'text':
-            return isEditMode ? (
+        if (part.type === 'files') {
+          return (
+            <MessageAttachments key={`${i}-files`}>
+              {part.group.map((filePart, j) => (
+                <MessageAttachment key={`${i}-file-${j}`} data={filePart} />
+              ))}
+            </MessageAttachments>
+          )
+        }
+
+        if (part.type === 'thinking') {
+          return (
+            <Reasoning key={`${i}-thinking`} isStreaming={isStreaming && !hasTextParts} defaultOpen={isStreaming}>
+              <ReasoningTrigger />
+              <ReasoningContent className='flex flex-col gap-4'>
+                {part.group.map((tPart, j) => {
+                  if (tPart.type === 'reasoning') {
+                    const isReasoningStreaming = tPart.state === 'streaming'
+                    return (
+                      <MessageResponse
+                        key={`${i}-${tPart.type}-${j}`}
+                        mode={isReasoningStreaming ? 'streaming' : 'static'}
+                        isAnimating={isReasoningStreaming}
+                      >
+                        {tPart.text}
+                      </MessageResponse>
+                    )
+                  }
+                  return (
+                    <Tool key={`${i}-${tPart.type}-${j}`} className='w-fit max-w-full border-0 mb-0'>
+                      <ToolHeader state={tPart.state} type={tPart.type} title={tPart.title} className='p-0 w-fit' />
+                      <ToolContent>
+                        <ToolInput input={tPart.input} />
+                        <ToolOutput errorText={tPart.errorText} output={tPart.output} />
+                      </ToolContent>
+                    </Tool>
+                  )
+                })}
+              </ReasoningContent>
+            </Reasoning>
+          );
+        }
+
+        if (part.type === 'text') {
+          if (isEditMode) {
+            return (
               <ChatMessageEditor
                 key={`${i}-editor`}
                 initialValue={part.text}
@@ -157,26 +256,25 @@ function ChatMessage(props: ChatMessageProps) {
                   }, { body: { regenerate: true }})
                 }}
               />
-            ) : (
-              <MessageContent className='max-w-full' key={`${i}-text`}>
+            )
+          }
+
+          return (
+            <MessageContent className='max-w-full' key={`${i}-text`}>
+              {isAssistant ? (
                 <MessageResponse
                   mode={isStreaming ? 'streaming' : 'static'}
                   isAnimating={isStreaming}
                 >
                   {part.text}
                 </MessageResponse>
-              </MessageContent>
-            );
-          case 'file':
-            return (
-              <MessageAttachments key={`${i}-files`}>
-                {part.group.map((filePart, j) => (
-                  <MessageAttachment key={`${i}-file-${j}`} data={filePart} />
-                ))}
-              </MessageAttachments>
-            )
-          default:
-            return null;
+              ) : (
+                <p className='whitespace-pre-wrap'>
+                  {part.text}
+                </p>
+              )}
+            </MessageContent>
+          );
         }
       })}
       {!isStreaming && !isEditMode && (
@@ -222,9 +320,101 @@ function ChatMessage(props: ChatMessageProps) {
               </>
             )
           )}
+          {fileRefs.length > 0 && (
+            <Sources className='ml-1'>
+              {fileRefs.map(({ id, name, mimeType }, i) => (
+                <SourceItem key={`${id}-${i}`} title={name} description={mimeType} />
+              ))}
+            </Sources>
+          )}
         </MessageActions>
       )}
     </Message>
+  )
+}
+
+interface SourcesProps {
+  children: ReactNode
+  className?: string
+}
+
+function Sources({ children, className }: SourcesProps) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return
+
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
+
+  return (
+    <div className={cn('group inline items-center gap-1', className)}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Badge className="hover:bg-secondary/80" variant='secondary' asChild>
+            <button type='button'>Sources</button>
+          </Badge>
+        </PopoverTrigger>
+        <PopoverContent className="relative w-80 p-0" align='start' side='top'>
+          <Carousel className="w-full" setApi={setApi}>
+            <div className="flex items-center justify-between gap-2 rounded-t-md bg-secondary p-2">
+              <button
+                type="button"
+                className="shrink-0"
+                aria-label="Previous"
+                onClick={() => api?.scrollPrev()}
+              >
+                <ArrowLeftIcon className="size-4 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
+                className="shrink-0"
+                aria-label="Next"
+                onClick={() => api?.scrollNext()}
+              >
+                <ArrowRightIcon className="size-4 text-muted-foreground" />
+              </button>
+              <div className="flex flex-1 items-center justify-end px-3 py-1 text-muted-foreground text-xs">
+                {current}/{count}
+              </div>
+            </div>
+            <CarouselContent>
+              {children}
+            </CarouselContent>
+          </Carousel>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+interface SourceItemProps {
+  title: string
+  subtitle?: string
+  description?: string
+  className?: string
+}
+
+function SourceItem({ title, subtitle, description, className }: SourceItemProps) {
+  return (
+    <div className={cn("min-w-full space-y-2 p-4 pl-8", className)}>
+      <div className='space-y-1'>
+        <h4 className="truncate font-medium text-sm leading-tight">{title}</h4>
+        {subtitle && (
+          <p className="truncate break-all text-muted-foreground text-xs">{subtitle}</p>
+        )}
+        {description && <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
+          {description}
+        </p>}
+      </div>
+    </div>
   )
 }
 
@@ -247,13 +437,18 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
         <InputGroupButton className="ml-auto" size="sm" variant="secondary" onClick={() => onCancel()}>
           Cancel
         </InputGroupButton>
-        <InputGroupButton size="sm" variant="default" disabled={!input.trim() || input.trim() === initialValue} onClick={() => {
-          onSubmit(input.trim())
-            .catch(() => {
-              toast.error('Failed to update message')
-            })
-          onCancel()
-        }}>
+        <InputGroupButton
+          size="sm"
+          variant="default"
+          disabled={!input.trim() || input.trim() === initialValue}
+          onClick={() => {
+            onSubmit(input.trim())
+              .catch(() => {
+                toast.error('Failed to update message')
+              })
+            onCancel()
+          }}
+        >
           Send
         </InputGroupButton>
       </InputGroupAddon>
@@ -294,11 +489,9 @@ function ThinkingMessage(){
     <Message from='assistant'>
       <div className="flex items-center gap-2">
         <div className="animate-pulse">
-          <MessageSquareMoreIcon className='size-5' />
+          <BrainIcon className="size-4" />
         </div>
-        <div className="flex w-full flex-col gap-2 md:gap-4">
-          <LoadingDots message='Thinking' className='text-muted-foreground text-sm' />
-        </div>
+        <div className="flex w-full flex-col gap-2 md:gap-4"></div>
       </div>
     </Message>
   );
