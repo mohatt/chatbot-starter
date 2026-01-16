@@ -13,6 +13,7 @@ import { ChatMessages } from './messages'
 import { ChatPrompt } from './prompt'
 import { useChat, useNewChatRef, type ChatIdProps } from './hooks'
 import { useChatQuery, useChatHistoryQuery } from '@/api/queries/chats'
+import { useClientSettingsQuery } from '@/api/hooks/client'
 import { useNewChatMutation } from '@/api/mutations/chats'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
@@ -23,10 +24,10 @@ export function Chat(props: ChatIdProps) {
   const newChat = useNewChatRef(props)
   const isNewChat = newChat.current != null
   const [isStoredChat, setIsStoredChat] = useState(!isNewChat)
-  const [model, setModel] = useState('gpt-4o');
   const scrollRef = useRef<StickToBottomContext>(null)
 
   const queryClient = useQueryClient()
+  const { data: settings } = useClientSettingsQuery()
   const { mutate: addNewChatToCache } = useNewChatMutation()
   const { data: chatData, error: chatDataError, isLoading: isChatDataLoading } = useChatQuery({
     variables: { id },
@@ -55,6 +56,7 @@ export function Chat(props: ChatIdProps) {
           timeZone: getTimeZone(),
           createChat: !isStoredChat,
           regenerate: request.trigger === 'regenerate-message',
+          model: settings?.chatModel,
           projectId,
           ...request.body
         }
@@ -68,7 +70,8 @@ export function Chat(props: ChatIdProps) {
     }),
     onFinish: useEventCallback(() => {
       queryClient.setQueryData(useChatHistoryQuery.getKey({ id }), {
-        pages: [{ data: [...messages] as any, nextCursor: null }],
+        // @todo messages here doesn't have the metadata set by the backend (modelId, createdAt)
+        pages: [{ data: [...messages], nextCursor: null }],
         pageParams: [null],
       })
     })
@@ -114,6 +117,7 @@ export function Chat(props: ChatIdProps) {
   // Set message history for existing chats
   useEffect(() => {
     if (!historyData) return
+    // @todo fix any - messages here is not typed with chat tools
     const historyMessages: any = historyData.pages.flatMap((d) => d.data)
     setMessages((prev) => {
       // If we already have messages (e.g. coming back with a warm Chat store),
@@ -178,8 +182,6 @@ export function Chat(props: ChatIdProps) {
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
             chatId={id}
-            model={model}
-            setModel={setModel}
             sendMessage={sendMessageWithScroll}
             stop={stop}
             status={status}

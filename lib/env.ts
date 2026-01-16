@@ -10,11 +10,10 @@ const envSchema = z.object({
   UPSTASH_VECTOR_REST_TOKEN: z.string().trim().nonempty(),
   BLOB_READ_WRITE_TOKEN: z.string().trim().nonempty(),
   BLOB_BASE_URL: z.string().trim().nonempty(),
+  VERCEL_OIDC_TOKEN: z.string().trim().nonempty(),
   HUGGING_FACE_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().optional(),
-  AI_MODEL: z.string().optional(),
-  EMBEDDING_MODEL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

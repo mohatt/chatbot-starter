@@ -14,7 +14,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const { db, ai, authz, storage } = api;
   const id = uuidV7.parse(params.id)
   const { user } = await session()
-  const { message, projectId, timeZone, regenerate, createChat } = postRequestBodySchema.parse(await request.json())
+  const { message, projectId, timeZone, regenerate, createChat, model } = postRequestBodySchema.parse(await request.json())
   const messageText: string[] = []
   const messageFiles: string[] = []
   for (const part of message.parts) {
@@ -59,6 +59,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
+  const chatModelId = model ?? ai.defaultChatModel
+  const chatModel = model != null ? ai.getModel(model) : ai.chat
+  // const chatModelMeta = await ai.getModelMeta(chatModel)
+
   if (regenerate) {
     await db.messages.deleteMany(id, message.id)
   }
@@ -83,7 +87,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     generateId: generateUUID,
     execute: async ({ writer: dataStream }) => {
       const result = streamText({
-        model: ai.chat,
+        model: chatModel,
         system: project != null
           ? ai.prompts.projectChatPrompt.toString({
             projectName: project.name,
@@ -124,7 +128,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       dataStream.merge(result.toUIMessageStream());
     },
     onFinish: async ({ messages }) => {
-      await db.messages.insertMany(id, messages).catch((err) => {
+      await db.messages.insertMany(id, messages, chatModelId).catch((err) => {
         console.warn('Failed to save chat messages:', id, err);
       })
     },

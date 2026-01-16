@@ -14,35 +14,19 @@ import {
   PromptInputActionMenuContent,
 } from '@/components/ai-elements/prompt-input'
 import { InputGroup, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { ModelSelectorLogo } from '@/components/ai-elements/model-selector'
+import { ChatModelSelector } from '@/components/chat/model-selector'
 import { CornerDownLeftIcon, ImageIcon, Loader2Icon, PaperclipIcon, SquareIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import type { UseChatResult } from './hooks'
 
-const models = [
-  { id: 'gpt-4o', name: 'GPT-4o', logo: 'openai' },
-  { id: 'claude-opus-4-20250514', name: 'Claude 4 Opus', logo: 'openai' },
-];
-
 export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'stop' | 'status'> {
   chatId: string;
-  model: string
-  setModel: (value: string) => void
   isPending?: boolean
   isEphemeral?: boolean
 }
 
 export const ChatPrompt = (props: ChatPromptProps) => {
-  const { chatId, model, setModel, sendMessage, stop, status, isPending, isEphemeral } = props;
+  const { chatId, sendMessage, stop, status, isPending, isEphemeral } = props;
   const [input, setInput] = useState('');
   const isComposingRef = useRef(false)
   const {
@@ -196,28 +180,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                   </PromptInputActionMenuItem>
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
-              <Select
-                name='model'
-                onValueChange={(value) => {
-                  setModel(value);
-                }}
-                value={model}
-              >
-                <SelectTrigger size='sm' title='Select AI Model' disabled={isPending || isStreaming}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Select AI Model</SelectLabel>
-                    {models.map((model) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        <ModelSelectorLogo provider={model.logo} />
-                        {model.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <ChatModelSelector size='sm' disabled={isPending || isStreaming} />
             </PromptInputTools>
             {isStreaming ? (
               <InputGroupButton

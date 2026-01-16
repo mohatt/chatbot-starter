@@ -78,7 +78,7 @@ CREATE TABLE "chats" (
 CREATE TABLE "messages" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"chatId" uuid NOT NULL,
-	"role" varchar NOT NULL,
+	"from" varchar NOT NULL,
 	"parts" json NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );

@@ -20,7 +20,6 @@ export function NewChat(props: NewChatProps) {
   const searchParams = useSearchParams();
   const query = searchParams.get("query")?.trim();
   const [isNavigating, setIsNavigating] = useState(false);
-  const [model, setModel] = useState('gpt-4o');
 
   const sendMessage = useCallback<UseChatResult['sendMessage']>(async (...args) => {
     const { url } = createNewChat(args)
@@ -60,8 +59,6 @@ export function NewChat(props: NewChatProps) {
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
             chatId={props.id}
-            model={model}
-            setModel={setModel}
             sendMessage={sendMessage}
             stop={async () => {}}
             status='ready'

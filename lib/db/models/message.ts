@@ -8,6 +8,7 @@ export type ChatMessageRecord = typeof messages.$inferSelect;
 export type ChatMessageRecordInput = Omit<typeof messages.$inferInsert, 'createdAt'>;
 
 export interface ChatMessageMetadata {
+  modelId?: string
   createdAt: string
 }
 
@@ -16,9 +17,11 @@ export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, 
 export class ChatMessageModel extends DbModel {
   readonly schema = messages;
 
-  async insertMany(chatId: string, uiMessages: UIMessage[]): Promise<number | null> {
+  async insertMany(chatId: string, uiMessages: UIMessage[], modelId?: string): Promise<number | null> {
     try {
-      const { rowCount } = await this.db.insert(messages).values(this.toDBMessages(chatId, uiMessages));
+      const { rowCount } = await this.db
+        .insert(messages)
+        .values(this.toDBMessages(chatId, modelId ?? 'assistant', uiMessages));
       return rowCount
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to save chat messages");
@@ -59,12 +62,12 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  private toDBMessages(chatId: string, uiMessages: UIMessage[]): ChatMessageRecordInput[] {
+  private toDBMessages(chatId: string, modelId: string, uiMessages: UIMessage[]): ChatMessageRecordInput[] {
     return uiMessages.map(({ id, role, parts }): ChatMessageRecordInput => {
       if (role !== 'user' && role !== 'assistant') return null!
       return {
         id,
-        role,
+        from: role === 'user' ? 'user' : modelId,
         chatId,
         parts: parts.map((part) => {
           if (isTextUIPart(part) || isFileUIPart(part) || isDataUIPart(part) || isStaticToolUIPart(part)) {
@@ -77,6 +80,16 @@ export class ChatMessageModel extends DbModel {
   }
 
   private toUIMessages(dbMessages: ChatMessageRecord[]): ChatUIMessageRecord[] {
-    return dbMessages.map(({ chatId, createdAt, ...message }) => ({ ...message, metadata: { createdAt: createdAt.toISOString() } }))
+    return dbMessages.map(({ chatId, from, createdAt, ...message }) => {
+      const [role, modelId] = from === 'user' ? ['user', undefined] as const : ['assistant', from] as const
+      return {
+        ...message,
+        role,
+        metadata: {
+          modelId,
+          createdAt: createdAt.toISOString(),
+        },
+      }
+    })
   }
 }
