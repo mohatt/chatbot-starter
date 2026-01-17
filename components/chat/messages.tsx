@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode, useRef } from 'react'
 import { useStickToBottomContext } from 'use-stick-to-bottom'
 import { isStaticToolUIPart } from 'ai'
 import { toast } from 'sonner'
@@ -104,9 +104,10 @@ interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessa
 }
 
 function ChatMessage(props: ChatMessageProps) {
-  const { message, editorId, isReadonly, isStreaming, regenerate, sendMessage, setEditorId } = props
+  const { message, editorId, isReadonly, isStreaming = false, regenerate, sendMessage, setEditorId } = props
   const { id, role, parts } = message
   const scrollContext = useStickToBottomContext()
+  const showThinkingRef = useRef(isStreaming)
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
 
@@ -201,9 +202,9 @@ function ChatMessage(props: ChatMessageProps) {
         }
 
         if (part.type === 'thinking') {
-          const isGroupStreaming = !!isStreaming && groupedParts[i+1] === undefined
+          const isGroupStreaming = isStreaming && groupedParts[i+1] === undefined
           return (
-            <Reasoning key={`${i}-thinking`} isStreaming={isGroupStreaming} defaultOpen={isStreaming} className='mt-4'>
+            <Reasoning key={`${i}-thinking`} isStreaming={isGroupStreaming} defaultOpen={showThinkingRef.current} className='mt-4'>
               <ReasoningTrigger />
               <ReasoningContent className='flex flex-col gap-4'>
                 {part.group.map((tPart, j) => {

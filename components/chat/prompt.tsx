@@ -123,7 +123,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
       {renderUpload(
         <InputGroup className='hover:ring-1 hover:ring-ring/50'>
           {files.length > 0 && (
-            <div className='flex flex-wrap items-center gap-2 p-3 w-full'>
+            <div className='flex flex-wrap items-center gap-2 p-3 pb-1 w-full'>
               {files.map((file) => (
                 <PromptInputAttachment
                   key={file.id}
