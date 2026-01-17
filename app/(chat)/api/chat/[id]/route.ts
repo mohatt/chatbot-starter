@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
-import { stepCountIs, streamText, generateText, convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, smoothStream } from 'ai'
+import {
+  stepCountIs,
+  streamText,
+  generateText,
+  smoothStream,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from 'ai'
 import { geolocation } from "@vercel/functions";
 import { generateUUID } from '@/lib/util'
 import { createApiHandler } from '@/lib/api'
@@ -59,9 +67,13 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
-  const chatModelId = model ?? ai.defaultChatModel
-  const chatModel = model != null ? ai.getModel(model) : ai.chat
-  // const chatModelMeta = await ai.getModelMeta(chatModel)
+  const chatModelKey = model?.key ?? config.chat.models.serialize(ai.defaultChatModel)
+  const chatModel = model != null ? ai.getLanguageModel(model.entry) : ai.chat
+  const chatModelMeta = await ai.getModelMeta(chatModel)
+  const isReasoning = model?.variant === 'thinking' || false
+  if (isReasoning && !chatModelMeta?.reasoning) {
+    throw new AppError('bad_request:chat', 'Selected model does not support reasoning.')
+  }
 
   if (regenerate) {
     await db.messages.deleteMany(id, message.id)
@@ -97,7 +109,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
           })
           : ai.prompts.chatPrompt.toString({ timeZone, location }),
         messages: await convertToModelMessages(uiMessages),
-        temperature: 0.2,
+        temperature: isReasoning ? undefined : 0.2,
         maxOutputTokens: 800,
         tools: ai.createChatTools({
           api,
@@ -107,7 +119,18 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         }),
         stopWhen: stepCountIs(5),
         abortSignal: request.signal,
-        experimental_transform: smoothStream({ chunking: "word" }),
+        experimental_transform: isReasoning ? undefined : smoothStream({ chunking: "word" }),
+        providerOptions: isReasoning
+          ? {
+            anthropic: {
+              thinking: { type: "enabled", budgetTokens: 10_000 },
+            },
+            openai: {
+              reasoningEffort: 'low',
+              reasoningSummary: 'auto'
+            },
+          }
+          : undefined,
         onFinish: (res) => {
           // console.log(JSON.stringify(res.request, null, 2))
           console.log(res.totalUsage)
@@ -128,7 +151,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       dataStream.merge(result.toUIMessageStream());
     },
     onFinish: async ({ messages }) => {
-      await db.messages.insertMany(id, messages, chatModelId).catch((err) => {
+      await db.messages.insertMany(id, messages, chatModelKey).catch((err) => {
         console.warn('Failed to save chat messages:', id, err);
       })
     },

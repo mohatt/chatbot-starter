@@ -2,18 +2,19 @@ import { gateway } from '@ai-sdk/gateway';
 import { createHuggingFace } from '@ai-sdk/huggingface';
 import { embed, embedMany, type ToolSet } from 'ai'
 import { fetchModels, getModelMeta, type ProvidersCatalog } from 'tokenlens'
-import { config, type ModelConfig } from '@/lib/config'
+import { config } from '@/lib/config'
 import { listFiles, readFile, readFileText, fileTextSearch } from './tools'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
+import type { ModelEntry } from './model-config'
 
 export type LanguageModel = ReturnType<typeof gateway>
 export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
 
 export class AI {
   readonly chat: LanguageModel
-  readonly defaultChatModel: string
+  readonly defaultChatModel: ModelEntry
   readonly embedding: EmbeddingModel
   readonly prompts = {
     chatPrompt,
@@ -23,26 +24,21 @@ export class AI {
   private catalog?: ProvidersCatalog
 
   constructor(private env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>) {
-    const defaultModel = config.chat.models.find((m) => m.default)
-    if (!defaultModel) {
-      throw new Error('No default chat model was found')
-    }
-
-    this.defaultChatModel = `${defaultModel.provider}:${defaultModel.id}`
-    this.chat = this.getModel(this.defaultChatModel)
+    this.defaultChatModel = config.chat.models.getDefault()
+    this.chat = this.getLanguageModel(this.defaultChatModel)
     this.embedding = gateway.embeddingModel('openai/text-embedding-3-small');
   }
 
-  getModel(key: string) {
-    const [provider, modelId] = key.split(':') as [ModelConfig['provider'], string]
+  getLanguageModel(entry: ModelEntry) {
+    const { id, provider } = entry
     if (provider === 'huggingface') {
       const apiKey = this.env.HUGGING_FACE_API_KEY
       if (!apiKey) {
         throw new Error('No API key was found for HuggingFace')
       }
-      return createHuggingFace({ apiKey })(modelId)
+      return createHuggingFace({ apiKey })(id)
     }
-    return gateway(modelId)
+    return gateway(id)
   }
 
   async getModelsCatalog() {

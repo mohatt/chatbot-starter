@@ -1,4 +1,5 @@
 import type { AppConfig } from './types'
+import { ModelsConfig } from '@/lib/ai/model-config'
 
 function getDeploymentBaseUrl() {
   const host = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL
@@ -10,7 +11,7 @@ export const config = {
   appName: 'Rag Chatbot',
   baseUrl: getDeploymentBaseUrl(),
   chat: {
-    models: [
+    models: new ModelsConfig([
       // Anthropic
       {
         id: "anthropic/claude-haiku-4.5",
@@ -28,9 +29,10 @@ export const config = {
         provider: "vercel",
       },
       {
-        id: "anthropic/claude-3.7-sonnet-thinking",
+        id: "anthropic/claude-3.7-sonnet",
         name: "Claude 3.7 Sonnet",
         provider: "vercel",
+        thinking: true,
       },
       // OpenAI
       {
@@ -43,6 +45,7 @@ export const config = {
         id: "openai/gpt-5.2",
         name: "GPT-5.2",
         provider: "vercel",
+        thinking: true,
       },
       // Google
       {
@@ -62,17 +65,12 @@ export const config = {
         provider: "vercel",
       },
       {
-        id: "xai/grok-code-fast-1-thinking",
+        id: "xai/grok-code-fast-1",
         name: "Grok Code Fast",
         provider: "vercel",
+        thinking: 'always'
       },
-      // HuggingFace
-      {
-        id: 'meta-llama/Llama-3.1-8B-Instruct',
-        name: "Llama-3.1-8B-Instruct",
-        provider: "huggingface",
-      }
-    ],
+    ]),
     title: {
       fallback: 'New Chat',
       maxGeneratedLength: 40
@@ -114,4 +112,4 @@ export const config = {
   ]
 } satisfies AppConfig
 
-export type { AppConfig, ModelConfig } from './types'
+export type { AppConfig }

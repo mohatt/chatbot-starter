@@ -1,12 +1,6 @@
+import type { ModelsConfig } from '@/lib/ai/model-config'
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
 import type { FileUploadRules } from '@/lib/schema'
-
-export interface ModelConfig {
-  id: string;
-  name: string;
-  provider: 'vercel' | 'huggingface';
-  default?: boolean
-}
 
 export interface AppConfig {
   appId: string
@@ -25,7 +19,7 @@ export interface AppConfig {
       defaultLimit: number
       maxLimit: number
     }
-    models: ModelConfig[]
+    models: ModelsConfig
   }
   project: {
     maxFiles: number

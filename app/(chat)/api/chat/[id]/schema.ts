@@ -28,9 +28,7 @@ export const postRequestBodySchema = z.object({
   regenerate: z.boolean().default(false),
   createChat: z.boolean().default(false),
   projectId: uuidV7.nullable().default(null),
-  model: z
-    .enum(config.chat.models.map((m) => `${m.provider}:${m.id}`))
-    .nullish(),
+  model: config.chat.models.getKeySchema().nullish(),
 });
 
 export type PostRequestBody = z.input<typeof postRequestBodySchema>;

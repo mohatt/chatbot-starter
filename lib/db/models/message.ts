@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, lt } from 'drizzle-orm'
-import { isTextUIPart, isFileUIPart, isDataUIPart, isStaticToolUIPart, type UIMessage } from 'ai'
+import { type UIMessage } from 'ai'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { messages } from '../schema'
@@ -8,7 +8,7 @@ export type ChatMessageRecord = typeof messages.$inferSelect;
 export type ChatMessageRecordInput = Omit<typeof messages.$inferInsert, 'createdAt'>;
 
 export interface ChatMessageMetadata {
-  modelId?: string
+  modelKey?: string
   createdAt: string
 }
 
@@ -17,11 +17,11 @@ export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, 
 export class ChatMessageModel extends DbModel {
   readonly schema = messages;
 
-  async insertMany(chatId: string, uiMessages: UIMessage[], modelId?: string): Promise<number | null> {
+  async insertMany(chatId: string, uiMessages: UIMessage[], modelKey?: string): Promise<number | null> {
     try {
       const { rowCount } = await this.db
         .insert(messages)
-        .values(this.toDBMessages(chatId, modelId ?? 'assistant', uiMessages));
+        .values(this.toDBMessages(chatId, modelKey ?? 'assistant', uiMessages));
       return rowCount
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to save chat messages");
@@ -62,31 +62,27 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  private toDBMessages(chatId: string, modelId: string, uiMessages: UIMessage[]): ChatMessageRecordInput[] {
+  private toDBMessages(chatId: string, modelKey: string, uiMessages: UIMessage[]): ChatMessageRecordInput[] {
     return uiMessages.map(({ id, role, parts }): ChatMessageRecordInput => {
       if (role !== 'user' && role !== 'assistant') return null!
       return {
         id,
-        from: role === 'user' ? 'user' : modelId,
+        from: role === 'user' ? 'user' : modelKey,
         chatId,
-        parts: parts.map((part) => {
-          if (isTextUIPart(part) || isFileUIPart(part) || isDataUIPart(part) || isStaticToolUIPart(part)) {
-            return part
-          }
-          return null!
-        }).filter(Boolean)
+        parts
       }
     }).filter(Boolean)
   }
 
   private toUIMessages(dbMessages: ChatMessageRecord[]): ChatUIMessageRecord[] {
-    return dbMessages.map(({ chatId, from, createdAt, ...message }) => {
-      const [role, modelId] = from === 'user' ? ['user', undefined] as const : ['assistant', from] as const
+    return dbMessages.map(({ id, parts, from, createdAt }) => {
+      const [role, modelKey] = from === 'user' ? ['user', undefined] as const : ['assistant', from] as const
       return {
-        ...message,
+        id,
+        parts,
         role,
         metadata: {
-          modelId,
+          modelKey,
           createdAt: createdAt.toISOString(),
         },
       }

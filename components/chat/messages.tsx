@@ -188,7 +188,7 @@ function ChatMessage(props: ChatMessageProps) {
   }
 
   return (
-    <Message from={role} className={cn('justify-start', (isAssistant || isEditMode) && 'max-w-full')}>
+    <Message from={role} className={cn('justify-start [&>*:first-child]:mt-0', (isAssistant || isEditMode) && 'max-w-full')}>
       {groupedParts.map((part, i) => {
         if (part.type === 'files') {
           return (
@@ -201,13 +201,17 @@ function ChatMessage(props: ChatMessageProps) {
         }
 
         if (part.type === 'thinking') {
+          const isGroupStreaming = !!isStreaming && groupedParts[i+1] === undefined
           return (
-            <Reasoning key={`${i}-thinking`} isStreaming={isStreaming && !hasTextParts} defaultOpen={isStreaming}>
+            <Reasoning key={`${i}-thinking`} isStreaming={isGroupStreaming} defaultOpen={isStreaming} className='mt-4'>
               <ReasoningTrigger />
               <ReasoningContent className='flex flex-col gap-4'>
                 {part.group.map((tPart, j) => {
                   if (tPart.type === 'reasoning') {
                     const isReasoningStreaming = tPart.state === 'streaming'
+                    if (!isReasoningStreaming && !tPart.text.trim()) {
+                      return null
+                    }
                     return (
                       <Streamdown
                         key={`${i}-${tPart.type}-${j}`}
@@ -255,13 +259,14 @@ function ChatMessage(props: ChatMessageProps) {
             )
           }
 
+          const isTextStreaming = part.state === 'streaming'
           return (
             <MessageContent className='max-w-full' key={`${i}-text`}>
               {isAssistant ? (
                 <Streamdown
-                  caret={isStreaming ? 'block' : undefined}
-                  mode={isStreaming ? 'streaming' : 'static'}
-                  isAnimating={isStreaming}
+                  caret={isTextStreaming ? 'block' : undefined}
+                  mode={isTextStreaming ? 'streaming' : 'static'}
+                  isAnimating={isTextStreaming}
                 >
                   {part.text}
                 </Streamdown>

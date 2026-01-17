@@ -12,8 +12,8 @@ import { ChatHeader } from './header'
 import { ChatMessages } from './messages'
 import { ChatPrompt } from './prompt'
 import { useChat, useNewChatRef, type ChatIdProps } from './hooks'
+import { useClientSettings } from '@/hooks/client-settings'
 import { useChatQuery, useChatHistoryQuery } from '@/api/queries/chats'
-import { useClientSettingsQuery } from '@/api/hooks/client'
 import { useNewChatMutation } from '@/api/mutations/chats'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
@@ -27,7 +27,7 @@ export function Chat(props: ChatIdProps) {
   const scrollRef = useRef<StickToBottomContext>(null)
 
   const queryClient = useQueryClient()
-  const { data: settings } = useClientSettingsQuery()
+  const { data: settings } = useClientSettings()
   const { mutate: addNewChatToCache } = useNewChatMutation()
   const { data: chatData, error: chatDataError, isLoading: isChatDataLoading } = useChatQuery({
     variables: { id },
@@ -56,7 +56,7 @@ export function Chat(props: ChatIdProps) {
           timeZone: getTimeZone(),
           createChat: !isStoredChat,
           regenerate: request.trigger === 'regenerate-message',
-          model: settings?.chatModel,
+          model: settings?.chatModel?.key,
           projectId,
           ...request.body
         }

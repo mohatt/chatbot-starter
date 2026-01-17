@@ -1,6 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
 import { index, json, pgTable, text, timestamp, boolean, uuid, varchar } from 'drizzle-orm/pg-core'
-import type { TextUIPart, FileUIPart, DataUIPart, ToolUIPart } from 'ai'
+import type { UIMessage } from 'ai'
 import { users } from './auth'
 import { files } from './file'
 
@@ -49,7 +49,7 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => chats.id, { onDelete: "cascade" }),
   from: varchar("from").notNull(),
-  parts: json("parts").notNull().$type<Array<TextUIPart | FileUIPart | ToolUIPart | DataUIPart<any>>>(),
+  parts: json("parts").notNull().$type<UIMessage['parts']>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (self) => [
   index('messages_chat_id_idx').on(self.chatId, self.id.desc()),

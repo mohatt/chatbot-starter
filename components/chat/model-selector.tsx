@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useClientSettingsQuery, useClientSettingsMutation } from '@/api/hooks/client'
+import { useClientSettings } from '@/hooks/client-settings'
 import {
   Select,
   SelectContent,
@@ -9,8 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { ModelSelectorLogo } from '@/components/ai-elements/model-selector'
-import { RefreshCcwDotIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 
 const vendorNames: Record<string, string> = {
@@ -21,20 +22,19 @@ const vendorNames: Record<string, string> = {
   huggingface: "Hugging Face",
 };
 
-export const modelsByVendor = config.chat.models.reduce(
-  (acc, { id, name, provider }) => {
-    const vendor = provider === 'huggingface' ? 'huggingface' : id.split('/')[0]
-    const group = vendor ?? 'Unknown'
+const { models } = config.chat
+const defaultModel = models.getDefault()
+const modelsByVendor = models.registry.reduce(
+  (acc, m) => {
+    const group = m.provider === 'huggingface' ? 'huggingface' : m.vendor ?? 'Unknown'
     if (!acc[group]) {
       acc[group] = [];
     }
-    acc[group].push({ id: `${provider}:${id}`, name, logo: vendor });
+    acc[group].push(m);
     return acc;
   },
-  {} as Record<string, Array<{ id: string; name: string; logo?: string }>>
+  {} as Record<string, Array<typeof models.registry[number]>>
 );
-
-const autoId = 'auto'
 
 export interface ChatModelSelectorProps {
   size?: 'sm' | 'default';
@@ -42,41 +42,57 @@ export interface ChatModelSelectorProps {
 }
 
 export function ChatModelSelector({ disabled, size }: ChatModelSelectorProps) {
-  const { data, isLoading: dataLoading } = useClientSettingsQuery()
-  const { mutate, isPending: mutationLoading } = useClientSettingsMutation()
+  const { data, mutate } = useClientSettings()
   const handleChane = useCallback((value: string) => {
-    mutate({ chatModel: value === autoId ? undefined : value })
+    mutate({ chatModel: value || undefined })
   }, [])
+
+  const userModel = data?.chatModel
+  const activeModel = userModel?.entry ?? defaultModel
+
   return (
-    <Select
-      name='model'
-      onValueChange={handleChane}
-      value={data?.chatModel ?? autoId}
-      disabled={disabled || dataLoading || mutationLoading}
-    >
-      <SelectTrigger size={size} title='Select AI Model'>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>Select AI Model</SelectLabel>
-          <SelectItem value={autoId}>
-            <RefreshCcwDotIcon className='size-3' />
-            Auto
-          </SelectItem>
-        </SelectGroup>
-          {Object.entries(modelsByVendor).map(([vendor, models]) => (
+    <div className='flex items-center gap-1'>
+      <Select
+        name='model'
+        onValueChange={handleChane}
+        value={models.serialize(activeModel)}
+        disabled={disabled}
+      >
+        <SelectTrigger size={size} title='Select AI Model'>
+          <SelectValue placeholder='Select AI Model' />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Select AI Model</SelectLabel>
+          </SelectGroup>
+          {Object.entries(modelsByVendor).map(([vendor, group]) => (
             <SelectGroup key={vendor}>
               <SelectLabel>{vendorNames[vendor] ?? vendor}</SelectLabel>
-              {models.map(({ id, name, logo }) => (
-                <SelectItem key={id} value={id}>
-                  {logo && <ModelSelectorLogo provider={logo} />}
-                  {name}
-                </SelectItem>
-              ))}
+              {group.map((m) => {
+                const key = models.serialize(m)
+                const logo = m.provider === 'huggingface' ? 'huggingface' : m.vendor
+                return (
+                  <SelectItem key={key} value={key}>
+                    {logo && <ModelSelectorLogo provider={logo} />}
+                    {m.name}
+                  </SelectItem>
+                )
+              })}
             </SelectGroup>
           ))}
-      </SelectContent>
-    </Select>
+        </SelectContent>
+      </Select>
+      <div className="flex items-center gap-2 min-h-8 px-2">
+        <Switch
+          id="thinking-mode"
+          checked={userModel?.variant === 'thinking'}
+          disabled={disabled || activeModel.thinking !== true}
+          onCheckedChange={(checked) => {
+            handleChane(models.serialize(activeModel, checked ? 'thinking' : undefined))
+          }}
+        />
+        <Label htmlFor="thinking-mode">Thinking</Label>
+      </div>
+    </div>
   )
 }
