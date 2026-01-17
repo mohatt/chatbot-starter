@@ -43,9 +43,10 @@ export interface ChatModelSelectorProps {
 
 export function ChatModelSelector({ disabled, size }: ChatModelSelectorProps) {
   const { data, mutate } = useClientSettings()
-  const handleChane = useCallback((value: string) => {
-    mutate({ chatModel: value || undefined })
-  }, [])
+  const handleChane = useCallback((chatModel: string) => {
+    if (!chatModel) return
+    mutate({ chatModel })
+  }, [mutate])
 
   const userModel = data?.chatModel
   const activeModel = userModel?.entry ?? defaultModel
