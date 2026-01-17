@@ -1,4 +1,3 @@
-"use client";
 import { Fragment, type ReactNode } from "react";
 import { useMediaQuery } from 'usehooks-ts'
 import { useSidebar } from '@/components/ui/sidebar'
@@ -12,8 +11,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { ChatTitle } from './list-item/title'
+import { FolderClosedIcon, MenuIcon } from 'lucide-react'
 import { GithubIcon } from "../icons";
-import { LockIcon, GlobeIcon, FolderClosedIcon, MenuIcon } from 'lucide-react'
 import Link from "next/link";
 import type { ChatRecord } from '@/lib/db'
 
@@ -53,12 +53,7 @@ export function ChatHeader({ chat }: ChatHeaderProps) {
   }
 
   if (chat) {
-    items.push(
-      <span className='inline-flex items-center gap-1.5'>
-        {chat.privacy === 'public' ? <GlobeIcon className='size-4' /> : <LockIcon className='size-4' />}
-        <span className='truncate'>{chat.title}</span>
-      </span>
-    )
+    items.push(<ChatTitle chat={chat} showPrivacyIcon />)
   }
 
   return (

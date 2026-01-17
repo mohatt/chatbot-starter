@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { CheckIcon } from 'lucide-react'
 import { config } from '@/lib/config'
+import { cn } from '@/lib/utils'
 
 const { models } = config.chat
 const defaultModel = models.getDefault()
@@ -41,10 +42,11 @@ const knownVendors: Record<string, string> = {
 };
 
 export interface ChatModelSelectorProps {
+  className?: string;
   disabled?: boolean;
 }
 
-export function ChatModelSelector({ disabled }: ChatModelSelectorProps) {
+export function ChatModelSelector({ className, disabled }: ChatModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { data, mutate } = useClientSettings()
 
@@ -54,7 +56,7 @@ export function ChatModelSelector({ disabled }: ChatModelSelectorProps) {
   const activeModelKey = activeModel.getKey()
   const activeModelLogo = activeModel.provider === 'huggingface' ? 'huggingface' : activeModel.vendor
   return (
-    <div className='flex items-center gap-1'>
+    <div className={cn('flex items-center gap-1', className)}>
       <ModelSelector open={isOpen} onOpenChange={setIsOpen}>
         <ModelSelectorTrigger asChild>
           <InputGroupButton type="button" size='sm' disabled={disabled}>

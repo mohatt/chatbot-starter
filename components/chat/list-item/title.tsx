@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { Share2 } from 'lucide-react'
+import { GlobeIcon, LockIcon } from 'lucide-react'
 import type { ChatRecord } from '@/lib/db'
 
 export interface ChatTitleProps {
   chat: Pick<ChatRecord, 'title' | 'privacy' | 'isTitlePending'>
+  showPrivacyIcon?: boolean
   msPerChar?: number
 }
 
-export function ChatTitle({ chat, msPerChar = 32 }: ChatTitleProps) {
+export function ChatTitle({ chat, showPrivacyIcon, msPerChar = 32 }: ChatTitleProps) {
   const { title, privacy, isTitlePending } = chat
   const [shown, setShown] = useState(title)
   const prevPendingRef = useRef(isTitlePending)
@@ -60,8 +61,10 @@ export function ChatTitle({ chat, msPerChar = 32 }: ChatTitleProps) {
 
   return (
     <span className='inline-flex items-center min-w-0'>
-      {privacy === 'public' && (
-        <Share2 className="text-muted-foreground size-3 mr-1" />
+      {showPrivacyIcon && (
+        <span className='mr-2'>
+          {privacy === 'public' ? <GlobeIcon className='size-4' /> : <LockIcon className='size-4' />}
+        </span>
       )}
       <span className='truncate min-w-0'>{shown}</span>
       {isTyping && <span className='ml-0.5 animate-pulse'>|</span>}

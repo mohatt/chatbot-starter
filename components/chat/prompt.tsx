@@ -121,7 +121,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   return (
     <form onSubmit={handleSubmit} className="size-full mt-4">
       {renderUpload(
-        <InputGroup className='p-1 hover:ring-1 hover:ring-ring/50'>
+        <InputGroup className='hover:ring-1 hover:ring-ring/50'>
           {files.length > 0 && (
             <div className='flex flex-wrap items-center gap-2 p-3 w-full'>
               {files.map((file) => (
@@ -144,7 +144,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
           <PromptInputBody>
             <InputGroupTextarea
               name="message"
-              className="field-sizing-content max-h-48 min-h-16"
+              className="field-sizing-content max-h-48 min-h-16 p-4 pb-1"
               placeholder='What’s on your mind today?'
               value={input}
               onChange={(e) => setInput(e.target.value)}
