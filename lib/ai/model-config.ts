@@ -10,6 +10,7 @@ export interface ModelConfig {
 
 export interface ModelEntry extends ModelConfig {
   vendor?: string
+  getKey: (variant?: 'thinking') => string
 }
 
 export class ModelsConfig {
@@ -17,10 +18,18 @@ export class ModelsConfig {
 
   constructor(config: ModelConfig[]) {
     this.registry = config.map(m => {
-      const parts = m.id.split('/')
+      const { id, provider, thinking } = m
+      const parts = id.split('/')
       return {
         ...m,
         vendor: parts.length > 1 && parts[0] || undefined,
+        getKey: (variant) => {
+          const isThinking = variant === 'thinking' || thinking === 'always'
+          if (isThinking && !thinking) {
+            throw new Error(`Model ${id} does not support reasoning`)
+          }
+          return `${provider}:${id}${isThinking ? ':thinking' : ''}`
+        },
       }
     })
   }
@@ -45,15 +54,6 @@ export class ModelsConfig {
       throw new Error(`Invalid model key: ${key}`)
     }
     return { key, entry, variant } as const
-  }
-
-  serialize(model: ModelConfig, variant?: 'thinking') {
-    const { id, provider, thinking } = model
-    const isThinking = variant === 'thinking' || thinking === 'always'
-    if (isThinking && !thinking) {
-      throw new Error(`Model ${id} does not support reasoning`)
-    }
-    return `${provider}:${id}${isThinking ? ':thinking' : ''}`
   }
 
   getKeySchema() {

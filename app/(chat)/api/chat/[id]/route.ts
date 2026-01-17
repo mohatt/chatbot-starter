@@ -67,7 +67,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
-  const chatModelKey = model?.key ?? config.chat.models.serialize(ai.defaultChatModel)
+  const chatModelKey = model?.key ?? ai.defaultChatModel.getKey()
   const chatModel = model != null ? ai.getLanguageModel(model.entry) : ai.chat
   const chatModelMeta = await ai.getModelMeta(chatModel)
   const isReasoning = model?.variant === 'thinking' || false

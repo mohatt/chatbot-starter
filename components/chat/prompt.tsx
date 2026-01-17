@@ -121,7 +121,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   return (
     <form onSubmit={handleSubmit} className="size-full mt-4">
       {renderUpload(
-        <InputGroup>
+        <InputGroup className='p-1 hover:ring-1 hover:ring-ring/50'>
           {files.length > 0 && (
             <div className='flex flex-wrap items-center gap-2 p-3 w-full'>
               {files.map((file) => (
@@ -180,7 +180,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                   </PromptInputActionMenuItem>
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
-              <ChatModelSelector size='sm' disabled={isPending || isStreaming} />
+              <ChatModelSelector disabled={isPending || isStreaming} />
             </PromptInputTools>
             {isStreaming ? (
               <InputGroupButton
