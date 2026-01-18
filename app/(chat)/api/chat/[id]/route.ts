@@ -67,12 +67,12 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
-  const chatModelKey = model?.key ?? ai.defaultChatModel.getKey()
-  const chatModel = model != null ? ai.getLanguageModel(model.entry) : ai.chat
+  const chatModel = model != null ? ai.getLanguageModel(model) : ai.chat
   const chatModelMeta = await ai.getModelMeta(chatModel)
-  const isReasoning = model?.variant === 'thinking' || false
+  const chatModelKey = model ?? ai.defaultChatModel
+  const isReasoning = !!chatModelKey.modifiers.thinking
   if (isReasoning && !chatModelMeta?.reasoning) {
-    throw new AppError('bad_request:chat', 'Selected model does not support reasoning.')
+    throw new AppError('bad_request:chat', 'Selected chat model does not support reasoning.')
   }
 
   if (regenerate) {
@@ -151,7 +151,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       dataStream.merge(result.toUIMessageStream());
     },
     onFinish: async ({ messages }) => {
-      await db.messages.insertMany(id, messages, chatModelKey).catch((err) => {
+      await db.messages.insertMany(id, messages, chatModelKey.key).catch((err) => {
         console.warn('Failed to save chat messages:', id, err);
       })
     },

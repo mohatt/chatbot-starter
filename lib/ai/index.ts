@@ -7,14 +7,14 @@ import { listFiles, readFile, readFileText, fileTextSearch } from './tools'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
-import type { ModelEntry } from './model-config'
+import type { ModelKey } from './model-config'
 
 export type LanguageModel = ReturnType<typeof gateway>
 export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
 
 export class AI {
   readonly chat: LanguageModel
-  readonly defaultChatModel: ModelEntry
+  readonly defaultChatModel: ModelKey
   readonly embedding: EmbeddingModel
   readonly prompts = {
     chatPrompt,
@@ -29,8 +29,8 @@ export class AI {
     this.embedding = gateway.embeddingModel('openai/text-embedding-3-small');
   }
 
-  getLanguageModel(entry: ModelEntry) {
-    const { id, provider } = entry
+  getLanguageModel(key: ModelKey) {
+    const { id, provider } = key.entry
     if (provider === 'huggingface') {
       const apiKey = this.env.HUGGING_FACE_API_KEY
       if (!apiKey) {

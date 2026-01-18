@@ -50,10 +50,9 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
   const [isOpen, setIsOpen] = useState(false);
   const { data, mutate } = useClientSettings()
 
-  const userModel = data?.chatModel
-  const isThinkingActive = userModel?.variant === 'thinking'
-  const activeModel = userModel?.entry ?? defaultModel
-  const activeModelKey = activeModel.getKey()
+  const activeKey = data?.chatModel ?? defaultModel
+  const activeModel = activeKey.entry
+  const activeModelId = activeModel.getKey()
   const activeModelLogo = activeModel.provider === 'huggingface' ? 'huggingface' : activeModel.vendor
   return (
     <div className={cn('flex items-center gap-1', className)}>
@@ -71,24 +70,24 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
             {Object.entries(modelsByVendor).map(([vendor, group]) => (
               <ModelSelectorGroup key={vendor} heading={knownVendors[vendor] ?? vendor}>
                 {group.map((model) => {
-                  const key = model.getKey()
+                  const id = model.getKey()
+                  const isActive = id === activeModelId
                   const logo = model.provider === 'huggingface' ? 'huggingface' : model.vendor
-                  const isActive = activeModelKey === key
                   return (
                     <ModelSelectorItem
-                      key={key}
+                      key={id}
                       onSelect={() => {
-                        mutate({ chatModel: model.getKey(model.thinking ? userModel?.variant : undefined) })
+                        mutate({ chatModel: model.getKey(activeKey.modifiers) })
                         setIsOpen(false);
                       }}
-                      value={key}
+                      value={id}
                     >
                       {logo && <ModelSelectorLogo provider={logo} />}
                       <ModelSelectorName>{model.name}</ModelSelectorName>
                       {model.thinking && (
                         <div className='flex shrink-0 items-center'>
                           <Badge
-                            variant={isActive && isThinkingActive ? 'default' : 'outline'}
+                            variant={isActive && activeKey.modifiers.thinking ? 'default' : 'outline'}
                           >
                             Thinking
                           </Badge>
@@ -111,10 +110,10 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
         <div className="flex items-center gap-2 min-h-8 px-2">
           <Switch
             id="thinking-mode"
-            checked={isThinkingActive}
+            checked={!!activeKey.modifiers.thinking}
             disabled={disabled || activeModel.thinking === 'always'}
-            onCheckedChange={(checked) => {
-              mutate({ chatModel: activeModel.getKey(checked ? 'thinking' : undefined) })
+            onCheckedChange={(thinking) => {
+              mutate({ chatModel: activeModel.getKey({ ...activeKey.modifiers, thinking }) })
             }}
           />
           <Label htmlFor="thinking-mode">Thinking</Label>
