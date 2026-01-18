@@ -11,12 +11,9 @@ import {
   ModelSelectorLogo,
   ModelSelectorName,
   ModelSelectorTrigger,
-} from "@/components/ai-elements/model-selector";
+} from '@/components/ai-elements/model-selector'
 import { InputGroupButton } from '@/components/ui/input-group'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { CheckIcon } from 'lucide-react'
+import { CheckIcon, GlobeIcon, BrainIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
 
@@ -50,8 +47,8 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
   const [isOpen, setIsOpen] = useState(false);
   const { data, mutate } = useClientSettings()
 
-  const activeKey = data?.chatModel ?? defaultModel
-  const activeModel = activeKey.entry
+  const active = data?.chatModel ?? defaultModel
+  const activeModel = active.entry
   const activeModelId = activeModel.getKey()
   const activeModelLogo = activeModel.provider === 'huggingface' ? 'huggingface' : activeModel.vendor
   return (
@@ -59,7 +56,7 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
       <ModelSelector open={isOpen} onOpenChange={setIsOpen}>
         <ModelSelectorTrigger asChild>
           <InputGroupButton type="button" size='sm' disabled={disabled}>
-            <ModelSelectorLogo provider={activeModelLogo ?? 'unknown'} />
+            <ModelSelectorLogo provider={activeModelLogo ?? 'unknown'} className='size-4' />
             <ModelSelectorName>{activeModel.name}</ModelSelectorName>
           </InputGroupButton>
         </ModelSelectorTrigger>
@@ -77,22 +74,25 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
                     <ModelSelectorItem
                       key={id}
                       onSelect={() => {
-                        mutate({ chatModel: model.getKey(activeKey.modifiers) })
+                        mutate({ chatModel: model.getKey(active.modifiers) })
                         setIsOpen(false);
                       }}
                       value={id}
                     >
                       {logo && <ModelSelectorLogo provider={logo} />}
                       <ModelSelectorName>{model.name}</ModelSelectorName>
-                      {model.thinking && (
-                        <div className='flex shrink-0 items-center'>
-                          <Badge
-                            variant={isActive && activeKey.modifiers.thinking ? 'default' : 'outline'}
-                          >
-                            Thinking
-                          </Badge>
-                        </div>
-                      )}
+                      <div className='flex shrink-0 items-center gap-1.5'>
+                        {model.thinking && (
+                          <label title='Thinking'>
+                            <BrainIcon className='size-4' />
+                          </label>
+                        )}
+                        {model.webSearch && (
+                          <label title='Web search'>
+                            <GlobeIcon className='size-4' />
+                          </label>
+                        )}
+                      </div>
                       {isActive ? (
                         <CheckIcon className="ml-auto size-4" />
                       ) : (
@@ -107,17 +107,42 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
         </ModelSelectorContent>
       </ModelSelector>
       {activeModel.thinking && (
-        <div className="flex items-center gap-2 min-h-8 px-2">
-          <Switch
-            id="thinking-mode"
-            checked={!!activeKey.modifiers.thinking}
-            disabled={disabled || activeModel.thinking === 'always'}
-            onCheckedChange={(thinking) => {
-              mutate({ chatModel: activeModel.getKey({ ...activeKey.modifiers, thinking }) })
-            }}
-          />
-          <Label htmlFor="thinking-mode">Thinking</Label>
-        </div>
+        <InputGroupButton
+          type="button"
+          size='sm'
+          variant={active.modifiers.thinking ? 'secondary' : 'ghost'}
+          onClick={() => {
+            mutate({
+              chatModel: activeModel.getKey({
+                ...active.modifiers,
+                thinking: !active.modifiers.thinking,
+              })
+            })
+          }}
+          disabled={disabled}
+        >
+          <BrainIcon className='size-4' />
+          <span>Thinking</span>
+        </InputGroupButton>
+      )}
+      {activeModel.webSearch && (
+        <InputGroupButton
+          type="button"
+          size='sm'
+          variant={active.modifiers.websearch ? 'secondary' : 'ghost'}
+          onClick={() => {
+            mutate({
+              chatModel: activeModel.getKey({
+                ...active.modifiers,
+                websearch: !active.modifiers.websearch,
+              })
+            })
+          }}
+          disabled={disabled}
+        >
+          <GlobeIcon className='size-4' />
+          <span>Web search</span>
+        </InputGroupButton>
       )}
     </div>
   )
