@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button"
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Sources, SourceItem, type SourceFileItem, type SourceUrlItem } from './sources'
 import type { OpenaiResponsesTextProviderMetadata } from '@ai-sdk/openai'
+import type { ChatTools } from '@/lib/ai'
 import type { UseChatResult } from './hooks'
 
 export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
@@ -91,6 +92,16 @@ export function ChatMessages(props: ChatMessagesProps) {
       {(status === "error" || error) && <ErrorMessage error={error} regenerate={regenerate} />}
     </>
   )
+}
+
+const toolTitles: Record<`tool-${keyof ChatTools}`, string> = {
+  'tool-list_files': 'Reading project files',
+  'tool-read_file': 'Reading file',
+  'tool-read_file_text': 'Reading document',
+  'tool-file_text_search': 'Searching documents',
+  'tool-google_search': 'Searching web',
+  'tool-openai_web_search': 'Searching web',
+  'tool-anthropic_web_search': 'Searching web',
 }
 
 interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessage'> {
@@ -149,11 +160,11 @@ function ChatMessage(props: ChatMessageProps) {
       }
       if (isStaticToolUIPart(part)) {
         if (part.state === 'output-available') {
-          if (part.type === 'tool-readFile' && part.output.data) {
+          if (part.type === 'tool-read_file' && part.output.data) {
             $fileRefs[part.output.data.id] ??= part.output.data
-          } else if (part.type === 'tool-readFileText' && part.output) {
+          } else if (part.type === 'tool-read_file_text' && part.output) {
             $fileRefs[part.output.id] ??= part.output
-          } else if (part.type === 'tool-fileTextSearch' && part.output.data) {
+          } else if (part.type === 'tool-file_text_search' && part.output.data) {
             part.output.data.forEach(({ file }) => {
               $fileRefs[file.id] ??= file
             })
@@ -235,7 +246,7 @@ function ChatMessage(props: ChatMessageProps) {
                   }
                   return (
                     <Tool key={`${i}-${tPart.type}-${j}`} className='w-fit max-w-full border-0 mb-0'>
-                      <ToolHeader state={tPart.state} type={tPart.type} title={tPart.title} className='p-0 w-fit' />
+                      <ToolHeader state={tPart.state} type={tPart.type} title={toolTitles[tPart.type]} className='p-0 w-fit' />
                       <ToolContent>
                         <ToolInput input={tPart.input} />
                         <ToolOutput errorText={tPart.errorText} output={tPart.output} />

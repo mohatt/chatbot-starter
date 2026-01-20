@@ -3,8 +3,7 @@ import { createHuggingFace } from '@ai-sdk/huggingface';
 import { embed, embedMany, type ToolSet } from 'ai'
 import { fetchModels, getModelMeta, type ProvidersCatalog } from 'tokenlens'
 import { config } from '@/lib/config'
-import { listFiles, readFile, readFileText, fileTextSearch } from './tools'
-import { webSearch } from './tools/web-search'
+import { listFiles, readFile, readFileText, fileTextSearch, webSearch } from './tools'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
