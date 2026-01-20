@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode, useRef } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useStickToBottomContext } from 'use-stick-to-bottom'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { isStaticToolUIPart } from 'ai'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Message,
@@ -31,16 +31,14 @@ import {
   AlertCircleIcon,
   RefreshCwIcon,
   CopyIcon,
+  CheckIcon,
   PencilIcon,
   BrainIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
-import { Carousel, CarouselContent, type CarouselApi } from '@/components/ui/carousel'
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Badge } from '@/components/ui/badge'
+import { Sources, SourceItem, type SourceFileItem, type SourceUrlItem } from './sources'
+import type { OpenaiResponsesTextProviderMetadata } from '@ai-sdk/openai'
 import type { UseChatResult } from './hooks'
 
 export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
@@ -106,20 +104,23 @@ interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessa
 function ChatMessage(props: ChatMessageProps) {
   const { message, editorId, isReadonly, isStreaming = false, regenerate, sendMessage, setEditorId } = props
   const { id, role, parts } = message
+  const { copyToClipboard, isCopied } = useCopyToClipboard()
   const scrollContext = useStickToBottomContext()
   const showThinkingRef = useRef(isStreaming)
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
 
-  const { groupedParts, textParts, fileRefs } = useMemo(() => {
+  const { groupedParts, textParts, sources } = useMemo(() => {
     type Part = typeof message['parts'][0]
     type FilePart = Extract<Part, { type: 'file' }>
     type ThinkPart = Extract<Part, { type: `tool-${string}` | 'reasoning' }>
     type TextPart = Extract<Part, { type: 'text' }>
     type GroupPart = { type: 'files', group: FilePart[] } | { type: 'thinking', group: ThinkPart[] }
+
     const $newParts: Array<Exclude<Part, FilePart | ThinkPart> | GroupPart> = []
     const $textParts: TextPart[] = []
-    const $fileRefs: Record<string, Record<'id' | 'name' | 'mimeType', string>> = {}
+    const $fileRefs: Record<string, SourceFileItem> = {}
+    const $urlRefs: Record<string, SourceUrlItem> = {}
 
     let current = null as GroupPart | null
     const flush = () => {
@@ -156,6 +157,12 @@ function ChatMessage(props: ChatMessageProps) {
             part.output.data.forEach(({ file }) => {
               $fileRefs[file.id] ??= file
             })
+          } else if (part.type === 'tool-anthropic_web_search') {
+            part.output.forEach((item) => {
+              if (item.type === 'web_search_result') {
+                $urlRefs[item.url] ??= item
+              }
+            })
           }
         }
         addPart('thinking', part)
@@ -163,6 +170,15 @@ function ChatMessage(props: ChatMessageProps) {
       }
       flush()
       if (part.type === 'text') {
+        const providerMetadata = part.providerMetadata as
+          | OpenaiResponsesTextProviderMetadata
+          | undefined;
+        // Get sources for openai web search results
+        providerMetadata?.openai?.annotations?.forEach((item) => {
+          if (item.type === 'url_citation') {
+            $urlRefs[item.url] ??= item
+          }
+        })
         $textParts.push(part)
       }
       $newParts.push(part)
@@ -172,18 +188,12 @@ function ChatMessage(props: ChatMessageProps) {
     return {
       groupedParts: $newParts,
       textParts: $textParts,
-      fileRefs: Object.values($fileRefs),
+      fileRefs: $fileRefs,
+      sources: [...Object.values($fileRefs), ...Object.values($urlRefs)]
     }
   }, [parts])
 
   const hasTextParts = textParts.length > 0
-  const handleCopy = () => {
-    if (!hasTextParts) return
-    navigator.clipboard.writeText(textParts.map(({ text }) => text).join('\n\n'))
-      .then(() => toast.success('Copied to clipboard'))
-      .catch(() => toast.error('Failed to copy to clipboard'))
-  }
-
   if (!groupedParts.length) {
     return null
   }
@@ -284,12 +294,13 @@ function ChatMessage(props: ChatMessageProps) {
         <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
           {hasTextParts && (
             <MessageAction
-              onClick={handleCopy}
+              onClick={() => copyToClipboard(textParts.map(({ text }) => text).join(''))}
               label="Copy"
               title="Copy"
               size='icon-sm'
+              className={isCopied ? 'pointer-events-none' : ''}
             >
-              <CopyIcon className="size-3.5" />
+              {isCopied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
             </MessageAction>
           )}
           {!isReadonly && (
@@ -301,7 +312,7 @@ function ChatMessage(props: ChatMessageProps) {
                   title="Retry"
                   size='icon-sm'
                 >
-                  <RefreshCwIcon className="size-3.5" />
+                  <RefreshCwIcon className="size-4" />
                 </MessageAction>
               </>
             ) : (
@@ -317,107 +328,22 @@ function ChatMessage(props: ChatMessageProps) {
                     title="Edit"
                     size='icon-sm'
                   >
-                    <PencilIcon className="size-3.5" />
+                    <PencilIcon className="size-4" />
                   </MessageAction>
                 )}
               </>
             )
           )}
-          {fileRefs.length > 0 && (
+          {sources.length > 0 && (
             <Sources className='ml-1'>
-              {fileRefs.map(({ id, name, mimeType }, i) => (
-                <SourceItem key={`${id}-${i}`} title={name} description={mimeType} />
+              {sources.map((item, i) => (
+                <SourceItem key={i} item={item} />
               ))}
             </Sources>
           )}
         </MessageActions>
       )}
     </Message>
-  )
-}
-
-interface SourcesProps {
-  children: ReactNode
-  className?: string
-}
-
-function Sources({ children, className }: SourcesProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!api) return
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
-
-  return (
-    <div className={cn('group inline items-center gap-1', className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Badge className="hover:bg-secondary/80" variant='secondary' asChild>
-            <button type='button'>Sources</button>
-          </Badge>
-        </PopoverTrigger>
-        <PopoverContent className="relative w-80 p-0" align='start' side='top'>
-          <Carousel className="w-full" setApi={setApi}>
-            <div className="flex items-center justify-between gap-2 rounded-t-md bg-secondary p-2">
-              <button
-                type="button"
-                className="shrink-0"
-                aria-label="Previous"
-                onClick={() => api?.scrollPrev()}
-              >
-                <ArrowLeftIcon className="size-4 text-muted-foreground" />
-              </button>
-              <button
-                type="button"
-                className="shrink-0"
-                aria-label="Next"
-                onClick={() => api?.scrollNext()}
-              >
-                <ArrowRightIcon className="size-4 text-muted-foreground" />
-              </button>
-              <div className="flex flex-1 items-center justify-end px-3 py-1 text-muted-foreground text-xs">
-                {current}/{count}
-              </div>
-            </div>
-            <CarouselContent>
-              {children}
-            </CarouselContent>
-          </Carousel>
-        </PopoverContent>
-      </Popover>
-    </div>
-  )
-}
-
-interface SourceItemProps {
-  title: string
-  subtitle?: string
-  description?: string
-  className?: string
-}
-
-function SourceItem({ title, subtitle, description, className }: SourceItemProps) {
-  return (
-    <div className={cn("min-w-full space-y-2 p-4 pl-8", className)}>
-      <div className='space-y-1'>
-        <h4 className="truncate font-medium text-sm leading-tight">{title}</h4>
-        {subtitle && (
-          <p className="truncate break-all text-muted-foreground text-xs">{subtitle}</p>
-        )}
-        {description && <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
-          {description}
-        </p>}
-      </div>
-    </div>
   )
 }
 
@@ -445,10 +371,7 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
           variant="default"
           disabled={!input.trim() || input.trim() === initialValue}
           onClick={() => {
-            onSubmit(input.trim())
-              .catch(() => {
-                toast.error('Failed to update message')
-              })
+            void onSubmit(input.trim())
             onCancel()
           }}
         >

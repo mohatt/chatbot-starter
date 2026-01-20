@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 
 const { models } = config.chat
 const defaultModel = models.getDefault()
-const modelsByVendor = models.registry.reduce(
+const modelGroups = models.registry.reduce(
   (acc, m) => {
     const group = m.provider === 'huggingface' ? 'huggingface' : m.vendor ?? 'Unknown'
     if (!acc[group]) {
@@ -30,7 +30,7 @@ const modelsByVendor = models.registry.reduce(
   },
   {} as Record<string, Array<typeof models.registry[number]>>
 );
-const knownVendors: Record<string, string> = {
+const groupNames: Record<string, string> = {
   xai: "xAI",
   openai: "OpenAI",
   google: "Google",
@@ -64,8 +64,8 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
           <ModelSelectorInput placeholder="Search models..." />
           <ModelSelectorList>
             <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-            {Object.entries(modelsByVendor).map(([vendor, group]) => (
-              <ModelSelectorGroup key={vendor} heading={knownVendors[vendor] ?? vendor}>
+            {Object.entries(modelGroups).map(([vendor, group]) => (
+              <ModelSelectorGroup key={vendor} heading={groupNames[vendor] ?? vendor}>
                 {group.map((model) => {
                   const id = model.getKey()
                   const isActive = id === activeModelId

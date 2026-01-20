@@ -4,6 +4,7 @@ import { embed, embedMany, type ToolSet } from 'ai'
 import { fetchModels, getModelMeta, type ProvidersCatalog } from 'tokenlens'
 import { config } from '@/lib/config'
 import { listFiles, readFile, readFileText, fileTextSearch } from './tools'
+import { webSearch } from './tools/web-search'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
 import type { ChatToolContext } from './types'
@@ -79,7 +80,7 @@ export class AI {
       ...readFile(context),
       ...readFileText(context),
       ...fileTextSearch(context),
-      // webSearch: gateway.tools.perplexitySearch(),
+      ...webSearch(context),
     } satisfies ToolSet
   }
 }

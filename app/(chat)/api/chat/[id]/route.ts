@@ -3,7 +3,6 @@ import {
   stepCountIs,
   streamText,
   generateText,
-  smoothStream,
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -17,6 +16,9 @@ import { uuidV7 } from '@/lib/schema'
 import { postRequestBodySchema, patchRequestBodySchema } from './schema'
 import type { ChatMessage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
+import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
+import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
+import type { AnthropicProviderOptions } from '@ai-sdk/anthropic'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai, authz, storage } = api;
@@ -95,6 +97,50 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const { city, country } = geolocation(request)
   const location = city && country ?  `${city}, ${country}` : null
 
+  function getProviderOptions(): Record<string, any> {
+    const { vendor, id } = chatModelKey.entry
+    if(vendor === 'google') {
+      const v2_5 = id.startsWith('google/gemini-2.5')
+      const v3 = id.startsWith('google/gemini-3')
+      return {
+        google: {
+          // https://ai.google.dev/gemini-api/docs/thinking#javascript
+          thinkingConfig: {
+            includeThoughts: isReasoning,
+            ...(v3 ? {
+              // For reasoning let the model decide how much thinking to use (dynamic)
+              thinkingLevel: isReasoning ? undefined : 'low'
+            } : v2_5 ? {
+              thinkingBudget: isReasoning ? undefined : 1024
+            } : {}),
+          },
+        } satisfies GoogleGenerativeAIProviderOptions
+      }
+    }
+
+    if(vendor === 'anthropic') {
+      return {
+        anthropic: {
+          // https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+          thinking: isReasoning
+            ? { type: "enabled", budgetTokens: 6_144 }
+            : undefined,
+        } satisfies AnthropicProviderOptions
+      }
+    }
+
+    if(vendor === 'openai') {
+      return {
+        openai: {
+          reasoningEffort: isReasoning ? 'medium' : 'low',
+          reasoningSummary: isReasoning ? 'auto' : undefined
+        } satisfies OpenAIResponsesProviderOptions,
+      }
+    }
+
+    return {}
+  }
+
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
     execute: async ({ writer: dataStream }) => {
@@ -110,30 +156,21 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
           : ai.prompts.chatPrompt.toString({ timeZone, location }),
         messages: await convertToModelMessages(uiMessages),
         temperature: isReasoning ? undefined : 0.2,
-        maxOutputTokens: 800,
+        maxOutputTokens: 12_288,
         tools: ai.createChatTools({
           api,
           chat,
           project,
           dataStream,
+          model: chatModelKey,
         }),
         stopWhen: stepCountIs(5),
         abortSignal: request.signal,
-        experimental_transform: isReasoning ? undefined : smoothStream({ chunking: "word" }),
-        providerOptions: isReasoning
-          ? {
-            anthropic: {
-              thinking: { type: "enabled", budgetTokens: 10_000 },
-            },
-            openai: {
-              reasoningEffort: 'low',
-              reasoningSummary: 'auto'
-            },
-          }
-          : undefined,
+        providerOptions: getProviderOptions(),
         onFinish: (res) => {
           // console.log(JSON.stringify(res.request, null, 2))
           console.log(res.totalUsage)
+          // console.log(res.sources)
           dataStream.write({
             type: 'data-notification',
             data: { message: `Tokens used: ${res.totalUsage.totalTokens}`, level: 'info' },
