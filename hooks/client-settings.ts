@@ -17,6 +17,11 @@ function readStoredValue() {
     }
     return clientSettingsSchema.parse(JSON.parse(json))
   } catch (error) {
+    try {
+      window.localStorage.removeItem(clientSettingsKey)
+    } catch {
+      // ignore
+    }
     console.error('Error reading client settings', error)
     return null
   }
