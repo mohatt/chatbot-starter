@@ -59,7 +59,7 @@ CREATE TABLE "billingPeriods" (
 	"billingId" uuid NOT NULL,
 	"year" integer NOT NULL,
 	"month" integer NOT NULL,
-	"chatUsage" bigint DEFAULT 0 NOT NULL,
+	"chatUsage" numeric(12, 6) DEFAULT 0 NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );

@@ -1,5 +1,5 @@
 {
-  "id": "1bd1afa7-b65c-4a0f-8faf-1d09681db7d6",
+  "id": "9d249d7e-418e-411c-a9fd-e3e2ddaa91e2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -453,7 +453,7 @@
         },
         "chatUsage": {
           "name": "chatUsage",
-          "type": "bigint",
+          "type": "numeric(12, 6)",
           "primaryKey": false,
           "notNull": true,
           "default": 0

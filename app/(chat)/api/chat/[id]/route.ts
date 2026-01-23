@@ -186,7 +186,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
             if (stepCost > 0) {
               userChatCost += stepCost
               if(userChatCost >= maxChatCredits) {
-                generation.abort('Insufficient chat credits')
+                generation.abort(new AppError('rate_limit:chat'))
               }
             }
           } catch (error) {
@@ -220,7 +220,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
           if (generation.signal.aborted) {
             dataStream.write({
               type: 'error',
-              errorText: String(generation.signal.reason),
+              errorText: (generation.signal.reason as AppError).message,
             });
           }
           console.log('streamText aborted');

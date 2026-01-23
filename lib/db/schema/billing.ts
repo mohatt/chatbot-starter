@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, uuid, bigint, timestamp, index, integer } from "drizzle-orm/pg-core";
+import { pgTable, uuid, numeric, timestamp, index, integer } from "drizzle-orm/pg-core";
 import { billings } from "./auth";
 
 export const billingPeriods = pgTable("billingPeriods", {
@@ -9,7 +9,11 @@ export const billingPeriods = pgTable("billingPeriods", {
       .references(() => billings.id, { onDelete: "cascade" }),
     year: integer("year").notNull(),
     month: integer("month").notNull(),
-    chatUsage: bigint("chatUsage", { mode: "number" }).default(0).notNull(),
+    // Usage is stored as exact decimal currency-style units (USD) to avoid float drift
+    // numeric(12,6) keeps up to 6 fractional digits (e.g. 0.566680) and enough headroom
+    chatUsage: numeric("chatUsage", { precision: 12, scale: 6, mode: "number" })
+      .default(0)
+      .notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt")
       .defaultNow()
