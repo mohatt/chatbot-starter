@@ -45,43 +45,52 @@ export class BillingPeriodModel extends DbModel {
     }
   }
 
-  async updateCurrent(billingId: string, data: {
-    inputDelta?: number;
-    outputDelta?: number;
-  }): Promise<BillingPeriodRecord> {
-    const normalizedInput = data.inputDelta ?? 0;
-    const normalizedOutput = data.outputDelta ?? 0;
-    const { id, parts } = this.getId(billingId);
-
-    if (normalizedInput === 0 && normalizedOutput === 0) {
+  async upsertCurrent(billingId: string, data: { chatUsageDelta: number }): Promise<BillingPeriodRecord> {
+    const chatUsage = data.chatUsageDelta;
+    if (chatUsage === 0) {
       return this.ensureCurrent(billingId);
     }
 
+    const { id, parts } = this.getId(billingId);
     try {
       const [record] = await this.db
         .insert(billingPeriods)
         .values({
           id,
           billingId,
+          chatUsage,
           year: parts.year,
           month: parts.month,
-          inputUsage: normalizedInput,
-          outputUsage: normalizedOutput,
         })
         .onConflictDoUpdate({
           target: billingPeriods.id,
           set: {
-            inputUsage: sql`${billingPeriods.inputUsage} + ${normalizedInput}`,
-            outputUsage: sql`${billingPeriods.outputUsage} + ${normalizedOutput}`,
+            chatUsage: sql`${billingPeriods.chatUsage} + ${chatUsage}`,
           },
         })
         .returning();
-      if (record) {
-        return record;
-      }
-      return this.ensureCurrent(billingId);
+      return record
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to update current billing period");
+      throw new AppError("bad_request:database", "Failed to upsert current billing period");
+    }
+  }
+
+  async updateById(id: string, data: { chatUsageDelta: number }): Promise<BillingPeriodRecord | null> {
+    const chatUsage = data.chatUsageDelta;
+    if (chatUsage === 0) {
+      return null
+    }
+    try {
+      const [record] = await this.db
+        .update(billingPeriods)
+        .set({
+          chatUsage: sql`${billingPeriods.chatUsage} + ${chatUsage}`,
+        })
+        .where(eq(billingPeriods.id, id))
+        .returning();
+      return record ?? null
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to update billing period by id");
     }
   }
 

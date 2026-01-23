@@ -1,5 +1,5 @@
 {
-  "id": "53361f75-7a87-4369-a99a-98e0ac628522",
+  "id": "1bd1afa7-b65c-4a0f-8faf-1d09681db7d6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -451,15 +451,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "inputUsage": {
-          "name": "inputUsage",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "outputUsage": {
-          "name": "outputUsage",
+        "chatUsage": {
+          "name": "chatUsage",
           "type": "bigint",
           "primaryKey": false,
           "notNull": true,
@@ -690,8 +683,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "from": {
-          "name": "from",
+        "role": {
+          "name": "role",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -699,6 +692,12 @@
         "parts": {
           "name": "parts",
           "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },

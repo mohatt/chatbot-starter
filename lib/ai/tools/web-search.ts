@@ -5,7 +5,8 @@ import type { ToolSet } from 'ai'
 import type { ChatToolContext } from '../types'
 
 export function webSearch({ model }: ChatToolContext) {
-  if (!model.modifiers.websearch) {
+  const { key, vendor } = model
+  if (!key.modifiers.webSearch) {
     return null
   }
 
@@ -30,7 +31,6 @@ export function webSearch({ model }: ChatToolContext) {
     } satisfies ToolSet
   }
 
-  const { vendor } = model.entry
   const tools = {
     ...(vendor === 'google' ? googleSearch() : {}),
     ...(vendor === 'openai' ? openaiSearch() : {}),

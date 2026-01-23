@@ -1,34 +1,27 @@
 import { and, desc, eq, gte, lt } from 'drizzle-orm'
-import { type UIMessage } from 'ai'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { messages } from '../schema'
+import type { ChatMessage } from '@/lib/ai'
 
 export type ChatMessageRecord = typeof messages.$inferSelect;
 export type ChatMessageRecordInput = Omit<typeof messages.$inferInsert, 'createdAt'>;
 
-export interface ChatMessageMetadata {
-  modelKey?: string
-  createdAt: string
-}
-
-export type ChatUIMessageRecord = UIMessage<ChatMessageMetadata, Record<string, unknown>>;
-
 export class ChatMessageModel extends DbModel {
   readonly schema = messages;
 
-  async insertMany(chatId: string, uiMessages: UIMessage[], modelKey?: string): Promise<number | null> {
+  async insertMany(chatId: string, uiMessages: ChatMessage[]): Promise<number | null> {
     try {
       const { rowCount } = await this.db
         .insert(messages)
-        .values(this.toDBMessages(chatId, modelKey ?? 'assistant', uiMessages));
+        .values(this.toDBMessages(chatId, uiMessages));
       return rowCount
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to save chat messages");
     }
   }
 
-  async findMany(chatId: string, limit: number, cursor?: string): Promise<PaginatedResult<ChatUIMessageRecord>> {
+  async findMany(chatId: string, limit: number, cursor?: string): Promise<PaginatedResult<ChatMessage>> {
     try {
       const data = await this.db.select()
         .from(messages)
@@ -62,29 +55,26 @@ export class ChatMessageModel extends DbModel {
     }
   }
 
-  private toDBMessages(chatId: string, modelKey: string, uiMessages: UIMessage[]): ChatMessageRecordInput[] {
-    return uiMessages.map(({ id, role, parts }): ChatMessageRecordInput => {
+  private toDBMessages(chatId: string, uiMessages: ChatMessage[]) {
+    return uiMessages.map(({ id, role, parts, metadata = {} }): ChatMessageRecordInput => {
       if (role !== 'user' && role !== 'assistant') return null!
       return {
         id,
-        from: role === 'user' ? 'user' : modelKey,
+        role,
         chatId,
-        parts
+        parts,
+        metadata,
       }
     }).filter(Boolean)
   }
 
-  private toUIMessages(dbMessages: ChatMessageRecord[]): ChatUIMessageRecord[] {
-    return dbMessages.map(({ id, parts, from, createdAt }) => {
-      const [role, modelKey] = from === 'user' ? ['user', undefined] as const : ['assistant', from] as const
+  private toUIMessages(dbMessages: ChatMessageRecord[]): ChatMessage[] {
+    return dbMessages.map(({ id, role, parts, metadata }): ChatMessage => {
       return {
         id,
-        parts,
         role,
-        metadata: {
-          modelKey,
-          createdAt: createdAt.toISOString(),
-        },
+        parts,
+        metadata,
       }
     })
   }

@@ -1,6 +1,7 @@
 import { createQuery, createInfiniteQuery } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
-import type { ChatRecord, ChatUIMessageRecord, PaginatedResult } from '@/lib/db'
+import type { ChatRecord, PaginatedResult } from '@/lib/db'
+import type { ChatMessage } from '@/lib/ai'
 
 export const useChatQuery = createQuery({
   queryKey: ['chat'],
@@ -14,7 +15,7 @@ export const useChatHistoryQuery = createInfiniteQuery({
     const query = new URLSearchParams();
     if (pageParam) query.set('before', pageParam);
     const url = `/api/chat/${vars.id}/history${query.size > 0 ? `?${query.toString()}` : ''}`;
-    return fetcher<PaginatedResult<ChatUIMessageRecord>>(url)
+    return fetcher<PaginatedResult<ChatMessage>>(url)
   },
   getNextPageParam: (lastPage) => lastPage.nextCursor,
   staleTime: 'static',

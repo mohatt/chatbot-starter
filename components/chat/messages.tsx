@@ -205,10 +205,6 @@ function ChatMessage(props: ChatMessageProps) {
   }, [parts])
 
   const hasTextParts = textParts.length > 0
-  if (!groupedParts.length) {
-    return null
-  }
-
   return (
     <Message from={role} className={cn('justify-start [&>*:first-child]:mt-0', (isAssistant || isEditMode) && 'max-w-full')}>
       {groupedParts.map((part, i) => {

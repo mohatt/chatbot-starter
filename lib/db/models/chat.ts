@@ -12,10 +12,7 @@ export class ChatModel extends DbModel {
   async findById(id: string): Promise<ChatRecord | null> {
     try {
       const [selectedChat] = await this.db.select().from(chats).where(eq(chats.id, id));
-      if (!selectedChat) {
-        return null;
-      }
-      return selectedChat;
+      return selectedChat ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to fetch chat by id");
     }

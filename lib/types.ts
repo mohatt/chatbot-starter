@@ -1,6 +1,10 @@
-import type { ModelsConfig } from '@/lib/ai/model-config'
+import type { ModelsConfig, ModelKey } from '@/lib/ai/model-config'
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
 import type { FileUploadRules } from '@/lib/schema'
+
+export interface BillingConfig {
+  maxChatCredits: number
+}
 
 export interface AppConfig {
   appId: string
@@ -8,6 +12,7 @@ export interface AppConfig {
   baseUrl: string
   chat: {
     title: {
+      model: ModelKey
       fallback: string,
       maxGeneratedLength: number
     }
@@ -23,6 +28,10 @@ export interface AppConfig {
   }
   project: {
     maxFiles: number
+  }
+  billing: {
+    user: BillingConfig
+    anonymous: BillingConfig
   }
   fileLoader: FileLoaderOptions
   uploads: {

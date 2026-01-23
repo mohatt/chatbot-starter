@@ -1,28 +1,29 @@
 import { z } from 'zod'
 
-export interface ModelConfig {
-  id: string;
+const modelKeySchema = z.object({
+  id: z.string().nonempty(),
+  provider: z.enum(['vercel', 'huggingface']),
+  modifiers: z.object({
+    thinking: z.boolean().optional(),
+    webSearch: z.boolean().optional(),
+  }),
+})
+
+export type ModelKey = z.infer<typeof modelKeySchema>
+
+export interface ModelConfig extends Pick<ModelKey, 'id' | 'provider'> {
   name: string;
-  provider: 'vercel' | 'huggingface';
   thinking?: boolean | 'always';
   webSearch?: boolean;
-  default?: true | ModelKeyModifiers
-}
-
-export type ModelKeyModifier = 'thinking' | 'websearch'
-export type ModelKeyModifiers = {
-  [K in ModelKeyModifier]?: boolean
-}
-
-export interface ModelKey {
-  key: string
-  entry: ModelEntry
-  modifiers: ModelKeyModifiers
+  default?: true | ModelKey['modifiers']
 }
 
 export interface ModelEntry extends ModelConfig {
   vendor?: string
-  getKey: (modifiers?: ModelKeyModifiers, strict?: boolean) => string
+}
+
+export interface ResolvedModelEntry extends ModelEntry {
+  key: ModelKey
 }
 
 export class ModelsConfig {
@@ -30,29 +31,10 @@ export class ModelsConfig {
 
   constructor(config: ModelConfig[]) {
     this.registry = config.map(entry => {
-      const { id, provider, thinking, webSearch } = entry
-      const parts = id.split('/')
+      const parts = entry.id.split('/')
       return {
         ...entry,
         vendor: parts.length > 1 && parts[0] || undefined,
-        getKey: (modifiers, strict) => {
-          const modifiersArr = [] as ModelKeyModifier[]
-          if (modifiers?.thinking || thinking === 'always') {
-            if(thinking) {
-              modifiersArr.push('thinking')
-            } else if (strict) {
-              throw new Error(`Model ${id} does not support reasoning`)
-            }
-          }
-          if (modifiers?.websearch) {
-            if(webSearch) {
-              modifiersArr.push('websearch')
-            } else if (strict) {
-              throw new Error(`Model ${id} does not support web search`)
-            }
-          }
-          return [provider, id, ...modifiersArr].join(':')
-        },
       }
     })
   }
@@ -63,35 +45,55 @@ export class ModelsConfig {
       throw new Error('No default model was found')
     }
     const modifiers = typeof entry.default === 'object' ? entry.default : {}
-    const key = entry.getKey(modifiers, true)
-    return { key, entry, modifiers }
+    return this.getKey(entry, modifiers)
   }
 
-  parseKey(key: string): ModelKey {
-    const [provider, modelId, ...rest] = key.split(':')
-    const modifiersArr = rest as ModelKeyModifier[]
-    if (!provider || !modelId || modifiersArr.some((m) => !['thinking', 'websearch'].includes(m))) {
-      throw new Error(`Invalid model key: ${key}`)
+  getKey(entry: ModelEntry | ResolvedModelEntry, modifiers?: ModelKey['modifiers'], strict?: boolean) {
+    const { id, provider, thinking, webSearch } = entry
+    const key: ModelKey = {
+      id,
+      provider,
+      modifiers: {}
     }
-    const entry = this.registry.find((m) => m.provider === provider && m.id === modelId)
-    const modifiers = Object.fromEntries(modifiersArr.map(k => [k, true])) as ModelKeyModifiers
+    const mods = 'key' in entry
+      ? { ...entry.key.modifiers, ...modifiers }
+      : modifiers
+    if (mods?.thinking || thinking === 'always') {
+      if(thinking) {
+        key.modifiers.thinking = true
+      } else if (strict) {
+        throw new Error(`Model ${id} does not support reasoning`)
+      }
+    }
+    if (mods?.webSearch) {
+      if(webSearch) {
+        key.modifiers.webSearch = true
+      } else if (strict) {
+        throw new Error(`Model ${id} does not support web search`)
+      }
+    }
+    return key
+  }
+
+  resolveKey(key: ModelKey): ResolvedModelEntry {
+    const { id, provider, modifiers } = key
+    const entry = this.registry.find((m) => m.provider === provider && m.id === id)
     if (!entry
       || (modifiers.thinking && !entry.thinking)
       || (!modifiers.thinking && entry.thinking === 'always')
-      || (modifiers.websearch && !entry.webSearch)
+      || (modifiers.webSearch && !entry.webSearch)
     ) {
-      throw new Error(`Invalid model key: ${key}`)
+      throw new Error(`Invalid model key for ${id}`)
     }
-    return { key, entry, modifiers }
+    return { ...entry, key }
   }
 
   getKeySchema() {
-    return z
-      .string()
-      .nonempty()
+    return modelKeySchema
+      .default(() => this.getDefault())
       .transform((val, ctx) => {
         try {
-          return this.parseKey(val)
+          return this.resolveKey(val)
         } catch (err) {
           ctx.addIssue({
             code: 'custom',

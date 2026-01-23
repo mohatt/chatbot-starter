@@ -1,20 +1,32 @@
 import { gateway } from '@ai-sdk/gateway';
 import { createHuggingFace } from '@ai-sdk/huggingface';
-import { embed, embedMany, type ToolSet } from 'ai'
+import { embed, embedMany, type ToolSet, type LanguageModelUsage } from 'ai'
 import { fetchModels, getModelMeta, type ProvidersCatalog } from 'tokenlens'
-import { config } from '@/lib/config'
+import { getTokenCosts } from 'tokenlens/helpers'
 import { listFiles, readFile, readFileText, fileTextSearch, webSearch } from './tools'
 import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
-import type { ChatToolContext } from './types'
 import type { ModelKey } from './model-config'
+import type { ChatToolContext } from './types'
 
 export type LanguageModel = ReturnType<typeof gateway>
 export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
 
+export interface ModelUsageSchema {
+  input?: number
+  output?: number
+  reasoning?: number
+  cacheReads?: number
+  cacheWrites?: number
+  total?: number
+}
+
+export interface ModelUsage {
+  cost: ModelUsageSchema
+  tokens: ModelUsageSchema
+}
+
 export class AI {
-  readonly chat: LanguageModel
-  readonly defaultChatModel: ModelKey
   readonly embedding: EmbeddingModel
   readonly prompts = {
     chatPrompt,
@@ -24,36 +36,81 @@ export class AI {
   private catalog?: ProvidersCatalog
 
   constructor(private env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>) {
-    this.defaultChatModel = config.chat.models.getDefault()
-    this.chat = this.getLanguageModel(this.defaultChatModel)
     this.embedding = gateway.embeddingModel('openai/text-embedding-3-small');
   }
 
-  getLanguageModel(key: ModelKey) {
-    const { id, provider } = key.entry
+  async getLanguageModel(key: ModelKey): Promise<LanguageModel> {
+    const { id, provider } = key
+    const meta = await this.getModelMeta(key)
+    if (key.modifiers.thinking && !meta.reasoning) {
+      throw new Error(`Model ${id} does not support reasoning.`)
+    }
+
     if (provider === 'huggingface') {
       const apiKey = this.env.HUGGING_FACE_API_KEY
       if (!apiKey) {
         throw new Error('No API key was found for HuggingFace')
       }
+
       return createHuggingFace({ apiKey })(id)
     }
+
     return gateway(id)
   }
 
-  async getModelsCatalog() {
+  async getProvidersCatalog() {
     if (this.catalog === undefined) {
       this.catalog = await fetchModels()
     }
     return this.catalog
   }
 
-  async getModelMeta(model: LanguageModel | EmbeddingModel) {
-    const providers = await this.getModelsCatalog()
-    if (model.provider === 'huggingface.responses') {
-      return getModelMeta(providers, 'huggingface', model.modelId)
+  async getModelUsage(key: ModelKey, usage: LanguageModelUsage): Promise<ModelUsage> {
+    const { id, provider } = key
+    const providers = await this.getProvidersCatalog()
+    if (!providers[provider]) {
+      throw new Error(`Provider ${provider} is not supported`)
     }
-    return getModelMeta(providers, 'vercel', model.modelId)
+    const cost = getTokenCosts({
+      providers: providers[provider],
+      modelId: id,
+      usage: {
+        ...usage,
+        // tokenlens does not read cacheWriteTokens from inputTokenDetails
+        cacheWrites: usage.inputTokenDetails.cacheWriteTokens,
+      },
+    })
+    if (!cost) {
+      throw new Error(`Unable to calculate usage for model ${id}`);
+    }
+    return {
+      tokens: {
+        input: usage.inputTokens,
+        output: usage.outputTokens,
+        reasoning: usage.outputTokenDetails.reasoningTokens,
+        cacheReads: usage.inputTokenDetails.cacheReadTokens,
+        cacheWrites: usage.inputTokenDetails.cacheWriteTokens,
+        total: usage.totalTokens,
+      },
+      cost: {
+        input: cost.inputUSD,
+        output: cost.outputUSD,
+        reasoning: cost.reasoningUSD,
+        cacheReads: cost.cacheReadsUSD,
+        cacheWrites: cost.cacheWritesUSD,
+        total: cost.totalUSD,
+      },
+    }
+  }
+
+  async getModelMeta(key: ModelKey) {
+    const { id, provider } = key
+    const providers = await this.getProvidersCatalog()
+    const meta = getModelMeta({ providers, provider, id })
+    if (!meta) {
+      throw new Error(`Model ${id} is not supported`)
+    }
+    return meta
   }
 
   async embed(value: string): Promise<number[]> {
@@ -85,4 +142,5 @@ export class AI {
 }
 
 export * from './types'
+export * from './model-config'
 export * from './prompts'

@@ -56,7 +56,7 @@ export function Chat(props: ChatIdProps) {
           timeZone: getTimeZone(),
           createChat: !isStoredChat,
           regenerate: request.trigger === 'regenerate-message',
-          model: settings?.chatModel?.key,
+          model: settings.chatModel.key,
           projectId,
           ...request.body
         }
@@ -68,9 +68,9 @@ export function Chat(props: ChatIdProps) {
         toast[data.level](data.message)
       }
     }),
-    onFinish: useEventCallback(() => {
+    onFinish: useEventCallback((res) => {
+      console.log(res.isAbort) // isAbort is true when stop() is called
       queryClient.setQueryData(useChatHistoryQuery.getKey({ id }), {
-        // @todo messages here doesn't have the metadata set by the backend (modelId, createdAt)
         pages: [{ data: [...messages], nextCursor: null }],
         pageParams: [null],
       })
@@ -117,8 +117,7 @@ export function Chat(props: ChatIdProps) {
   // Set message history for existing chats
   useEffect(() => {
     if (!historyData) return
-    // @todo fix any - messages here is not typed with chat tools
-    const historyMessages: any = historyData.pages.flatMap((d) => d.data)
+    const historyMessages = historyData.pages.flatMap((d) => d.data)
     setMessages((prev) => {
       // If we already have messages (e.g. coming back with a warm Chat store),
       // don't prepend history again and cause duplicates.

@@ -85,6 +85,11 @@ export const config = {
       },
     ]),
     title: {
+      model: {
+        id: "openai/gpt-4.1-nano",
+        provider: "vercel",
+        modifiers: {},
+      },
       fallback: 'New Chat',
       maxGeneratedLength: 40
     },
@@ -99,6 +104,14 @@ export const config = {
   },
   project: {
     maxFiles: 12,
+  },
+  billing: {
+    user: {
+      maxChatCredits: 2,
+    },
+    anonymous: {
+      maxChatCredits: 1
+    }
   },
   fileLoader: {},
   uploads: {

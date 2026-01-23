@@ -14,7 +14,7 @@ import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import { uuidV7 } from '@/lib/schema'
 import { postRequestBodySchema, patchRequestBodySchema } from './schema'
-import type { ChatMessage } from '@/lib/ai'
+import type { ChatMessage, ModelUsage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
@@ -44,6 +44,12 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     throw new AppError('bad_request:chat')
   }
 
+  const userBilling = await db.billingPeriods.ensureCurrent(user.billingId!)
+  const { maxChatCredits } = config.billing[user.isAnonymous ? 'anonymous' : 'user']
+  if(userBilling.chatUsage >= maxChatCredits) {
+    throw new AppError('rate_limit:chat')
+  }
+
   let chat: ChatRecord
   if (createChat) {
     chat = await db.chats.create({
@@ -69,13 +75,8 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
-  const chatModel = model != null ? ai.getLanguageModel(model) : ai.chat
-  const chatModelMeta = await ai.getModelMeta(chatModel)
-  const chatModelKey = model ?? ai.defaultChatModel
-  const isReasoning = !!chatModelKey.modifiers.thinking
-  if (isReasoning && !chatModelMeta?.reasoning) {
-    throw new AppError('bad_request:chat', 'Selected chat model does not support reasoning.')
-  }
+  const chatModel = await ai.getLanguageModel(model.key)
+  const isReasoning = model.key.modifiers.thinking === true
 
   if (regenerate) {
     await db.messages.deleteMany(id, message.id)
@@ -94,11 +95,22 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
+  // Can be used to abort the generation stream
+  // When triggered, the abort reason will be sent as an error part
+  const generation = new AbortController()
+
+  // Model usage is set during streamText.onFinish and saved to db later
+  let chatUsage: ModelUsage | null = null
+  // Usage cost is incremented during streamText.onStepFinish
+  // Stream is aborted if it reaches max value
+  let userChatCost = userBilling.chatUsage
+
+  // Fetch user location info
   const { city, country } = geolocation(request)
   const location = city && country ?  `${city}, ${country}` : null
 
   function getProviderOptions(): Record<string, any> {
-    const { vendor, id } = chatModelKey.entry
+    const { vendor, id } = model
     if(vendor === 'google') {
       const v2_5 = id.startsWith('google/gemini-2.5')
       const v3 = id.startsWith('google/gemini-3')
@@ -160,24 +172,57 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         tools: ai.createChatTools({
           api,
           chat,
+          model,
           project,
           dataStream,
-          model: chatModelKey,
         }),
         stopWhen: stepCountIs(5),
-        abortSignal: request.signal,
+        abortSignal: AbortSignal.any([request.signal, generation.signal]),
         providerOptions: getProviderOptions(),
-        onFinish: (res) => {
-          // console.log(JSON.stringify(res.request, null, 2))
-          console.log(res.totalUsage)
-          // console.log(res.sources)
+        onStepFinish: async ({ usage }) => {
+          try {
+            const stepUsage = await ai.getModelUsage(model.key, usage)
+            const stepCost = stepUsage.cost.total ?? 0
+            if (stepCost > 0) {
+              userChatCost += stepCost
+              if(userChatCost >= maxChatCredits) {
+                generation.abort('Insufficient chat credits')
+              }
+            }
+          } catch (error) {
+            console.error('Failed to calculate model step usage:', {
+              key: model.key,
+              stepUsage: usage,
+              error
+            })
+            generation.abort(String(error))
+          }
+        },
+        onFinish: async ({ totalUsage }) => {
+          try {
+            // Calculate model usage
+            chatUsage = await ai.getModelUsage(model.key, totalUsage)
+          } catch (error) {
+            console.error('Failed to calculate model final usage:', {
+              key: model.key,
+              totalUsage,
+              error
+            })
+          }
+          console.log(chatUsage)
           dataStream.write({
             type: 'data-notification',
-            data: { message: `Tokens used: ${res.totalUsage.totalTokens}`, level: 'info' },
+            data: { message: `Tokens used: ${totalUsage.totalTokens}`, level: 'info' },
             transient: true, // won't be persisted to storage
           });
         },
         onAbort: () => {
+          if (generation.signal.aborted) {
+            dataStream.write({
+              type: 'error',
+              errorText: String(generation.signal.reason),
+            });
+          }
           console.log('streamText aborted');
         },
         onError: (err) => {
@@ -185,12 +230,49 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         }
       });
 
-      dataStream.merge(result.toUIMessageStream());
+      dataStream.merge(
+        result.toUIMessageStream({
+          sendSources: model.vendor === 'google', // for google search
+          messageMetadata: ({ part }) => {
+            console.log('messageMetadata', part.type)
+            if (part.type === 'finish') {
+              return {
+                model: model.key,
+                usage: chatUsage ?? { tokens: {}, cost: {} },
+              }
+            }
+          },
+        }),
+      );
     },
-    onFinish: async ({ messages }) => {
-      await db.messages.insertMany(id, messages, chatModelKey.key).catch((err) => {
-        console.warn('Failed to save chat messages:', id, err);
-      })
+    onFinish: async ({ messages, finishReason, isAborted }) => {
+      console.log('saveMessage', { messages, finishReason, isAborted, chatUsage })
+      const tasks: Array<Promise<any>> = [
+        db.messages
+          .insertMany(id, messages)
+          .catch((error) => {
+            console.error('Failed to save chat messages:', {
+              chatId: id,
+              error,
+            });
+          })
+      ]
+
+      const totalCost = chatUsage?.cost.total ?? 0
+      if (totalCost > 0) {
+        tasks.push(
+          db.billingPeriods
+            .updateById(userBilling.id, { chatUsageDelta: totalCost })
+            .catch((error) => {
+              console.error('Failed to update user chat usage:', {
+                userId: user.id,
+                error,
+              });
+            })
+        )
+      }
+
+      await Promise.all(tasks)
     },
     onError: (_err) => {
       return 'Oops, an error occurred!'
@@ -219,11 +301,12 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api
 
   // Generate title for new chats
   if (chat.isTitlePending) {
-    let title = config.chat.title.fallback
+    const { model, fallback, maxGeneratedLength } = config.chat.title
+    let title = fallback
     try {
       const { text } = await generateText({
-        model: ai.chat,
-        system: ai.prompts.chatTitlePrompt.toString({ maxLength: config.chat.title.maxGeneratedLength }),
+        model: await ai.getLanguageModel(model),
+        system: ai.prompts.chatTitlePrompt.toString({ maxLength: maxGeneratedLength }),
         prompt: chat.title,
         temperature: 0.2,
       });

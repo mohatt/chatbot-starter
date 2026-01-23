@@ -9,8 +9,7 @@ export const billingPeriods = pgTable("billingPeriods", {
       .references(() => billings.id, { onDelete: "cascade" }),
     year: integer("year").notNull(),
     month: integer("month").notNull(),
-    inputUsage: bigint("inputUsage", { mode: "number" }).default(0).notNull(),
-    outputUsage: bigint("outputUsage", { mode: "number" }).default(0).notNull(),
+    chatUsage: bigint("chatUsage", { mode: "number" }).default(0).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt")
       .defaultNow()

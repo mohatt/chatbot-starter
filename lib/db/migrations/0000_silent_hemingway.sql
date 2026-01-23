@@ -59,8 +59,7 @@ CREATE TABLE "billingPeriods" (
 	"billingId" uuid NOT NULL,
 	"year" integer NOT NULL,
 	"month" integer NOT NULL,
-	"inputUsage" bigint DEFAULT 0 NOT NULL,
-	"outputUsage" bigint DEFAULT 0 NOT NULL,
+	"chatUsage" bigint DEFAULT 0 NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
@@ -78,8 +77,9 @@ CREATE TABLE "chats" (
 CREATE TABLE "messages" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"chatId" uuid NOT NULL,
-	"from" varchar NOT NULL,
+	"role" varchar NOT NULL,
 	"parts" json NOT NULL,
+	"metadata" jsonb NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

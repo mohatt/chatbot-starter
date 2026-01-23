@@ -4,8 +4,9 @@ import { config } from '@/lib/config'
 
 const clientSettingsKey = 'client-settings'
 const clientSettingsSchema = z.object({
-  chatModel: config.chat.models.getKeySchema().optional()
+  chatModel: config.chat.models.getKeySchema()
 })
+const defaultClientSettings = clientSettingsSchema.parse({})
 
 export type ClientSettings = z.infer<typeof clientSettingsSchema>
 
@@ -28,14 +29,14 @@ function readStoredValue() {
 }
 
 export function useClientSettings() {
-  const [data, setData] = useState<ClientSettings | null>(null)
+  const [data, setData] = useState<ClientSettings>(defaultClientSettings)
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     let isMounted = true
     const load = () => {
       if (!isMounted) return
-      setData(readStoredValue())
+      setData(readStoredValue() ?? defaultClientSettings)
       setError(null)
     }
     load()

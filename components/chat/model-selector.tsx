@@ -17,8 +17,7 @@ import { CheckIcon, GlobeIcon, BrainIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
 
-const { models } = config.chat
-const defaultModel = models.getDefault()
+const models = config.chat.models
 const modelGroups = models.registry.reduce(
   (acc, m) => {
     const group = m.provider === 'huggingface' ? 'huggingface' : m.vendor ?? 'Unknown'
@@ -47,17 +46,16 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
   const [isOpen, setIsOpen] = useState(false);
   const { data, mutate } = useClientSettings()
 
-  const active = data?.chatModel ?? defaultModel
-  const activeModel = active.entry
-  const activeModelId = activeModel.getKey()
-  const activeModelLogo = activeModel.provider === 'huggingface' ? 'huggingface' : activeModel.vendor
+  const current = data.chatModel
+  const currentId = `${current.provider}:${current.id}`
+  const currentLogo = current.provider === 'huggingface' ? 'huggingface' : current.vendor
   return (
     <div className={cn('flex items-center gap-1', className)}>
       <ModelSelector open={isOpen} onOpenChange={setIsOpen}>
         <ModelSelectorTrigger asChild>
           <InputGroupButton type="button" size='sm' disabled={disabled}>
-            <ModelSelectorLogo provider={activeModelLogo ?? 'unknown'} className='size-4' />
-            <ModelSelectorName>{activeModel.name}</ModelSelectorName>
+            <ModelSelectorLogo provider={currentLogo ?? 'unknown'} className='size-4' />
+            <ModelSelectorName>{current.name}</ModelSelectorName>
           </InputGroupButton>
         </ModelSelectorTrigger>
         <ModelSelectorContent>
@@ -67,14 +65,14 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
             {Object.entries(modelGroups).map(([vendor, group]) => (
               <ModelSelectorGroup key={vendor} heading={groupNames[vendor] ?? vendor}>
                 {group.map((model) => {
-                  const id = model.getKey()
-                  const isActive = id === activeModelId
+                  const id = `${model.provider}:${model.id}`
+                  const isActive = id === currentId
                   const logo = model.provider === 'huggingface' ? 'huggingface' : model.vendor
                   return (
                     <ModelSelectorItem
                       key={id}
                       onSelect={() => {
-                        mutate({ chatModel: model.getKey(active.modifiers) })
+                        mutate({ chatModel: models.getKey(model, current.key.modifiers, false) })
                         setIsOpen(false);
                       }}
                       value={id}
@@ -106,16 +104,15 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
           </ModelSelectorList>
         </ModelSelectorContent>
       </ModelSelector>
-      {activeModel.thinking && (
+      {current.thinking && (
         <InputGroupButton
           type="button"
           size='sm'
-          variant={active.modifiers.thinking ? 'secondary' : 'ghost'}
+          variant={current.key.modifiers.thinking ? 'secondary' : 'ghost'}
           onClick={() => {
             mutate({
-              chatModel: activeModel.getKey({
-                ...active.modifiers,
-                thinking: !active.modifiers.thinking,
+              chatModel: models.getKey(current, {
+                thinking: !current.key.modifiers.thinking,
               })
             })
           }}
@@ -125,16 +122,15 @@ export function ChatModelSelector({ className, disabled }: ChatModelSelectorProp
           <span>Thinking</span>
         </InputGroupButton>
       )}
-      {activeModel.webSearch && (
+      {current.webSearch && (
         <InputGroupButton
           type="button"
           size='sm'
-          variant={active.modifiers.websearch ? 'secondary' : 'ghost'}
+          variant={current.key.modifiers.webSearch ? 'secondary' : 'ghost'}
           onClick={() => {
             mutate({
-              chatModel: activeModel.getKey({
-                ...active.modifiers,
-                websearch: !active.modifiers.websearch,
+              chatModel: models.getKey(current, {
+                webSearch: !current.key.modifiers.webSearch,
               })
             })
           }}
