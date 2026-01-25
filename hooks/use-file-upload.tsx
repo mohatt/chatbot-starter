@@ -1,7 +1,7 @@
 import { useCallback, createRef, useMemo, useRef, useState, useEffect, type DragEvent, type ReactElement } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useLazyRef } from '@/hooks/use-lazy-ref'
-import { useUploadFileMutation } from '@/api/mutations/files'
+import { useUploadFileMutation } from '@/api/hooks/files'
 import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'

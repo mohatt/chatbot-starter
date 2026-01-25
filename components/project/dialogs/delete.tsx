@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDeleteProjectMutation } from '@/api/mutations/projects'
+import { useDeleteProjectMutation } from '@/api/hooks/projects'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'

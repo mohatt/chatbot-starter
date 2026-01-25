@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDeleteChatsMutation } from '@/api/mutations/chats'
+import { useDeleteChatsMutation } from '@/api/hooks/chats'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'

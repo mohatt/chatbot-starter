@@ -2,7 +2,7 @@
 import { useRef, useState, type FormEvent, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
-import { useUserBillingPeriodQuery } from '@/api/queries/user'
+import { useUserBillingPeriodQuery } from '@/api/hooks/user'
 import { toast } from 'sonner'
 import {
   PromptInputBody,

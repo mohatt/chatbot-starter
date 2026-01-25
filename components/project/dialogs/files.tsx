@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useFileUpload, type ClientUpload } from '@/hooks/use-file-upload'
-import { useFilesQuery } from '@/api/queries/files'
-import { useDeleteFileMutation } from '@/api/mutations/files'
+import { useFilesQuery, useDeleteFileMutation } from '@/api/hooks/files'
 import { useDialogState, type BaseDialogProps } from '@/components/dialog'
 import { toast } from 'sonner'
 import { formatFileSize } from '@/lib/util'

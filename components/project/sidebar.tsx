@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react'
-import { useProjectsQuery } from '@/api/queries/projects'
+import { useProjectsQuery } from '@/api/hooks/projects'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,

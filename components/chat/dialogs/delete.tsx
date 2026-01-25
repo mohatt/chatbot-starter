@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDeleteChatMutation } from '@/api/mutations/chats'
+import { useDeleteChatMutation } from '@/api/hooks/chats'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { toast } from 'sonner'
 import type { ChatRecord } from '@/lib/db'

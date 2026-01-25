@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react'
 import { useChatParams } from '@/components/chat/hooks'
-import { useChatsQuery } from '@/api/queries/chats'
+import { useChatsQuery } from '@/api/hooks/chats'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   useSidebar,

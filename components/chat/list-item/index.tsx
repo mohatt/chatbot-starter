@@ -1,6 +1,6 @@
 'use client';
 import { useState, type KeyboardEvent } from 'react'
-import { useUpdateChatMutation } from '@/api/mutations/chats'
+import { useUpdateChatMutation } from '@/api/hooks/chats'
 import { toast } from 'sonner'
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import {

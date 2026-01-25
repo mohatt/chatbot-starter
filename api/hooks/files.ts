@@ -1,8 +1,12 @@
-import { createMutation } from 'react-query-kit'
+import { createQuery, createMutation } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
-import { useFilesQuery } from '../queries/files'
 import type { FileRecord } from '@/lib/db'
 import type { PostRequestBody } from '@/app/(core)/api/files/schema'
+
+export const useFilesQuery = createQuery({
+  queryKey: ['files'],
+  fetcher: async (vars: { projectId: string }) => fetcher<FileRecord[]>(`/api/files?projectId=${vars.projectId}`),
+})
 
 export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],
