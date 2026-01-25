@@ -7,18 +7,18 @@ export type ErrorType =
   | "rate_limit"
   | "offline";
 
-export type ErrorNamespace =
+export type RouteNamespace =
   | "project"
   | "chat"
   | "file"
   | "api"
   | "database";
 
-export type ErrorCode = `${ErrorType}:${ErrorNamespace}`;
+export type ErrorCode = `${ErrorType}:${RouteNamespace}`;
 
 export type ErrorVisibility = "response" | "log" | "none";
 
-export const visibilityByNamespace: Record<ErrorNamespace, ErrorVisibility> = {
+export const visibilityByNamespace: Record<RouteNamespace, ErrorVisibility> = {
   database: "log",
   project: "response",
   chat: "response",
@@ -26,44 +26,7 @@ export const visibilityByNamespace: Record<ErrorNamespace, ErrorVisibility> = {
   api: "response",
 };
 
-export class AppError extends Error {
-  type: ErrorType;
-  cause?: Error | string;
-  namespace: ErrorNamespace;
-  statusCode: number;
-
-  constructor(errorCode: ErrorCode, cause?: Error | string) {
-    super();
-
-    const [type, namespace] = errorCode.split(":");
-
-    this.type = type as ErrorType;
-    this.cause = cause;
-    this.namespace = namespace as ErrorNamespace;
-    this.message = getMessageByErrorCode(errorCode);
-    this.statusCode = getStatusCodeByType(this.type);
-  }
-
-  toResponse() {
-    const code: ErrorCode = `${this.type}:${this.namespace}`;
-    const visibility = visibilityByNamespace[this.namespace];
-
-    const { message, cause, statusCode } = this;
-
-    if (this.type === "internal" || visibility === "log") {
-      console.error({ code, message, cause });
-
-      return Response.json(
-        { code, message: "Something went wrong. Please try again later." },
-        { status: statusCode }
-      );
-    }
-
-    return Response.json({ code, message, cause }, { status: statusCode });
-  }
-}
-
-export function getMessageByErrorCode(errorCode: ErrorCode): string {
+function getMessageByErrorCode(errorCode: ErrorCode): string {
   if (errorCode.includes("database")) {
     return "An error occurred while executing a database query.";
   }
@@ -116,5 +79,42 @@ function getStatusCodeByType(type: ErrorType) {
       return 503;
     default:
       return 500;
+  }
+}
+
+export class AppError extends Error {
+  type: ErrorType;
+  cause?: Error | string;
+  namespace: RouteNamespace;
+  statusCode: number;
+
+  constructor(errorCode: ErrorCode, cause?: Error | string) {
+    super();
+
+    const [type, namespace] = errorCode.split(":");
+
+    this.type = type as ErrorType;
+    this.cause = cause;
+    this.namespace = namespace as RouteNamespace;
+    this.message = getMessageByErrorCode(errorCode);
+    this.statusCode = getStatusCodeByType(this.type);
+  }
+
+  toResponse() {
+    const code: ErrorCode = `${this.type}:${this.namespace}`;
+    const visibility = visibilityByNamespace[this.namespace];
+
+    const { message, cause, statusCode } = this;
+
+    if (this.type === "internal" || visibility === "log") {
+      console.error({ code, message, cause });
+
+      return Response.json(
+        { code, message: "Something went wrong. Please try again later." },
+        { status: statusCode }
+      );
+    }
+
+    return Response.json({ code, message, cause }, { status: statusCode });
   }
 }

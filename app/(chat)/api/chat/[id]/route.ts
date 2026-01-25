@@ -195,7 +195,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
               stepUsage: usage,
               error
             })
-            generation.abort(String(error))
+            generation.abort(new AppError('internal:chat', (error as Error).message))
           }
         },
         onFinish: async ({ totalUsage }) => {

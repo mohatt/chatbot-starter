@@ -2,6 +2,7 @@
 import { useRef, useState, type FormEvent, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
+import { useUserBillingPeriodQuery } from '@/api/queries/user'
 import { toast } from 'sonner'
 import {
   PromptInputBody,
@@ -14,20 +15,33 @@ import {
   PromptInputActionMenuContent,
 } from '@/components/ai-elements/prompt-input'
 import { InputGroup, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group'
+import { Alert, AlertTitle } from '@/components/ui/alert'
 import { ChatModelSelector } from '@/components/chat/model-selector'
-import { CornerDownLeftIcon, ImageIcon, Loader2Icon, PaperclipIcon, SquareIcon } from 'lucide-react'
+import { CornerDownLeftIcon, ImageIcon, Loader2Icon, PaperclipIcon, SquareIcon, CircleAlertIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import type { UseChatResult } from './hooks'
 
 export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'stop' | 'status'> {
   chatId: string;
   isPending?: boolean
+  isDisabled?: boolean
   isEphemeral?: boolean
 }
 
 export const ChatPrompt = (props: ChatPromptProps) => {
-  const { chatId, sendMessage, stop, status, isPending, isEphemeral } = props;
+  const { chatId, sendMessage, stop, status, isPending, isDisabled } = props;
   const [input, setInput] = useState('');
+
+  const { data: billing, isLoading: isBillingLoading, error: billingError } = useUserBillingPeriodQuery()
+  const chatCredits = billing?.chatCredits
+  const hasNoChatCredits = chatCredits != null && chatCredits.remaining <= 0
+
+  const warning = hasNoChatCredits
+    ? 'You’ve reached your monthly chat usage limit.'
+    : billingError
+      ? 'Failing loading your chat usage information.'
+      : null
+
   const isComposingRef = useRef(false)
   const {
     files,
@@ -50,7 +64,14 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     }
   })
   const isStreaming = status === 'submitted' || status === 'streaming'
-  const isSubmitDisabled = !input.trim() || isStreaming || hasPendingFiles || hasFailedFiles;
+  const isDataLoading = isPending || isBillingLoading
+  const isInputDisabled = isDisabled || hasNoChatCredits || !!billingError
+  const isSubmitDisabled = isInputDisabled
+    || isStreaming
+    || isDataLoading
+    || !input.trim()
+    || hasPendingFiles
+    || hasFailedFiles;
 
   const handleSubmit = useEventCallback((e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
@@ -122,6 +143,14 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     <form onSubmit={handleSubmit} className="size-full mt-4">
       {renderUpload(
         <InputGroup className='hover:ring-1 hover:ring-ring/50'>
+          {warning && (
+            <div className='p-3 pb-1 w-full'>
+              <Alert variant='destructive'>
+                <CircleAlertIcon />
+                <AlertTitle>{warning}</AlertTitle>
+              </Alert>
+            </div>
+          )}
           {files.length > 0 && (
             <div className='flex flex-wrap items-center gap-2 p-3 pb-1 w-full'>
               {files.map((file) => (
@@ -147,6 +176,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
               className="field-sizing-content max-h-48 min-h-16 p-4 pb-1"
               placeholder='What’s on your mind today?'
               value={input}
+              disabled={isInputDisabled}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
@@ -163,7 +193,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
               <PromptInputActionMenu>
                 <PromptInputActionMenuTrigger
                   title='Attach files'
-                  disabled={isPending || isStreaming}
+                  disabled={isInputDisabled}
                 />
                 <PromptInputActionMenuContent>
                   <PromptInputActionMenuItem
@@ -180,7 +210,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                   </PromptInputActionMenuItem>
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
-              <ChatModelSelector disabled={isPending || isStreaming} />
+              <ChatModelSelector disabled={isInputDisabled} />
             </PromptInputTools>
             {isStreaming ? (
               <InputGroupButton
@@ -202,7 +232,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
                 aria-label="Submit"
                 disabled={isSubmitDisabled}
               >
-                {isPending ? (
+                {isDataLoading ? (
                   <Loader2Icon className="size-4 animate-spin" />
                 ) : (
                   <CornerDownLeftIcon className="size-4" />

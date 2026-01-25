@@ -265,13 +265,14 @@ function ChatMessage(props: ChatMessageProps) {
                 onSubmit={async (value) => {
                   await sendMessage({
                     messageId: id,
+                    metadata: message.metadata,
                     parts: parts.map((p) => {
                       if (p === part) {
                         return { type: 'text', text: value }
                       }
                       return p
                     }),
-                  }, { body: { regenerate: true }})
+                  })
                 }}
               />
             )
@@ -376,7 +377,7 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
         <InputGroupButton
           size="sm"
           variant="default"
-          disabled={!input.trim() || input.trim() === initialValue}
+          disabled={!input.trim()}
           onClick={() => {
             void onSubmit(input.trim())
             onCancel()

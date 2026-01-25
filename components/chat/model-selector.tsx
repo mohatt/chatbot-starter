@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useClientSettings } from '@/hooks/client-settings'
+import { useClientSettings } from '@/hooks/use-client-settings'
 import {
   ModelSelector,
   ModelSelectorContent,

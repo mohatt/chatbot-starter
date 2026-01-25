@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm'
-import { v5 as uuidv5 } from 'uuid'
+import { v5 as uuidv5, validate } from 'uuid'
 import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
 import { billingPeriods } from '../schema'
@@ -22,8 +22,8 @@ export class BillingPeriodModel extends DbModel {
    * atomic increments race). Returns the fresh or existing row.
    */
   async ensureCurrent(billingId: string){
+    const { id, parts } = this.getId(billingId);
     try {
-      const { id, parts } = this.getId(billingId);
       const [current] = await this.db
         .select()
         .from(billingPeriods)
@@ -113,6 +113,9 @@ export class BillingPeriodModel extends DbModel {
    * concurrent writers all collide on the same physical record.
    */
   private getId(billingId: string, period: Date | BillingPeriodParts = new Date()) {
+    if (!validate(billingId)) {
+      throw new AppError('bad_request:database', 'Invalid billing id');
+    }
     const parts = period instanceof Date ? {
       year: period.getUTCFullYear(),
       month: period.getUTCMonth() + 1,

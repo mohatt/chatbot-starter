@@ -7,7 +7,7 @@ import { VectorDb } from './db/vector'
 import { Auth, type AuthSession } from './auth'
 import { Authorizer } from './authz'
 import { Storage } from './storage'
-import { AppError, type ErrorNamespace } from './errors'
+import { AppError, type RouteNamespace } from './errors'
 
 export class Api {
   private static instance?: Api
@@ -64,7 +64,7 @@ export interface ApiHandlerParams<T extends RouteContext<any>> {
 }
 
 export interface ApiHandlerOptions {
-  namespace?: ErrorNamespace
+  namespace?: RouteNamespace
 }
 
 export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>, options?: ApiHandlerOptions) {

@@ -12,8 +12,9 @@ import { ChatHeader } from './header'
 import { ChatMessages } from './messages'
 import { ChatPrompt } from './prompt'
 import { useChat, useNewChatRef, type ChatIdProps } from './hooks'
-import { useClientSettings } from '@/hooks/client-settings'
+import { useClientSettings } from '@/hooks/use-client-settings'
 import { useChatQuery, useChatHistoryQuery } from '@/api/queries/chats'
+import { useUserBillingPeriodQuery } from '@/api/queries/user'
 import { useNewChatMutation } from '@/api/mutations/chats'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
@@ -44,21 +45,21 @@ export function Chat(props: ChatIdProps) {
   }
 
   const { messages, sendMessage, setMessages, status, stop, regenerate, error } = useChat({
-    id: id,
+    id,
     generateId: generateUUID,
     experimental_throttle: 100,
     transport: new DefaultChatTransport({
       api: `/api/chat/${id}`,
       fetch: fetchWithOfflineHandler,
-      prepareSendMessagesRequest: useEventCallback((request) => {
+      prepareSendMessagesRequest: useEventCallback((req) => {
         const body: PostRequestBody = {
-          message: request.messages.at(-1) as any,
+          message: req.messages.at(-1) as any,
           timeZone: getTimeZone(),
           createChat: !isStoredChat,
-          regenerate: request.trigger === 'regenerate-message',
+          regenerate: req.trigger === 'regenerate-message' || req.messageId != null,
           model: settings.chatModel.key,
           projectId,
-          ...request.body
+          ...req.body
         }
         return { body }
       })
@@ -70,16 +71,19 @@ export function Chat(props: ChatIdProps) {
     }),
     onFinish: useEventCallback((res) => {
       console.log(res.isAbort) // isAbort is true when stop() is called
+      queryClient.invalidateQueries({
+        queryKey: useUserBillingPeriodQuery.getKey(),
+      })
       queryClient.setQueryData(useChatHistoryQuery.getKey({ id }), {
         pages: [{ data: [...messages], nextCursor: null }],
         pageParams: [null],
       })
-    })
+    }),
   });
   const statusRef = useRef(status)
   statusRef.current = status
 
-  const sendMessageWithScroll: typeof sendMessage = useEventCallback((...args) => {
+  const handleSendMessage: typeof sendMessage = useEventCallback((...args) => {
     setTimeout(() => {
       scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
     }, 10)
@@ -99,7 +103,7 @@ export function Chat(props: ChatIdProps) {
   useEffect(() => {
     if (newChat.current && !isInitialMessageSent.current) {
       isInitialMessageSent.current = true
-      void sendMessageWithScroll(...newChat.current.initialMessageArgs)
+      void handleSendMessage(...newChat.current.initialMessageArgs)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -166,8 +170,8 @@ export function Chat(props: ChatIdProps) {
                   <ChatMessages
                     isReadonly={!isStoredChat}
                     messages={messages}
+                    sendMessage={handleSendMessage}
                     regenerate={regenerate}
-                    sendMessage={sendMessageWithScroll}
                     status={status}
                     error={error}
                   />
@@ -181,11 +185,11 @@ export function Chat(props: ChatIdProps) {
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           <ChatPrompt
             chatId={id}
-            sendMessage={sendMessageWithScroll}
-            stop={stop}
-            status={status}
             isPending={isDataLoading}
             isEphemeral={!isStoredChat}
+            sendMessage={handleSendMessage}
+            status={status}
+            stop={stop}
           />
         </div>
       </div>
