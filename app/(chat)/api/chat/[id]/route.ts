@@ -21,7 +21,7 @@ import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import type { AnthropicProviderOptions } from '@ai-sdk/anthropic'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
-  const { db, ai, authz, storage } = api;
+  const { db, ai, authz, billing, storage } = api;
   const id = uuidV7.parse(params.id)
   const { user } = await session()
   const { message, projectId, timeZone, regenerate, createChat, model } = postRequestBodySchema.parse(await request.json())
@@ -44,9 +44,9 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     throw new AppError('bad_request:chat')
   }
 
-  const userBilling = await db.billingPeriods.ensureCurrent(user.billingId!)
-  const { maxChatCredits } = config.billing[user.isAnonymous ? 'anonymous' : 'user']
-  if(userBilling.chatUsage >= maxChatCredits) {
+  const billingPeriod = await billing.getCurrentPeriod(user)
+  const { chatCredits } = billingPeriod.period
+  if(chatCredits.remaining <= 0) {
     throw new AppError('rate_limit:chat')
   }
 
@@ -103,7 +103,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   let chatUsage: ModelUsage | null = null
   // Usage cost is incremented during streamText.onStepFinish
   // Stream is aborted if it reaches max value
-  let userChatCost = userBilling.chatUsage
+  let userChatCost = chatCredits.used
 
   // Fetch user location info
   const { city, country } = geolocation(request)
@@ -185,7 +185,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
             const stepCost = stepUsage.cost.total ?? 0
             if (stepCost > 0) {
               userChatCost += stepCost
-              if(userChatCost >= maxChatCredits) {
+              if(userChatCost >= chatCredits.max) {
                 generation.abort(new AppError('rate_limit:chat'))
               }
             }
@@ -261,8 +261,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       const totalCost = chatUsage?.cost.total ?? 0
       if (totalCost > 0) {
         tasks.push(
-          db.billingPeriods
-            .updateById(userBilling.id, { chatUsageDelta: totalCost })
+          billingPeriod.update({ chatUsageDelta: totalCost })
             .catch((error) => {
               console.error('Failed to update user chat usage:', {
                 userId: user.id,

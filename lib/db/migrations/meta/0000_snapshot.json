@@ -1,5 +1,5 @@
 {
-  "id": "9d249d7e-418e-411c-a9fd-e3e2ddaa91e2",
+  "id": "ebe4de44-cd9f-4529-87e7-a98ea49925e8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -439,6 +439,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "tier": {
+          "name": "tier",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "year": {
           "name": "year",
           "type": "integer",
@@ -457,6 +463,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "maxChatUsage": {
+          "name": "maxChatUsage",
+          "type": "numeric(12, 6)",
+          "primaryKey": false,
+          "notNull": true
         },
         "createdAt": {
           "name": "createdAt",

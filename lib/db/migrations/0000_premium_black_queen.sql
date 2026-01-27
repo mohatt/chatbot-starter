@@ -57,9 +57,11 @@ CREATE TABLE "verifications" (
 CREATE TABLE "billingPeriods" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"billingId" uuid NOT NULL,
+	"tier" varchar NOT NULL,
 	"year" integer NOT NULL,
 	"month" integer NOT NULL,
 	"chatUsage" numeric(12, 6) DEFAULT 0 NOT NULL,
+	"maxChatUsage" numeric(12, 6) NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );

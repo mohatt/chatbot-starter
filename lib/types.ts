@@ -1,10 +1,7 @@
+import type { BillingPeriodRecord } from '@/lib/db'
 import type { ModelsConfig, ModelKey } from '@/lib/ai/model-config'
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
 import type { FileUploadRules } from '@/lib/schema'
-
-export interface BillingConfig {
-  maxChatCredits: number
-}
 
 export interface AppConfig {
   appId: string
@@ -30,8 +27,7 @@ export interface AppConfig {
     maxFiles: number
   }
   billing: {
-    user: BillingConfig
-    anonymous: BillingConfig
+    tiers: Record<BillingPeriodRecord['tier'], Pick<BillingPeriodRecord, 'maxChatUsage'>>
   }
   fileLoader: FileLoaderOptions
   uploads: {

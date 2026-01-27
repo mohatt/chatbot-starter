@@ -1,6 +1,6 @@
 import { createQuery } from 'react-query-kit'
 import { fetcher } from '@/lib/util'
-import type { BillingPeriod } from '@/app/(core)/api/user/billing-period/schema'
+import type { BillingPeriod } from '@/lib/billing'
 
 export const useUserBillingPeriodQuery = createQuery({
   queryKey: ['userBillingPeriod'],

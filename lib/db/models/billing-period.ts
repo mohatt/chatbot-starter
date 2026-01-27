@@ -21,7 +21,7 @@ export class BillingPeriodModel extends DbModel {
    * Ensures a current billing period row exists (used by zero-delta updates or when
    * atomic increments race). Returns the fresh or existing row.
    */
-  async ensureCurrent(billingId: string){
+  async ensureCurrent(billingId: string, config: Pick<BillingPeriodRecord, 'tier' | 'maxChatUsage'>){
     const { id, parts } = this.getId(billingId);
     try {
       const [current] = await this.db
@@ -37,6 +37,8 @@ export class BillingPeriodModel extends DbModel {
           billingId,
           year: parts.year,
           month: parts.month,
+          tier: config.tier,
+          maxChatUsage: config.maxChatUsage,
         })
         .returning();
       return inserted;
@@ -45,46 +47,12 @@ export class BillingPeriodModel extends DbModel {
     }
   }
 
-  async upsertCurrent(billingId: string, data: { chatUsageDelta: number }): Promise<BillingPeriodRecord> {
-    const chatUsage = data.chatUsageDelta;
-    if (chatUsage === 0) {
-      return this.ensureCurrent(billingId);
-    }
-
-    const { id, parts } = this.getId(billingId);
-    try {
-      const [record] = await this.db
-        .insert(billingPeriods)
-        .values({
-          id,
-          billingId,
-          chatUsage,
-          year: parts.year,
-          month: parts.month,
-        })
-        .onConflictDoUpdate({
-          target: billingPeriods.id,
-          set: {
-            chatUsage: sql`${billingPeriods.chatUsage} + ${chatUsage}`,
-          },
-        })
-        .returning();
-      return record
-    } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to upsert current billing period");
-    }
-  }
-
   async updateById(id: string, data: { chatUsageDelta: number }): Promise<BillingPeriodRecord | null> {
-    const chatUsage = data.chatUsageDelta;
-    if (chatUsage === 0) {
-      return null
-    }
     try {
       const [record] = await this.db
         .update(billingPeriods)
         .set({
-          chatUsage: sql`${billingPeriods.chatUsage} + ${chatUsage}`,
+          chatUsage: sql`${billingPeriods.chatUsage} + ${data.chatUsageDelta}`,
         })
         .where(eq(billingPeriods.id, id))
         .returning();

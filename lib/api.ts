@@ -6,6 +6,7 @@ import { Db } from './db'
 import { VectorDb } from './db/vector'
 import { Auth, type AuthSession } from './auth'
 import { Authorizer } from './authz'
+import { Billing } from './billing'
 import { Storage } from './storage'
 import { AppError, type RouteNamespace } from './errors'
 
@@ -35,6 +36,10 @@ export class Api {
 
   get authz(): Authorizer {
     return this.set('authz', new Authorizer())
+  }
+
+  get billing(): Billing {
+    return this.set('billing', new Billing(this.db))
   }
 
   get storage(): Storage {

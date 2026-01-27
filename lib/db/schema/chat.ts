@@ -48,7 +48,7 @@ export const messages = pgTable("messages", {
   chatId: uuid("chatId")
     .notNull()
     .references(() => chats.id, { onDelete: "cascade" }),
-  role: varchar("role").notNull().$type<'user' | 'assistant'>(),
+  role: varchar("role", { enum: ['user', 'assistant'] }).notNull(),
   parts: json("parts").notNull().$type<ChatMessage['parts']>(),
   metadata: jsonb("metadata").notNull().$type<ChatMessageMetadata>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

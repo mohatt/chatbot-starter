@@ -106,12 +106,14 @@ export const config = {
     maxFiles: 12,
   },
   billing: {
-    user: {
-      maxChatCredits: 2,
+    tiers: {
+      user: {
+        maxChatUsage: 2,
+      },
+      anonymous: {
+        maxChatUsage: 1
+      }
     },
-    anonymous: {
-      maxChatCredits: 1
-    }
   },
   fileLoader: {},
   uploads: {
