@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from 'react'
 import { useTheme } from "next-themes";
 import { useAuth } from '@/components/auth-provider'
+import { useUserBillingPeriodQuery } from '@/api/hooks/user'
 import {
   DropdownMenu,
   DropdownMenuContent, DropdownMenuGroup,
@@ -19,7 +20,8 @@ import {
 } from '@/components/ui/sidebar'
 import { UserView } from "@daveyplate/better-auth-ui";
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChevronsUpDown, BadgeCheck, LogIn, LogOut, Palette, Sun, Moon, Monitor, UserRoundPlus } from 'lucide-react'
+import { LoadingDots } from '@/components/loading'
+import { ChevronsUpDown, BadgeCheck, LogIn, LogOut, Palette, Sun, Moon, Monitor, UserRoundPlus, Coins } from 'lucide-react'
 import { UserAccountDialog } from './dialogs/account'
 import Link from 'next/link'
 
@@ -101,6 +103,7 @@ export function UserSidebar() {
                         </button>
                       )}
                     </DropdownMenuItem>
+                    <UserChatCredits />
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
                         <Palette />
@@ -151,4 +154,44 @@ export function UserSidebar() {
       </SidebarMenu>
     </>
   );
+}
+
+function UserChatCredits() {
+  const { data, isLoading, error } = useUserBillingPeriodQuery()
+
+  const credits = useMemo(() => {
+    if (!data) return null;
+    const fmt = new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 2,
+    })
+    return {
+      used: fmt.format(data.chatCredits.used),
+      max: fmt.format(data.chatCredits.max),
+    }
+  }, [data])
+
+  return (
+    <DropdownMenuItem className="w-full" asChild>
+      <button>
+        <Coins />
+        <span>Chat credits</span>
+        <span className='ml-auto'>
+          {isLoading && (
+            <LoadingDots />
+          )}
+          {error && (
+            <span className='text-destructive'>Error</span>
+          )}
+          {credits && (
+            <span className='text-muted-foreground'>
+              <span className={credits.used >= credits.max ? 'text-destructive' : ''}>
+                {credits.used}{' '}
+              </span>
+              <span>/ {credits.max}</span>
+            </span>
+          )}
+        </span>
+      </button>
+    </DropdownMenuItem>
+  )
 }
