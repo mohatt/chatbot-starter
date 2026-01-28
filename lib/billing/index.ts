@@ -35,8 +35,7 @@ export class Billing {
   }
 
   async listPeriods(user: AuthUser): Promise<BillingPeriod[]> {
-    const periodModel = this.db.billingPeriods
-    const periods = await periodModel.findMany(user.billingId!)
+    const periods = await this.db.billingPeriods.findMany(user.billingId!)
     return periods.map((record) => this.createPeriod(record))
   }
 

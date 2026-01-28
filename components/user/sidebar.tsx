@@ -107,7 +107,7 @@ export function UserSidebar() {
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
                         <Palette />
-                        <span>Theme:</span>
+                        <span className='grow'>Theme</span>
                         <span className='text-muted-foreground'>
                           {themes.find((t) => t.key === theme)?.label ?? theme}
                         </span>
@@ -161,12 +161,15 @@ function UserChatCredits() {
 
   const credits = useMemo(() => {
     if (!data) return null;
+    const { remaining, max } = data.chatCredits
     const fmt = new Intl.NumberFormat('en-US', {
       maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
     })
     return {
-      used: fmt.format(data.chatCredits.used),
-      max: fmt.format(data.chatCredits.max),
+      isEmpty: remaining <= 0,
+      remaining: fmt.format(remaining),
+      limit: fmt.format(max),
     }
   }, [data])
 
@@ -174,7 +177,7 @@ function UserChatCredits() {
     <DropdownMenuItem className="w-full" asChild>
       <button>
         <Coins />
-        <span>Chat credits</span>
+        <span>Chat credit</span>
         <span className='ml-auto'>
           {isLoading && (
             <LoadingDots />
@@ -184,10 +187,10 @@ function UserChatCredits() {
           )}
           {credits && (
             <span className='text-muted-foreground'>
-              <span className={credits.used >= credits.max ? 'text-destructive' : ''}>
-                {credits.used}{' '}
+              <span className={credits.isEmpty ? 'text-destructive' : ''}>
+                {credits.remaining}{' '}
               </span>
-              <span>/ {credits.max}</span>
+              <span>/ {credits.limit}</span>
             </span>
           )}
         </span>
