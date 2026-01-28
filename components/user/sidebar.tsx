@@ -14,10 +14,12 @@ import {
   DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 import {
+  useSidebar,
   SidebarMenu,
+  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuItem, useSidebar,
 } from '@/components/ui/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { UserView } from "@daveyplate/better-auth-ui";
 import { Skeleton } from '@/components/ui/skeleton'
 import { LoadingDots } from '@/components/loading'
@@ -167,33 +169,40 @@ function UserChatCredits() {
       minimumFractionDigits: 2,
     })
     return {
-      isEmpty: remaining <= 0,
-      remaining: fmt.format(remaining),
       limit: fmt.format(max),
+      remaining: fmt.format(remaining),
+      isEmpty: remaining <= 0,
+      resetDate: new Date(data.endDate).toLocaleString(undefined, {
+        dateStyle: 'medium',
+      }),
     }
   }, [data])
 
   return (
     <DropdownMenuItem className="w-full" asChild>
-      <button>
+      <button disabled={!!error}>
         <Coins />
-        <span>Chat credit</span>
-        <span className='ml-auto'>
-          {isLoading && (
-            <LoadingDots />
-          )}
-          {error && (
-            <span className='text-destructive'>Error</span>
-          )}
-          {credits && (
-            <span className='text-muted-foreground'>
-              <span className={credits.isEmpty ? 'text-destructive' : ''}>
-                {credits.remaining}{' '}
-              </span>
-              <span>/ {credits.limit}</span>
+        <span>Chat credits</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className='ml-auto'>
+              {isLoading && <LoadingDots />}
+              {error && <span className='text-destructive'>Error</span>}
+              {credits && (
+                <span className='text-muted-foreground'>
+                  <span className={credits.isEmpty ? 'text-destructive' : ''}>
+                    {credits.remaining}{' '}
+                  </span>
+                  <span>/ {credits.limit}</span>
+                </span>
+              )}
             </span>
-          )}
-        </span>
+          </TooltipTrigger>
+          <TooltipContent hidden={isLoading} align="start" className="hidden md:block">
+            {error && 'Error loading chat credits'}
+            {credits && <>Resets on {credits.resetDate}</>}
+          </TooltipContent>
+        </Tooltip>
       </button>
     </DropdownMenuItem>
   )
