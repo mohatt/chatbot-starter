@@ -1,6 +1,6 @@
 'use client';
 import { useMemo } from 'react'
-import { useChatParams } from '@/components/chat/hooks'
+import { useAppParams } from '@/hooks/use-app-params'
 import { useChatsQuery } from '@/api/hooks/chats'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
@@ -46,7 +46,7 @@ export interface ProjectsSidebarItemProps {
 export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
   const { project, onEdit, onDelete, onChatEdit, onChatDelete, onChatSettings, activeChatEditId } = props
   const { isMobile, setOpenMobile } = useSidebar();
-  const { activeProjectId, activeChatId } = useChatParams();
+  const { activeProjectId, activeChatId } = useAppParams();
   const { data, isLoading } = useChatsQuery({
     variables: { projectId: project.id },
   })

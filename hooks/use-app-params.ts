@@ -1,6 +1,6 @@
 import { useParams } from 'next/navigation'
 
-export function useChatParams() {
+export function useAppParams() {
   const { cid, pid } = useParams<{ pid?: string; cid?: string }>()
   return {
     activeChatId: cid,

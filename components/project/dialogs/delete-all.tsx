@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteProjectsMutation } from '@/api/hooks/projects'
+import { useAppParams } from '@/hooks/use-app-params'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
@@ -11,13 +12,16 @@ export interface DeleteAllProjectsDialogProps extends BaseDialogProps {}
 export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
   const { open, onOpenChange } = props;
   const { mutate, error, isPending } = useDeleteProjectsMutation()
+  const { activeProjectId } = useAppParams()
   const router = useRouter();
 
   const handleDelete = useCallback(() => {
     mutate(undefined, {
       onSuccess: () => {
         onOpenChange(false);
-        router.replace("/");
+        if (activeProjectId) {
+          router.replace("/");
+        }
         setTimeout(() => {
           toast.success('All projects deleted successfully.')
         }, 100);
@@ -26,7 +30,7 @@ export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
         toast.error(err.message)
       },
     })
-  }, [mutate, onOpenChange, router])
+  }, [activeProjectId, mutate, onOpenChange, router])
 
   return (
     <AlertDialog

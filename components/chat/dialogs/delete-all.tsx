@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteChatsMutation } from '@/api/hooks/chats'
+import { useAppParams } from '@/hooks/use-app-params'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
@@ -15,13 +16,22 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
   const { open, onOpenChange, project } = props;
   const { mutate, error, isPending } = useDeleteChatsMutation()
   const router = useRouter();
+  const { activeProjectId, activeChatId } = useAppParams()
   const projectId = project?.id ?? null
 
   const handleDelete = useCallback(() => {
     mutate({ projectId }, {
       onSuccess: () => {
         onOpenChange(false);
-        router.replace("/");
+        if (activeChatId) {
+          if (projectId) {
+            if (activeProjectId === projectId) {
+              router.replace(`/project/${projectId}`);
+            }
+          } else {
+            router.replace("/");
+          }
+        }
         setTimeout(() => {
           toast.success('All chats deleted successfully.')
         }, 100);
@@ -30,7 +40,7 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
         toast.error(err.message)
       },
     })
-  }, [mutate, onOpenChange, projectId, router])
+  }, [activeChatId, activeProjectId, mutate, onOpenChange, projectId, router])
 
   return (
     <AlertDialog

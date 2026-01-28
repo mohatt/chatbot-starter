@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteChatMutation } from '@/api/hooks/chats'
+import { useAppParams } from '@/hooks/use-app-params'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { toast } from 'sonner'
 import type { ChatRecord } from '@/lib/db'
@@ -13,13 +14,17 @@ export function DeleteChatDialog(props: DeleteChatDialogProps) {
   const { open, chat, onOpenChange } = props;
   const { mutate, error, isPending } = useDeleteChatMutation()
   const router = useRouter();
-  const { id, title } = chat;
+  const { activeChatId } = useAppParams()
+  const { id, title, projectId } = chat;
 
   const handleDelete = useCallback(() => {
     mutate({ id }, {
       onSuccess: () => {
         onOpenChange(false);
-        router.replace("/");
+        if (activeChatId === id) {
+          const fallback = projectId ? `/project/${projectId}` : '/'
+          router.replace(fallback);
+        }
         setTimeout(() => {
           toast.success('Chat deleted successfully.')
         }, 100);
@@ -28,7 +33,7 @@ export function DeleteChatDialog(props: DeleteChatDialogProps) {
         toast.error(err.message)
       },
     })
-  }, [id, mutate, onOpenChange, router])
+  }, [id, projectId, activeChatId, mutate, onOpenChange, router])
 
   return (
     <AlertDialog

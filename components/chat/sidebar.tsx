@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useMemo, useState } from 'react'
-import { useChatParams } from '@/components/chat/hooks'
+import { useAppParams } from '@/hooks/use-app-params'
 import { useChatsQuery } from '@/api/hooks/chats'
 import {
   Collapsible,
@@ -30,7 +30,7 @@ import { ChatListItem } from './list-item'
 import type { ChatRecord } from '@/lib/db'
 
 export function ChatsSidebar() {
-  const { activeChatId } = useChatParams();
+  const { activeChatId } = useAppParams();
   const [showTitleEditor, setShowTitleEditor] = useState<ChatRecord | null>(null);
   const settingsDialog = useChatSettingsDialog();
   const deleteDialog = useDeleteChatDialog();

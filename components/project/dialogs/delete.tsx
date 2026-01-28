@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteProjectMutation } from '@/api/hooks/projects'
+import { useAppParams } from '@/hooks/use-app-params'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
@@ -14,6 +15,7 @@ export interface DeleteProjectDialogProps extends BaseDialogProps {
 export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
   const { project, open, onOpenChange } = props;
   const { mutate, error, isPending } = useDeleteProjectMutation()
+  const { activeProjectId } = useAppParams()
   const router = useRouter();
   const { id, name } = project;
 
@@ -21,7 +23,9 @@ export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
     mutate({ id }, {
       onSuccess: () => {
         onOpenChange(false);
-        router.replace("/");
+        if (activeProjectId === id) {
+          router.replace("/");
+        }
         setTimeout(() => {
           toast.success('Project deleted successfully.')
         }, 100);
@@ -30,7 +34,7 @@ export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
         toast.error(err.message)
       },
     })
-  }, [id, mutate, onOpenChange, router])
+  }, [activeProjectId, id, mutate, onOpenChange, router])
 
   return (
     <AlertDialog

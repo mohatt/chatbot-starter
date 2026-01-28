@@ -39,7 +39,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   const warning = hasNoChatCredits
     ? 'You’ve reached your monthly chat usage limit.'
     : billingError
-      ? 'Failing loading your chat usage information.'
+      ? 'Failed loading your chat usage information.'
       : null
 
   const isComposingRef = useRef(false)
