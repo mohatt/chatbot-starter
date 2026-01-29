@@ -171,7 +171,6 @@ function UserChatCredits() {
     return {
       limit: fmt.format(max),
       remaining: fmt.format(remaining),
-      isEmpty: remaining <= 0,
       resetDate: new Date(data.endDate).toLocaleString(undefined, {
         dateStyle: 'medium',
       }),
@@ -190,10 +189,7 @@ function UserChatCredits() {
               {error && <span className='text-destructive'>Error</span>}
               {credits && (
                 <span className='text-muted-foreground'>
-                  <span className={credits.isEmpty ? 'text-destructive' : ''}>
-                    {credits.remaining}{' '}
-                  </span>
-                  <span>/ {credits.limit}</span>
+                  {credits.remaining} / {credits.limit}
                 </span>
               )}
             </span>

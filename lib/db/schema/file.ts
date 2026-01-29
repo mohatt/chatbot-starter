@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
 import { index, jsonb, pgTable, timestamp, uuid, varchar, integer, text } from 'drizzle-orm/pg-core'
-import { chats, projects } from './chat'
+import { messages, chats, projects } from './chat'
 import { users } from './auth'
 
 export interface FileRecordMetadata {
@@ -23,12 +23,15 @@ export const files = pgTable("files", {
     .references(() => projects.id, { onDelete: "set null" }),
   chatId: uuid("chatId")
     .references(() => chats.id, { onDelete: "set null" }),
+  messageId: uuid("messageId")
+    .references(() => messages.id, { onDelete: "set null" }),
   storageKey: varchar("storageKey", { length: 256 }).notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (self) => [
   index('files_user_id_idx').on(self.userId, self.id.desc()),
   index('files_chat_id_idx').on(self.chatId, self.id.desc()),
+  index('files_message_id_idx').on(self.messageId, self.id.desc()),
   index('files_project_id_idx').on(self.projectId, self.id.desc()),
 ])
 
@@ -44,5 +47,9 @@ export const filesRelations = relations(files, ({ one }) => ({
   chat: one(chats, {
     fields: [files.chatId],
     references: [chats.id],
+  }),
+  message: one(messages, {
+    fields: [files.messageId],
+    references: [messages.id],
   }),
 }));

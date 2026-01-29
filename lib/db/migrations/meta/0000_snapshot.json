@@ -1,5 +1,5 @@
 {
-  "id": "ebe4de44-cd9f-4529-87e7-a98ea49925e8",
+  "id": "931f47c3-faa9-4b50-be55-060f31a65adb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1030,6 +1030,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "messageId": {
+          "name": "messageId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "storageKey": {
           "name": "storageKey",
           "type": "varchar(256)",
@@ -1077,6 +1083,27 @@
           "columns": [
             {
               "expression": "chatId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "files_message_id_idx": {
+          "name": "files_message_id_idx",
+          "columns": [
+            {
+              "expression": "messageId",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1148,6 +1175,19 @@
           "tableTo": "chats",
           "columnsFrom": [
             "chatId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "files_messageId_messages_id_fk": {
+          "name": "files_messageId_messages_id_fk",
+          "tableFrom": "files",
+          "tableTo": "messages",
+          "columnsFrom": [
+            "messageId"
           ],
           "columnsTo": [
             "id"

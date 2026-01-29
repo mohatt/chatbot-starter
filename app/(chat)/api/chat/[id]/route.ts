@@ -66,15 +66,6 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     chat = dbChat
   }
 
-  // Update attached files if any
-  if (messageFiles.length > 0) {
-    const updatedFiles = await db.files.updateByIdsForUser(messageFiles, user.id, { chatId: id })
-    if (updatedFiles.length !== messageFiles.length) {
-      // Guards against file urls from other chats/users being sent
-      throw new AppError('bad_request:chat')
-    }
-  }
-
   const chatModel = await ai.getLanguageModel(model.key)
   const isReasoning = model.key.modifiers.thinking === true
 
@@ -86,6 +77,19 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const uiMessages = [...dbMessages, message];
 
   await db.messages.insertMany(id, [message])
+
+  // Update attached files if any
+  if (messageFiles.length > 0) {
+    const updatedFiles = await db.files.updateByIdsForUser(messageFiles, user.id, {
+      chatId: id,
+      messageId: message.id,
+    })
+    if (updatedFiles.length !== messageFiles.length) {
+      await db.messages.deleteMany(id, message.id)
+      // Guards against file urls from other chats/users being sent
+      throw new AppError('bad_request:chat')
+    }
+  }
 
   let project: ChatProjectRecord | null = null
   if (chat.projectId) {

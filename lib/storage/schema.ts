@@ -9,6 +9,7 @@ export const chatStorageMetadataSchema = baseStorageMetadataSchema
   .extend({
     namespace: z.literal('chat'),
     chatId: z.uuid({ version: 'v7' }),
+    messageId: z.uuid({ version: 'v7' }),
   })
 
 export const projectStorageMetadataSchema = baseStorageMetadataSchema

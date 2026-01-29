@@ -120,6 +120,7 @@ CREATE TABLE "files" (
 	"userId" uuid,
 	"projectId" uuid,
 	"chatId" uuid,
+	"messageId" uuid,
 	"storageKey" varchar(256) NOT NULL,
 	"url" text NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
@@ -136,6 +137,7 @@ ALTER TABLE "projects" ADD CONSTRAINT "projects_userId_users_id_fk" FOREIGN KEY 
 ALTER TABLE "files" ADD CONSTRAINT "files_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_projectId_projects_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."projects"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_chatId_chats_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."chats"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "files" ADD CONSTRAINT "files_messageId_messages_id_fk" FOREIGN KEY ("messageId") REFERENCES "public"."messages"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "accounts_userId_idx" ON "accounts" USING btree ("userId");--> statement-breakpoint
 CREATE INDEX "sessions_userId_idx" ON "sessions" USING btree ("userId");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_idx" ON "verifications" USING btree ("identifier");--> statement-breakpoint
@@ -149,4 +151,5 @@ CREATE INDEX "configs_group_idx" ON "configs" USING btree ("group");--> statemen
 CREATE INDEX "cronJobs_status_idx" ON "cronJobs" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "files_user_id_idx" ON "files" USING btree ("userId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "files_chat_id_idx" ON "files" USING btree ("chatId","id" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "files_message_id_idx" ON "files" USING btree ("messageId","id" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "files_project_id_idx" ON "files" USING btree ("projectId","id" DESC NULLS LAST);

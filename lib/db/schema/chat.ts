@@ -2,7 +2,7 @@ import { relations, sql } from 'drizzle-orm'
 import { index, json, jsonb, pgTable, text, timestamp, boolean, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from './auth'
 import { files } from './file'
-import type { ChatMessage, ChatMessageMetadata } from '@/lib/ai'
+import type { UIMessage } from 'ai'
 
 export const projects = pgTable("projects", {
   id: uuid("id").primaryKey().notNull(),
@@ -49,8 +49,8 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => chats.id, { onDelete: "cascade" }),
   role: varchar("role", { enum: ['user', 'assistant'] }).notNull(),
-  parts: json("parts").notNull().$type<ChatMessage['parts']>(),
-  metadata: jsonb("metadata").notNull().$type<ChatMessageMetadata>(),
+  parts: json("parts").notNull().$type<UIMessage['parts']>(),
+  metadata: jsonb("metadata").notNull().$type<UIMessage['metadata']>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (self) => [
   index('messages_chat_id_idx').on(self.chatId, self.id.desc()),
@@ -78,9 +78,10 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
   files: many(files),
 }));
 
-export const messagesRelations = relations(messages, ({ one }) => ({
+export const messagesRelations = relations(messages, ({ one, many }) => ({
   chat: one(chats, {
     fields: [messages.chatId],
     references: [chats.id],
   }),
+  files: many(files),
 }));

@@ -68,14 +68,14 @@ export class ChatMessageModel extends DbModel {
     }).filter(Boolean)
   }
 
-  private toUIMessages(dbMessages: ChatMessageRecord[]): ChatMessage[] {
-    return dbMessages.map(({ id, role, parts, metadata }): ChatMessage => {
+  private toUIMessages(dbMessages: ChatMessageRecord[]) {
+    return dbMessages.map(({ id, role, parts, metadata }) => {
       return {
         id,
         role,
         parts,
         metadata,
-      }
+      } as ChatMessage
     })
   }
 }

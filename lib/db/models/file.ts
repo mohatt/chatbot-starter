@@ -33,7 +33,7 @@ export class FileModel extends DbModel {
   async findMany(filters: { projectId: string } | { orphan: boolean }, limit = 50, cursor?: string | null): Promise<PaginatedResult<FileRecord>> {
     const where = 'projectId' in filters
       ? eq(files.projectId, filters.projectId)
-      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.chatId)))
+      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
 
     try {
       const rows = await this.db
@@ -56,7 +56,7 @@ export class FileModel extends DbModel {
   async countMany(filters: { projectId: string } | { orphan: boolean }): Promise<number> {
     const where = 'projectId' in filters
       ? eq(files.projectId, filters.projectId)
-      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.chatId)))
+      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
     try {
       const [result] = await this.db
         .select({ value: count() })
@@ -68,12 +68,19 @@ export class FileModel extends DbModel {
     }
   }
 
-  async updateByIdsForUser(ids: string[], userId: string, values: Pick<FileRecordInput, 'chatId'>): Promise<FileRecord[]> {
+  async updateByIdsForUser(ids: string[], userId: string, values: { chatId: string; messageId: string }): Promise<FileRecord[]> {
     try {
       const updatedFiles = await this.db
         .update(files)
         .set(values)
-        .where(and(inArray(files.id, ids), eq(files.userId, userId)))
+        .where(
+          and(
+            inArray(files.id, ids),
+            eq(files.userId, userId),
+            isNull(files.chatId),
+            isNull(files.messageId),
+          )
+        )
         .returning();
       return updatedFiles;
     } catch (_error) {

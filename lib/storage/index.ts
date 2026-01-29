@@ -63,9 +63,11 @@ export class Storage {
     const id = filename.slice(0, dotIndex)
     if (!uuidV7.safeParse(id).success) return null
 
-    const metadata: StorageMetadata = ns === 'c'
-      ? { namespace: 'chat', chatId: nsId, bucket }
-      : { namespace: 'project', projectId: nsId, bucket }
+    const metadata = (
+      ns === 'c'
+        ? { namespace: 'chat', chatId: nsId, bucket }
+        : { namespace: 'project', projectId: nsId, bucket }
+    ) satisfies Partial<StorageMetadata>
 
     return { id, metadata }
   }

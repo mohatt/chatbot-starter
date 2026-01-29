@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent, type ClipboardEvent, type KeyboardEve
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
 import { useUserBillingPeriodQuery } from '@/api/hooks/user'
+import { generateUUID } from '@/lib/util'
 import { toast } from 'sonner'
 import {
   PromptInputBody,
@@ -31,6 +32,7 @@ export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'st
 export const ChatPrompt = (props: ChatPromptProps) => {
   const { chatId, sendMessage, stop, status, isPending, isDisabled } = props;
   const [input, setInput] = useState('');
+  const [messageId, setMessageId] = useState(generateUUID);
 
   const { data: billing, isLoading: isBillingLoading, error: billingError } = useUserBillingPeriodQuery()
   const chatCredits = billing?.chatCredits
@@ -56,7 +58,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   } = useFileUpload({
     limit: config.chat.message.maxFileParts,
     buckets: ['images', 'retrieval'],
-    metadata: { namespace: 'chat', chatId },
+    metadata: { namespace: 'chat', chatId, messageId },
     onError: ({ file, message }) => {
       toast.error(file?.name ?? 'Upload Error', {
         description: message
@@ -81,17 +83,21 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     }
 
     void sendMessage({
-      text,
-      files: files
-        .filter((f) => f.status === 'uploaded' && f.url)
-        .map(({ name, url, mimeType }) => ({
-          type: 'file',
-          filename: name,
-          mediaType: mimeType,
-          url: url!
-        }))
-    });
-    setInput('');
+      id: messageId,
+      parts: [
+        ...files
+          .filter((f) => f.status === 'uploaded' && f.url)
+          .map(({ name, url, mimeType }) => ({
+            type: 'file' as const,
+            filename: name,
+            mediaType: mimeType,
+            url: url!
+          })),
+        { type: 'text' as const, text }
+      ],
+    })
+    setMessageId(generateUUID())
+    setInput('')
     clearFiles()
   })
 
