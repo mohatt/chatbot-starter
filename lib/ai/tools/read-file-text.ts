@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import type { FileLoaderDoc } from '@/lib/document'
-import type { ChatToolContext } from '@/lib/ai'
+import type { ChatContext } from '../context'
 
 // Using a symbol to prevent it from being stored to db
 const textChunks = Symbol('textChunks')
@@ -15,7 +15,7 @@ export type ReadFileTextOutput = FileLoaderDoc['metadata']['file'] & {
   }[]
 } | null
 
-export function readFileText({ api, project }: ChatToolContext) {
+export function readFileText({ api, project }: ChatContext) {
   if (!project) {
     return null
   }

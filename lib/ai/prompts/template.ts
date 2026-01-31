@@ -1,5 +1,4 @@
 import type { UIMessage } from 'ai'
-import type { ZodObject, TypeOf } from 'zod'
 import { generateUUID } from '@/lib/util'
 
 type FormatArgs<Params extends Record<string, any>> = [Params] extends [never]
@@ -10,33 +9,36 @@ type FormatArgs<Params extends Record<string, any>> = [Params] extends [never]
       ? [params?: Params]
       : [params: Params]
 
-export interface PromptTemplateOptions<Schema extends ZodObject<any> = ZodObject<any>, Params extends Record<string, any> = TypeOf<Schema>> {
+export interface PromptTemplateOptions<Input extends Record<string, any> = {}> {
   readonly template: string
-  readonly schema?: Schema
-  readonly format?: (input: Params) => Params & { [p: string]: any }
+  readonly format?: (input: Input) => Record<string, any>
   readonly as?: UIMessage['role']
 }
 
-export class PromptTemplate<Schema extends ZodObject<any> = ZodObject<any>, Params extends Record<string, any> = TypeOf<Schema>> {
-  declare readonly $inferInput: FormatArgs<Params>[0]
+export class PromptTemplate<Input extends Record<string, any> = {}> {
+  constructor(private readonly options: PromptTemplateOptions<Input>) {}
 
-  constructor(private readonly options: PromptTemplateOptions<Schema, Params>) {}
-
-  toString(...args: FormatArgs<Params>): string {
-    const { template, schema, format } = this.options
+  toString(...args: FormatArgs<Input>): string {
+    const { template, format } = this.options
     if (!template) {
       return template
     }
 
     const input = args[0]
-    const validated = schema?.parse(input) as Params ?? input
-    const params = format?.(validated ?? {} as Params) ?? validated
-    if (!params) {
-      return template
-    }
+    const params = format?.(input ?? {} as Input) ?? input ?? {}
 
-    return template.replace(/\{([\w:.-]+)}/g, (placeholder, key): string => {
-      const value = params[key as keyof Params]
+    // Parse if blocks e.g. {% if name %}Hi {{ name }}!{% endif %}
+    const withConditionals = template.replace(
+      /\{%\s*if\s+([\w:.-]+)\s*%\}\n?([\s\S]*?)\{%\s*endif\s*%\}\n?/g,
+      (_block, key: string, content: string) => {
+        const value = params[key]
+        return value != null && value !== '' && value !== false ? content : ''
+      }
+    )
+
+    // Parse template vars e.g. {{ name }}
+    return withConditionals.replace(/\{\{\s*([\w:.-]+)\s*\}\}/g, (placeholder, key) => {
+      const value = params[key]
       if (value !== undefined) {
         return `${value}`
       }
@@ -44,7 +46,7 @@ export class PromptTemplate<Schema extends ZodObject<any> = ZodObject<any>, Para
     })
   }
 
-  toUIMessage(...args: FormatArgs<Params>): UIMessage {
+  toUIMessage(...args: FormatArgs<Input>): UIMessage {
     return {
       id: generateUUID(),
       role: this.options.as ?? 'system',

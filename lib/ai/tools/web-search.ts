@@ -2,9 +2,9 @@ import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
 import type { ToolSet } from 'ai'
-import type { ChatToolContext } from '../types'
+import type { ChatContext } from '../context'
 
-export function webSearch({ model }: ChatToolContext) {
+export function webSearch({ model }: ChatContext) {
   const { key, vendor } = model
   if (!key.modifiers.webSearch) {
     return null

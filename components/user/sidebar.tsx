@@ -189,7 +189,7 @@ function UserChatCredits() {
               {error && <span className='text-destructive'>Error</span>}
               {credits && (
                 <span className='text-muted-foreground'>
-                  {credits.remaining} / {credits.limit}
+                  {credits.remaining === credits.limit ? credits.remaining : `${credits.remaining} / ${credits.limit}`}
                 </span>
               )}
             </span>

@@ -2,13 +2,13 @@ import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import { formatFileSize } from '@/lib/util'
 import type { FileRecord } from '@/lib/db'
-import type { ChatToolContext } from '@/lib/ai'
+import type { ChatContext } from '../context'
 
 export type ListFilesOutput = Array<Pick<FileRecord, 'id' | 'name' | 'mimeType' | 'url' | 'size' | 'metadata'> & {
   createdAt: string
 }>
 
-export function listFiles({ project, api }: ChatToolContext) {
+export function listFiles({ project, api }: ChatContext) {
   if (!project) {
     return null
   }

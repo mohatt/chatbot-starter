@@ -1,8 +1,24 @@
-import type { InferUITools, UIMessage, UIMessageStreamWriter } from 'ai'
-import type { ChatRecord, ChatProjectRecord } from '@/lib/db'
-import type { Api } from '@/lib/api'
-import type { AI, ModelKey, ModelUsage } from './index'
-import type { ResolvedModelEntry } from './model-config'
+import type { UIMessage } from 'ai'
+import type { gateway } from '@ai-sdk/gateway'
+import type { ModelKey } from './config'
+import type { ChatTools } from './tools'
+
+export type LanguageModel = ReturnType<typeof gateway>
+export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
+
+export interface ModelUsageSchema {
+  input?: number
+  output?: number
+  reasoning?: number
+  cacheReads?: number
+  cacheWrites?: number
+  total?: number
+}
+
+export interface ModelUsage {
+  cost: ModelUsageSchema
+  tokens: ModelUsageSchema
+}
 
 export interface ChatMessageModelMetadata {
   model: ModelKey
@@ -21,15 +37,3 @@ export type ChatMessage = UIMessage<ChatMessageMetadata, {
     level: 'info' | 'warning' | 'error';
   }
 }, ChatTools>;
-
-export type ChatToolSet = ReturnType<AI['createChatTools']>
-
-export type ChatTools = InferUITools<ChatToolSet>
-
-export interface ChatToolContext {
-  api: Api
-  chat: ChatRecord
-  model: ResolvedModelEntry
-  project?: ChatProjectRecord | null
-  dataStream: UIMessageStreamWriter<ChatMessage>;
-}

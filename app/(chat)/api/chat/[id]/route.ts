@@ -7,6 +7,16 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
 } from 'ai'
+import {
+  chatPrompt,
+  chatTitlePrompt,
+  projectChatPrompt,
+  createChatTools,
+  createChatContext,
+  createChatOptions,
+  type ChatMessage,
+  type ModelUsage,
+} from '@/lib/ai'
 import { geolocation } from "@vercel/functions";
 import { generateUUID } from '@/lib/util'
 import { createApiHandler } from '@/lib/api'
@@ -14,11 +24,7 @@ import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import { uuidV7 } from '@/lib/schema'
 import { postRequestBodySchema, patchRequestBodySchema } from './schema'
-import type { ChatMessage, ModelUsage } from '@/lib/ai'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
-import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
-import type { AnthropicProviderOptions } from '@ai-sdk/anthropic'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai, authz, billing, storage } = api;
@@ -85,8 +91,8 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       messageId: message.id,
     })
     if (updatedFiles.length !== messageFiles.length) {
+      // Guard against invalid file urls from being stored
       await db.messages.deleteMany(id, message.id)
-      // Guards against file urls from other chats/users being sent
       throw new AppError('bad_request:chat')
     }
   }
@@ -109,80 +115,31 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   // Stream is aborted if it reaches max value
   let userChatCost = chatCredits.used
 
-  // Fetch user location info
-  const { city, country } = geolocation(request)
-  const location = city && country ?  `${city}, ${country}` : null
-
-  function getProviderOptions(): Record<string, any> {
-    const { vendor, id } = model
-    if(vendor === 'google') {
-      const v2_5 = id.startsWith('google/gemini-2.5')
-      const v3 = id.startsWith('google/gemini-3')
-      return {
-        google: {
-          // https://ai.google.dev/gemini-api/docs/thinking#javascript
-          thinkingConfig: {
-            includeThoughts: isReasoning,
-            ...(v3 ? {
-              // For reasoning let the model decide how much thinking to use (dynamic)
-              thinkingLevel: isReasoning ? undefined : 'low'
-            } : v2_5 ? {
-              thinkingBudget: isReasoning ? undefined : 1024
-            } : {}),
-          },
-        } satisfies GoogleGenerativeAIProviderOptions
-      }
-    }
-
-    if(vendor === 'anthropic') {
-      return {
-        anthropic: {
-          // https://platform.claude.com/docs/en/build-with-claude/extended-thinking
-          thinking: isReasoning
-            ? { type: "enabled", budgetTokens: 6_144 }
-            : undefined,
-        } satisfies AnthropicProviderOptions
-      }
-    }
-
-    if(vendor === 'openai') {
-      return {
-        openai: {
-          reasoningEffort: isReasoning ? 'medium' : 'low',
-          reasoningSummary: isReasoning ? 'auto' : undefined
-        } satisfies OpenAIResponsesProviderOptions,
-      }
-    }
-
-    return {}
-  }
-
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
     execute: async ({ writer: dataStream }) => {
+      // Fetch user location info
+      const location = geolocation(request)
+      const context = createChatContext({
+        api,
+        chat,
+        model,
+        project,
+        timeZone,
+        location,
+        dataStream,
+      })
+      const prompt = project != null ? projectChatPrompt : chatPrompt
       const result = streamText({
         model: chatModel,
-        system: project != null
-          ? ai.prompts.projectChatPrompt.toString({
-            projectName: project.name,
-            projectPrompt: project.prompt,
-            timeZone,
-            location
-          })
-          : ai.prompts.chatPrompt.toString({ timeZone, location }),
+        system: prompt.toString(context),
         messages: await convertToModelMessages(uiMessages),
         temperature: isReasoning ? undefined : 0.2,
         maxOutputTokens: 12_288,
-        tools: ai.createChatTools({
-          api,
-          chat,
-          model,
-          project,
-          dataStream,
-        }),
+        tools: createChatTools(context),
         stopWhen: stepCountIs(5),
         abortSignal: AbortSignal.any([request.signal, generation.signal]),
-        providerOptions: getProviderOptions(),
+        providerOptions: createChatOptions(context),
         onStepFinish: async ({ usage }) => {
           try {
             const stepUsage = await ai.getModelUsage(model.key, usage)
@@ -309,7 +266,7 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api
     try {
       const { text } = await generateText({
         model: await ai.getLanguageModel(model),
-        system: ai.prompts.chatTitlePrompt.toString({ maxLength: maxGeneratedLength }),
+        system: chatTitlePrompt.toString({ maxLength: maxGeneratedLength }),
         prompt: chat.title,
         temperature: 0.2,
       });

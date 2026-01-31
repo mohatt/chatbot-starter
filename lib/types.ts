@@ -1,5 +1,5 @@
 import type { BillingPeriodRecord } from '@/lib/db'
-import type { ModelsConfig, ModelKey } from '@/lib/ai/model-config'
+import type { ModelsConfig, ModelKey } from '@/lib/ai/config'
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
 import type { FileUploadRules } from '@/lib/schema'
 

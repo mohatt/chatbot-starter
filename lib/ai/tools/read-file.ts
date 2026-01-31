@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import type { FileRecord } from '@/lib/db'
-import type { ChatToolContext } from '@/lib/ai'
+import type { ChatContext } from '../context'
 
 // Using a symbol to prevent it from being stored to db
 const fileData = Symbol('fileData')
@@ -13,7 +13,7 @@ export type ReadFileOutput = {
   error?: string
 }
 
-export function readFile({ api }: ChatToolContext) {
+export function readFile({ api }: ChatContext) {
   return {
     read_file: tool({
       description: 'Reads a user file\'s raw data (don\'t call me if you won\'t be able to understand the file mediaType).',

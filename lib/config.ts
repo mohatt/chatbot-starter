@@ -1,5 +1,5 @@
 import type { AppConfig } from './types'
-import { ModelsConfig } from '@/lib/ai/model-config'
+import { ModelsConfig } from '@/lib/ai/config'
 
 function getDeploymentBaseUrl() {
   const host = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import type { FileLoaderDoc } from '@/lib/document'
-import type { ChatToolContext } from '@/lib/ai'
+import type { ChatContext } from '../context'
 
 // Using a symbol to prevent it from being stored to db
 const fullText = Symbol('fullText')
@@ -16,7 +16,7 @@ export type FileTextSearchOutput = {
   error?: string
 }
 
-export function fileTextSearch({ api, project }: ChatToolContext) {
+export function fileTextSearch({ api, project }: ChatContext) {
   if (!project) {
     return null
   }

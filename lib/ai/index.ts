@@ -1,38 +1,14 @@
 import { gateway } from '@ai-sdk/gateway';
 import { createHuggingFace } from '@ai-sdk/huggingface';
-import { embed, embedMany, type ToolSet, type LanguageModelUsage } from 'ai'
+import { embed, embedMany, type LanguageModelUsage } from 'ai'
 import { fetchModels, getModelMeta, type ProvidersCatalog } from 'tokenlens'
 import { getTokenCosts } from 'tokenlens/helpers'
-import { listFiles, readFile, readFileText, fileTextSearch, webSearch } from './tools'
-import { chatPrompt, projectChatPrompt, chatTitlePrompt } from './prompts'
 import type { Env } from '@/lib/env';
-import type { ModelKey } from './model-config'
-import type { ChatToolContext } from './types'
-
-export type LanguageModel = ReturnType<typeof gateway>
-export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
-
-export interface ModelUsageSchema {
-  input?: number
-  output?: number
-  reasoning?: number
-  cacheReads?: number
-  cacheWrites?: number
-  total?: number
-}
-
-export interface ModelUsage {
-  cost: ModelUsageSchema
-  tokens: ModelUsageSchema
-}
+import type { ModelKey } from './config'
+import type { LanguageModel, EmbeddingModel, ModelUsage } from './types'
 
 export class AI {
   readonly embedding: EmbeddingModel
-  readonly prompts = {
-    chatPrompt,
-    chatTitlePrompt,
-    projectChatPrompt,
-  }
   private catalog?: ProvidersCatalog
 
   constructor(private env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>) {
@@ -115,7 +91,8 @@ export class AI {
 
   async embed(value: string): Promise<number[]> {
     const result = await embed({
-      model: this.embedding, value,
+      value,
+      model: this.embedding,
       providerOptions: { openai: { dimensions: 1024 } },
     })
     return result.embedding
@@ -123,24 +100,21 @@ export class AI {
 
   async embedMany(values: string[]): Promise<number[][]> {
     const result = await embedMany({
-      model: this.embedding,
       values,
+      model: this.embedding,
       providerOptions: { openai: { dimensions: 1024 } },
     })
     return result.embeddings
   }
-
-  createChatTools(context: ChatToolContext) {
-    return {
-      ...listFiles(context),
-      ...readFile(context),
-      ...readFileText(context),
-      ...fileTextSearch(context),
-      ...webSearch(context),
-    } satisfies ToolSet
-  }
 }
 
 export * from './types'
-export * from './model-config'
+export * from './config'
+export * from './context'
+export * from './options'
 export * from './prompts'
+export {
+  createChatTools,
+  type ChatTools,
+  type ChatToolSet,
+} from './tools'

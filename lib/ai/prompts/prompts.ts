@@ -1,35 +1,34 @@
-import { z } from 'zod'
 import { PromptTemplate } from './template'
+import type { ChatContext } from '../context'
 
-export const chatPrompt = new PromptTemplate({
+export type ChatPromptInput = Pick<ChatContext, 'location' | 'timeZone'>
+
+export const chatPrompt = new PromptTemplate<ChatPromptInput>({
   template: `You are a friendly conversational assistant.
 Keep your responses human, concise, helpful and match the user’s tone. Respond in Markdown format if needed.
 Use citations to back up your answer.
 --
-The user's time is {dateTime} ({timeZone}).
-The user's location is {location}.
+The user's time is {{ dateTime }} ({{ timeZone }}).
+The user's location is {{ location }}.
 `,
-  schema: z.object({
-    timeZone: z.string(),
-    location: z.string().nullish(),
-  }),
   format: ({ timeZone, location }) => {
+    const { city, country } = location ?? {}
     return {
       timeZone,
       dateTime: new Date().toLocaleString('en-US', { timeZone }),
-      location: location ?? 'Unknown',
+      location: city && country ? `${city}, ${country}` : 'Unknown',
     }
-  }
+  },
 })
 
-export type ChatPromptVars = typeof chatPrompt.$inferInput
+export type ProjectChatPromptInput = Pick<ChatContext, 'location' | 'timeZone' | 'project'>
 
-export const projectChatPrompt = new PromptTemplate({
+export const projectChatPrompt = new PromptTemplate<ProjectChatPromptInput>({
   template: `You are a friendly conversational assistant.
 Keep your responses human, concise, helpful and match the user’s tone. Respond in Markdown format if needed.
 This conversation was started in the context of the following user project:
-- Project name: {projectName}
-- Project instructions: {projectPrompt}
+- Project name: {{ projectName }}
+- Project instructions: {{ projectPrompt }}
 --
 You have access to different tools that can help you access and search user files within the project:
 - 'fileTextSearch' uses semantic vector similarity (cosine distance) to query a vector store of user files (images excluded).
@@ -44,38 +43,31 @@ You have access to different tools that can help you access and search user file
 - Don't mention internal details like file IDs, search tools or result scores when responding to the user.
 - Use citations to back up your answer.
 --
-The user's time is {dateTime} ({timeZone}).
-The user's location is {location}.
+The user's time is {{ dateTime }} ({{ timeZone }}).
+The user's location is {{ location }}.
 `,
-  schema: z.object({
-    timeZone: z.string(),
-    location: z.string().nullish(),
-    projectName: z.string().nonempty(),
-    projectPrompt: z.string().nullish(),
-  }),
-  format: ({ timeZone, location, projectName, projectPrompt }) => {
+  format: ({ timeZone, location, project }) => {
+    const { city, country } = location ?? {}
+    const { name, prompt } = project!
     return {
       timeZone,
       dateTime: new Date().toLocaleString('en-US', { timeZone }),
-      location: location ?? 'Unknown',
-      projectName,
-      projectPrompt: projectPrompt ?? 'None',
+      location: city && country ? `${city}, ${country}` : 'Unknown',
+      projectName: name,
+      projectPrompt: prompt || 'None',
     }
-  }
+  },
 })
 
-export type ProjectChatPromptVars = typeof projectChatPrompt.$inferInput
+export interface ChatTitlePromptInput {
+  maxLength: number
+}
 
-export const chatTitlePrompt = new PromptTemplate({
+export const chatTitlePrompt = new PromptTemplate<ChatTitlePromptInput>({
   template: `You will generate a short title based on the first message a user begins a conversation with.
 [IMPORTANT !!!]
-- ensure it is not more than {maxLength} characters long
+- ensure it is not more than {{ maxLength }} characters long
 - the title should be a summary of the user's message
 - do not use quotes or colons
 `,
-  schema: z.object({
-    maxLength: z.number().positive().int().min(10).max(100),
-  }),
 })
-
-export type ChatTitlePromptVars = typeof chatTitlePrompt.$inferInput
