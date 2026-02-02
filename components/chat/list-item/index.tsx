@@ -9,7 +9,7 @@ import {
   PencilLine,
 } from 'lucide-react'
 import { ChatTitle } from './title'
-import { getChatUrl } from '@/lib/util'
+import { getChatUrl } from '@/lib/utils'
 import type { ChatRecord } from '@/lib/db'
 import {
   DefaultVariant,

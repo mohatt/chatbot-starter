@@ -4,8 +4,7 @@ import { useLazyRef } from '@/hooks/use-lazy-ref'
 import { useUploadFileMutation } from '@/api/hooks/files'
 import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
-import { cn } from '@/lib/utils'
-import { generateUUID } from '@/lib/util'
+import { cn, generateUUID } from '@/lib/utils'
 import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
 import { Slot, Slottable } from "@radix-ui/react-slot"
 import { CloudUploadIcon } from "lucide-react"

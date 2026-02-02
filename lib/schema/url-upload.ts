@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { posix } from 'node:path'
 import { extension as mimeExtension, lookup as mimeLookup } from 'mime-types'
 import { AsyncCaller, AsyncCallerOptions } from '@/lib/async-caller'
-import { formatFileSize } from '@/lib/util'
+import { formatFileSize } from '@/lib/utils'
 import type { FileUpload, FileUploadRules } from './file-upload'
 
 export interface UrlUploadOptions {

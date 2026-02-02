@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, type RefObject } from 'react'
 import { useLazyRef } from '@/hooks/use-lazy-ref'
-import { getChatUrl } from '@/lib/util'
+import { getChatUrl } from '@/lib/utils'
 import { config } from '@/lib/config'
 import type { UseChatResult } from './use-chat'
 import type { ChatRecord } from '@/lib/db'

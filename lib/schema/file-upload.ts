@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { extension as mimeExtension, lookup as mimeLookup, extensions as mimeExtensions } from 'mime-types'
-import { formatFileSize } from '@/lib/util'
+import { formatFileSize } from '@/lib/utils'
 
 export interface FileUpload<Ext extends string = string> {
   name: string

@@ -1,5 +1,5 @@
 import { createQuery, createMutation } from 'react-query-kit'
-import { fetcher } from '@/lib/util'
+import { fetcher } from '@/lib/utils'
 import type { FileRecord } from '@/lib/db'
 import type { PostRequestBody } from '@/app/(core)/api/files/schema'
 

@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent, type ClipboardEvent, type KeyboardEve
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
 import { useUserBillingPeriodQuery } from '@/api/hooks/user'
-import { generateUUID } from '@/lib/util'
+import { generateUUID } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
   PromptInputBody,

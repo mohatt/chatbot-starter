@@ -6,7 +6,7 @@ import { Conversation, ConversationContent, ConversationEmptyState, Conversation
 import { toast } from 'sonner'
 import { DefaultChatTransport } from 'ai'
 import { type StickToBottomContext } from 'use-stick-to-bottom';
-import { fetchWithOfflineHandler, generateUUID, getTimeZone } from '@/lib/util'
+import { fetchWithOfflineHandler, generateUUID, getTimeZone } from '@/lib/utils'
 import { LoadingDots } from '@/components/loading'
 import { ChatHeader } from './header'
 import { ChatMessages } from './messages'

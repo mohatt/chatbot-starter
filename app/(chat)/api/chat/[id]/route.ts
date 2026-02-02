@@ -18,7 +18,7 @@ import {
   type ModelUsage,
 } from '@/lib/ai'
 import { geolocation } from "@vercel/functions";
-import { generateUUID } from '@/lib/util'
+import { generateUUID } from '@/lib/utils'
 import { createApiHandler } from '@/lib/api'
 import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'

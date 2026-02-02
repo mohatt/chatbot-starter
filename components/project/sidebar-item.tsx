@@ -26,8 +26,7 @@ import {
 } from 'lucide-react'
 import { LoadingDots } from '@/components/loading'
 import { ChatListItem } from '@/components/chat/list-item'
-import { getProjectUrl } from '@/lib/util'
-import { cn } from '@/lib/utils'
+import { cn, getProjectUrl } from '@/lib/utils'
 import Link from 'next/link'
 import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 

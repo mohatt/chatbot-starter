@@ -48,7 +48,7 @@ export class ModelsConfig {
     return this.getKey(entry, modifiers)
   }
 
-  getKey(entry: ModelEntry | ResolvedModelEntry, modifiers?: ModelKey['modifiers'], strict?: boolean) {
+  getKey(entry: ModelEntry | ResolvedModelEntry, modifiers?: ModelKey['modifiers'], strict?: boolean): ModelKey {
     const { id, provider, thinking, webSearch } = entry
     const key: ModelKey = {
       id,

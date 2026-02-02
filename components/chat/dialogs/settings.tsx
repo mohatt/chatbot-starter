@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useUpdateChatMutation } from '@/api/hooks/chats'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { getChatUrl } from '@/lib/util'
+import { getChatUrl } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
   Field,

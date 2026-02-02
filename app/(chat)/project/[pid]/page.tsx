@@ -1,6 +1,6 @@
 'use client';
 import { use } from 'react'
-import { generateUUID } from '@/lib/util'
+import { generateUUID } from '@/lib/utils'
 import { ProjectIndex } from '@/components/project'
 import { NewChat } from '@/components/chat/new-chat'
 

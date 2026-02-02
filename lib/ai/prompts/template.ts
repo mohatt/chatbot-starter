@@ -1,5 +1,5 @@
 import type { UIMessage } from 'ai'
-import { generateUUID } from '@/lib/util'
+import { generateUUID } from '@/lib/utils'
 
 type FormatArgs<Params extends Record<string, any>> = [Params] extends [never]
   ? []

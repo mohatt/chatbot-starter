@@ -1,5 +1,5 @@
 import { createInfiniteQuery, createQuery, createMutation } from 'react-query-kit'
-import { fetcher } from '@/lib/util'
+import { fetcher } from '@/lib/utils'
 import { useChatsQuery } from './chats'
 import type { ChatProjectRecord, PaginatedResult } from '@/lib/db'
 import type { PostRequestBody, PatchRequestBody } from '@/app/(chat)/api/project/[id]/schema'

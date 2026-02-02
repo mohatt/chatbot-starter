@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import { formatFileSize } from '@/lib/util'
+import { formatFileSize } from '@/lib/utils'
 import type { FileRecord } from '@/lib/db'
 import type { ChatContext } from '../context'
 

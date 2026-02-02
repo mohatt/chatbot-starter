@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { useMediaQuery } from 'usehooks-ts'
 import { useSidebar } from '@/components/ui/sidebar'
-import { getProjectUrl } from '@/lib/util'
+import { getProjectUrl } from '@/lib/utils'
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
