@@ -111,6 +111,18 @@ export class FileModel extends DbModel {
       throw new AppError("bad_request:database", "Failed to batch delete files by ids");
     }
   }
+
+  async moveOwnership(fromUserId: string, toUserId: string): Promise<number> {
+    try {
+      const moved = await this.db
+        .update(files)
+        .set({ userId: toUserId })
+        .where(eq(files.userId, fromUserId));
+      return moved.rowCount ?? 0
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to transfer files ownership");
+    }
+  }
 }
 
 export { FileRecordMetadata }

@@ -28,8 +28,9 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
       },
       deleteUser: {
         enabled: true,
-        afterDelete: async (user) => {
-          // @todo cleanup app data linked to deleted user
+        afterDelete: async (_user) => {
+          // We rely on FK cascades for projects and chats
+          // As for files, userId FK will be set to NULL and mark them as orphaned (cronjob will clean them up)
         }
       }
     },
@@ -50,8 +51,19 @@ export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | '
     plugins: [
       anonymous({
         generateName: () => 'Guest',
-        onLinkAccount: async ({ anonymousUser, newUser, ctx }) => {
-          // @todo move app data from anonymous user to the new user
+        onLinkAccount: async ({ anonymousUser, newUser }) => {
+          const fromId = anonymousUser.user.id
+          const toId = newUser.user.id
+          console.log('Moving app data from anonymous user to the new user', { fromId, toId })
+          await db.client.transaction(async (tx) => {
+            const projects = db.projects.withDb(tx);
+            const chats = db.chats.withDb(tx);
+            const files = db.files.withDb(tx);
+
+            await projects.moveOwnership(fromId, toId);
+            await chats.moveOwnership(fromId, toId);
+            await files.moveOwnership(fromId, toId);
+          })
         },
       }),
       billing(db),

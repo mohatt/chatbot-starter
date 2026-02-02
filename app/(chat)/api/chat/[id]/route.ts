@@ -24,7 +24,7 @@ import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import { uuidV7 } from '@/lib/schema'
 import { postRequestBodySchema, patchRequestBodySchema } from './schema'
-import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
+import type { ChatRecord } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
   const { db, ai, authz, billing, storage } = api;
@@ -97,13 +97,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     }
   }
 
-  let project: ChatProjectRecord | null = null
-  if (chat.projectId) {
-    project = await db.projects.findById(chat.projectId)
-    if(!project) {
-      throw new AppError('internal:chat')
-    }
-  }
+  const location = geolocation(request)
+  const project = chat.projectId
+    ? await db.projects.findById(chat.projectId)
+    : null
 
   // Can be used to abort the generation stream
   // When triggered, the abort reason will be sent as an error part
@@ -118,8 +115,6 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
     execute: async ({ writer: dataStream }) => {
-      // Fetch user location info
-      const location = geolocation(request)
       const context = createChatContext({
         api,
         chat,

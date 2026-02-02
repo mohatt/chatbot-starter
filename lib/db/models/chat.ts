@@ -91,4 +91,16 @@ export class ChatModel extends DbModel {
       throw new AppError('bad_request:database', 'Failed to fetch chats')
     }
   }
+
+  async moveOwnership(fromUserId: string, toUserId: string): Promise<number> {
+    try {
+      const moved = await this.db
+        .update(chats)
+        .set({ userId: toUserId })
+        .where(eq(chats.userId, fromUserId));
+      return moved.rowCount ?? 0
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to transfer chats ownership");
+    }
+  }
 }

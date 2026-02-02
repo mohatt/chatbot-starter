@@ -1,12 +1,11 @@
 import { getIp } from 'better-auth/api'
 import { v5 as uuidv5 } from 'uuid'
-import { APIError, BetterAuthPlugin, GenericEndpointContext, User } from 'better-auth'
+import { APIError, type BetterAuthPlugin, type GenericEndpointContext, type User } from 'better-auth'
 import type { UserWithAnonymous } from 'better-auth/client/plugins'
 import type { Db, BillingRecordInput } from '@/lib/db'
 
 /**
- * Minimal Better Auth plugin that stamps every user with a deterministic
- * billing profile ID while delegating usage tracking to the application DB.
+ * Minimal Better Auth plugin that stamps every user with a deterministic billing profile ID.
  */
 export function billing(db: Db) {
   return {
@@ -46,6 +45,7 @@ export function billing(db: Db) {
         fields: {
           billingId: {
             type: 'string',
+            // BA throws an error during user signup that the field is required when required: true
             required: false,
             input: false,
             references: {

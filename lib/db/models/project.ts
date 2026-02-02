@@ -91,6 +91,18 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
+  async moveOwnership(fromUserId: string, toUserId: string): Promise<number> {
+    try {
+      const moved = await this.db
+        .update(projects)
+        .set({ userId: toUserId })
+        .where(eq(projects.userId, fromUserId));
+      return moved.rowCount ?? 0
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to transfer projects ownership");
+    }
+  }
+
   async findManyWithChats({ userId }: { userId: string }, limit: number, chatsLimit: number, cursor?: string): Promise<PaginatedResult<ChatsByProjectRecord>> {
     try {
       const projectRows = await this.db.query.projects.findMany({
