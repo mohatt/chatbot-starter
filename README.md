@@ -1,111 +1,61 @@
-# 🧠 TypeScript RAG Demo (Next.js Edition)
+# Chatbot Starter
 
-A full-stack Retrieval-Augmented Generation demo powered by **Next.js App Router**, **Vercel AI SDK + AI Gateway**, and **Vercel Postgres (pgvector)**.
+A full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped chats, built on **Next.js**, **Vercel AI SDK**, **Upstash Vector**, **Postgres**, and **Upstash Vector**.”
 
-The flow:
-1. Upload one or more documents (PDF / DOCX / TXT / Markdown).
-2. We parse, chunk, embed with LangChain + Hugging Face or OpenAI embeddings.
-3. Embeddings + chunks are stored in **Postgres** (vector column) so every serverless invocation can retrieve them.
-4. The `/api/chat` route runs semantic search directly inside Postgres, then streams a grounded answer via the Vercel AI SDK.
+[Live Demo][vercel-demo]
 
----
-## ✨ Features
-- ✅ **Next.js App Router** client/server components
-- ✅ **Vercel AI SDK + AI Gateway** for streaming LLM responses
-- ✅ **Vercel Postgres** with `pgvector` for shared session storage
-- ✅ **Hugging Face** _or_ **OpenAI-compatible** providers for both chat + embeddings
-- ✅ **Markdown-rendered chat** with auto-scroll and multi-file uploads
+## Features
 
----
-## 🧰 Tech Stack
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 16 + React 19 |
-| AI SDK | `@ai-sdk/react`, `ai` (Vercel AI SDK) |
-| Embeddings / Chunking | LangChain text splitters + Hugging Face/OpenAI embeddings |
-| Storage | Vercel Postgres (`pgvector` extension) |
-| Hosting | Vercel (serverless functions + Postgres + AI Gateway) |
+- **Streaming chat UI** with Markdown rendering, auto-scroll, and rich AI elements
+- **Multi-model support** via Vercel AI Gateway (OpenAI, Anthropic, Google, xAI, and many more)
+- **File uploads + RAG** with vector indexing (Upstash Vector) and in-chat file search/read tools
+- **Projects + chats** with per-project history and organized sidebar
+- **Auth + access control** with public/private chat visibility
+- **Usage tracking & limits** with per-user chat credits
 
----
-## ⚙️ Setup
-### 1. Install deps
+## Tech Stack
+
+- Next.js 16 + React 19
+- Vercel AI SDK + AI Gateway
+- Postgres (Neon) + Drizzle ORM
+- Upstash Vector (RAG)
+- Vercel Blob (file storage)
+- BetterAuth for authentication
+- Hosted on Vercel
+
+## Deploy Your Own
+
+You can deploy your own version of the Chatbot to Vercel with one click:
+
+[![Deploy with Vercel](https://vercel.com/button)][vercel-deploy]
+
+## Setup
+
+### 1. Install dependencies
+
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Database
-Provision Vercel Postgres (or any Postgres with the `vector` & `pgcrypto` extensions). Set `POSTGRES_URL` in `.env`.
 
-The API layer ensures the schema exists, but for clarity here’s the DDL:
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE TABLE IF NOT EXISTS sessions (
-  id TEXT PRIMARY KEY,
-  summary TEXT,
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS session_context (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,
-  chunk_index INTEGER,
-  content TEXT,
-  metadata JSONB,
-  embedding VECTOR(384)
-);
-```
-> 💡 384 = embedding dimension for `sentence-transformers/all-MiniLM-L6-v2`. Change it if you switch models.
+Todo
 
 ### 3. Environment variables
+
 Refer to `.env.example`:
 
 ### 4. Run locally
+
 ```bash
-npm run dev
+pnpm dev
 ```
-Visit `http://localhost:3000` and upload docs.
+
+Visit `http://localhost:3000`.
 
 ### 5. Deploy to Vercel
-1. `vercel` (or `vercel deploy --prod`)
-2. Attach the **Postgres** + **AI Gateway** integrations.
-3. Copy the env vars from `.env` to the Vercel dashboard (including `POSTGRES_URL`, `HUGGING_FACE_API_KEY`, etc.).
 
----
-## 🧠 Architecture
-```
-app/
-├── page.tsx (client page: UploadForm + FileSummary + ChatBox)
-├── api/
-│   ├── ingest/route.ts  # ingest pipeline -> Postgres + pgvector
-│   └── chat/route.ts    # similarity search + LLM streaming
-lib/
-├── db.ts               # schema helpers & vector queries
-├── ai.ts               # AI models factory
-components/
-├── UploadForm.tsx      # multi-file upload UI
-├── FileSummary.tsx     # session metadata panel
-└── ChatBox.tsx         # streaming markdown chat
-```
+TODO
 
----
-## 📡 API Details
-### `POST /api/ingest`
-- multipart form: `files[]`, optional `sessionId`
-- Splits, embeds, stores chunks + metadata in Postgres
-- Appends to an existing session if `sessionId` provided
-
-### `POST /api/chat`
-- body: `{ sessionId, messages }` (same payload as Vercel AI SDK `useChat`)
-- Embeds last user message, runs `SELECT ... ORDER BY embedding <=> query LIMIT 4`
-- Streams either Hugging Face (`chatCompletionStream`) or OpenAI-compatible responses
-
----
-## 🚀 Tips
-- **Vector index**: for larger corpora, add `CREATE INDEX session_context_embedding_idx ON session_context USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);`
-- **Cleanup**: add a cron/queue to delete stale sessions (e.g., after 24h) using the `sessions` table.
-- **Providers**: To stay 100% free, use Hugging Face Inference or Groq via AI Gateway and keep usage below their rate limits.
-
-Happy hacking! “Docs in, answers out.”
+[vercel-demo]: https://chatbot-starter.vercel.app
+[vercel-deploy]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmohatt%2Fchatbot-starter&env=BETTER_AUTH_URL,BETTER_AUTH_SECRET,CRON_SECRET&envDefaults=%7B%22BETTER_AUTH_URL%22%3A%22http%3A%2F%2Flocalhost%3A3000%22%7D&envDescription=API%20Keys%20needed%20for%20the%20application.&envLink=https%3A%2F%2Fgithub.com%2Fmohatt%2Fchatbot-starter%23env-vars&project-name=ai-chatbot&repository-name=ai-chatbot&demo-title=Chatbot%20Starter&demo-description=A%20full-stack%20AI%20Chatbot%20Starter%20powered%20by%20Next.js%20and%20Vercel%20AI%20SDK.&demo-url=https%3A%2F%2Fchatbot-starter.vercel.app&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2Fmohatt%2Fchatbot-starter%2Frefs%2Fheads%2Fmain%2Fpublic%2Fdemo-image-01.png&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-vector%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D

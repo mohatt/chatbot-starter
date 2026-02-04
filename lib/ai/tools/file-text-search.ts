@@ -59,7 +59,7 @@ export function fileTextSearch({ api, project }: ChatContext) {
       async execute({ query, topK, fileIds }): Promise<FileTextSearchOutput> {
         let filter = `projectId = '${project.id}'`
         if (fileIds?.length) {
-          filter += `AND file.id IN ('${fileIds.join(`', '`)}')`
+          filter += ` AND file.id IN ('${fileIds.join(`', '`)}')`
         }
         const docs = await api.vectorDb.files.query(query, Math.min(25, topK), filter);
         if (!docs.length) {
