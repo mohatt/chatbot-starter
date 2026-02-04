@@ -7,12 +7,12 @@ import { config } from '@/lib/config'
 import * as authSchema from '@/lib/db/schema/auth'
 import { billing } from './plugins/billing'
 
-export function createAuthClient(db: Db, env: Pick<Env, 'BETTER_AUTH_SECRET' | 'BETTER_AUTH_URL'>) {
+export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
   const auth = betterAuth({
     appName: config.appName,
-    baseURL: env.BETTER_AUTH_URL,
-    secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.BETTER_AUTH_URL],
+    baseURL: config.baseUrl,
+    secret: env.AUTH_SECRET,
+    trustedOrigins: [config.baseUrl],
     database: drizzleAdapter(db.client, {
       provider: "pg",
       camelCase: true,

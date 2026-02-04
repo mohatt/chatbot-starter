@@ -7,8 +7,7 @@ config({ path: '.env.development.local' });
 
 const env = loadPartialEnv({
   POSTGRES_URL: true,
-  BETTER_AUTH_URL: true,
-  BETTER_AUTH_SECRET: true,
+  AUTH_SECRET: true,
 })
 
 export const auth = createAuthClient(new Db(env), env)

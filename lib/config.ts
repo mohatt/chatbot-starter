@@ -7,8 +7,8 @@ function getDeploymentBaseUrl() {
 }
 
 export const config = {
-  appId: 'rag-chatbot',
-  appName: 'Rag Chatbot',
+  appId: 'chatbot-starter',
+  appName: 'Chatbot',
   baseUrl: getDeploymentBaseUrl(),
   chat: {
     models: new ModelsConfig([

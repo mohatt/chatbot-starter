@@ -7,10 +7,7 @@ import type { Db } from '@/lib/db'
 export class Auth {
   readonly client: ReturnType<typeof createAuthClient>
 
-  constructor(
-    db: Db,
-    env: Pick<Env, 'BETTER_AUTH_SECRET' | 'BETTER_AUTH_URL'>,
-  ) {
+  constructor(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
     this.client = createAuthClient(db, env)
   }
 
