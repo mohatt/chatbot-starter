@@ -18,6 +18,7 @@ import { useUserBillingPeriodQuery } from '@/api/hooks/user'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
 import type { PostRequestBody } from '@/app/(chat)/api/chat/[id]/schema'
+import type { ModelUsage } from '@/lib/ai'
 
 export function Chat(props: ChatIdProps) {
   const { id, projectId } = props;
@@ -43,6 +44,7 @@ export function Chat(props: ChatIdProps) {
     dataError = new AppError('not_found:chat')
   }
 
+  const [modelUsageMap, setModelUsageMap] = useState<Record<string, ModelUsage>>({})
   const { messages, sendMessage, setMessages, status, stop, regenerate, error } = useChat({
     id,
     generateId: generateUUID,
@@ -66,6 +68,16 @@ export function Chat(props: ChatIdProps) {
     onData: useEventCallback(({ type, data }) => {
       if (type === 'data-notification') {
         toast[data.level](data.message)
+        return
+      }
+      if (type === 'data-usage') {
+        const lastMsg = messages.at(-1)
+        if (lastMsg?.role === 'assistant') {
+          setModelUsageMap((prev) => ({
+            ...prev,
+            [lastMsg.id]: data,
+          }))
+        }
       }
     }),
     onFinish: useEventCallback((res) => {
@@ -169,6 +181,7 @@ export function Chat(props: ChatIdProps) {
                   <ChatMessages
                     isReadonly={!isStoredChat}
                     messages={messages}
+                    modelUsageMap={modelUsageMap}
                     sendMessage={handleSendMessage}
                     regenerate={regenerate}
                     status={status}

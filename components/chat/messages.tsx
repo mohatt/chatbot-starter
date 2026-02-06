@@ -38,16 +38,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Sources, SourceItem, type SourceFileItem, type SourceUrlItem } from './sources'
+import { ModelMessageInfo } from './message-info'
 import type { OpenaiResponsesTextProviderMetadata } from '@ai-sdk/openai'
-import type { ChatTools } from '@/lib/ai'
+import type { ChatTools, ModelUsage } from '@/lib/ai'
 import type { UseChatResult } from './hooks'
 
 export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
   isReadonly: boolean;
+  modelUsageMap: Record<string, ModelUsage>
 }
 
 export function ChatMessages(props: ChatMessagesProps) {
-  const { isReadonly, messages, sendMessage, regenerate, status, error } = props
+  const { isReadonly, messages, modelUsageMap, sendMessage, regenerate, status, error } = props
   const [editorId, setEditorId] = useState<string | null>(null);
   const totalCount = messages.length
   const isStreaming = status === 'streaming'
@@ -79,6 +81,7 @@ export function ChatMessages(props: ChatMessagesProps) {
           <ChatMessage
             key={id}
             message={message}
+            modelUsage={modelUsageMap[id]}
             editorId={editorId}
             isReadonly={isReadonly}
             isStreaming={index === totalCount - 1 && isStreaming}
@@ -106,6 +109,7 @@ const toolTitles: Record<`tool-${keyof ChatTools}`, string> = {
 
 interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessage'> {
   message: UseChatResult['messages'][0]
+  modelUsage?: ModelUsage
   editorId: string | null
   setEditorId: (id: string | null) => void
   isReadonly?: boolean
@@ -113,8 +117,8 @@ interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessa
 }
 
 function ChatMessage(props: ChatMessageProps) {
-  const { message, editorId, isReadonly, isStreaming = false, regenerate, sendMessage, setEditorId } = props
-  const { id, role, parts } = message
+  const { message, modelUsage, editorId, isReadonly, isStreaming = false, regenerate, sendMessage, setEditorId } = props
+  const { id, role, parts, metadata } = message
   const { copyToClipboard, isCopied } = useCopyToClipboard()
   const scrollContext = useStickToBottomContext()
   const showThinkingRef = useRef(isStreaming)
@@ -352,6 +356,9 @@ function ChatMessage(props: ChatMessageProps) {
                 <SourceItem key={i} item={item} />
               ))}
             </Sources>
+          )}
+          {metadata && 'model' in metadata && (
+            <ModelMessageInfo metadata={metadata} usage={modelUsage} className='ml-1' />
           )}
         </MessageActions>
       )}

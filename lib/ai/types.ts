@@ -7,15 +7,9 @@ import type { ChatTools } from './tools'
 export type LanguageModel = ReturnType<typeof gateway>
 export type EmbeddingModel = ReturnType<typeof gateway['embeddingModel']>
 
-export interface ChatMessageModelMetadata {
-  model: ModelKey
+export interface ChatMessageMetadata {
+  model?: ModelKey
 }
-
-export interface ChatMessageUserMetadata {
-  [k: string]: never
-}
-
-export type ChatMessageMetadata = ChatMessageModelMetadata | ChatMessageUserMetadata
 
 export type ChatMessage = UIMessage<ChatMessageMetadata, {
   notification: {
