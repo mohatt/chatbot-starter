@@ -60,14 +60,18 @@ The user's location is {{ location }}.
 })
 
 export interface ChatTitlePromptInput {
+  message: string
   maxLength: number
 }
 
 export const chatTitlePrompt = new PromptTemplate<ChatTitlePromptInput>({
-  template: `You will generate a short title based on the first message a user begins a conversation with.
+  template: `Generate a short conversation title based ONLY on the user's first message.
 [IMPORTANT !!!]
-- ensure it is not more than {{ maxLength }} characters long
-- the title should be a summary of the user's message
-- do not use quotes or colons
+- Ensure it is not more than {{ maxLength }} characters long
+- Avoid filler nouns like conversation, discussion, chat or thread
+- Avoid using quotes, colons or any title formatting
+--
+User message:
+{{ message }}
 `,
 })

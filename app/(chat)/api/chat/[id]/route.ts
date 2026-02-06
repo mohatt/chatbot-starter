@@ -14,6 +14,7 @@ import {
   createChatTools,
   createChatContext,
   createChatOptions,
+  createModelsRegistry,
   type ChatMessage,
   type ModelUsage,
 } from '@/lib/ai'
@@ -72,8 +73,18 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
     chat = dbChat
   }
 
-  const chatModel = await ai.getLanguageModel(model.key)
+  const chatModel = ai.getLanguageModel(model.key)
   const isReasoning = model.key.modifiers.thinking === true
+
+  // Fetch models registry and look up the selected model
+  const modelsRegistry = await createModelsRegistry()
+  const modelMeta = modelsRegistry.getModelMeta(model.key)
+  if (!modelMeta.tool_call) {
+    throw new Error(`Model ${model.key.id} does not support tool calling.`)
+  }
+  if (isReasoning && !modelMeta.reasoning) {
+    throw new Error(`Model ${model.key.id} does not support reasoning.`)
+  }
 
   if (regenerate) {
     await db.messages.deleteMany(id, message.id)
@@ -115,29 +126,32 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
     execute: async ({ writer: dataStream }) => {
-      const context = createChatContext({
+      const chatContext = createChatContext({
         api,
         chat,
         model,
+        modelMeta,
         project,
         timeZone,
         location,
         dataStream,
       })
-      const prompt = project != null ? projectChatPrompt : chatPrompt
+      const systemPrompt = project != null ? projectChatPrompt : chatPrompt
+      const chatTools = createChatTools(chatContext)
       const result = streamText({
         model: chatModel,
-        system: prompt.toString(context),
+        system: systemPrompt.toString(chatContext),
         messages: await convertToModelMessages(uiMessages),
         temperature: isReasoning ? undefined : 0.2,
         maxOutputTokens: 12_288,
-        tools: createChatTools(context),
+        activeTools: Object.keys(chatTools) as Array<keyof typeof chatTools>,
+        tools: chatTools,
         stopWhen: stepCountIs(5),
         abortSignal: AbortSignal.any([request.signal, generation.signal]),
-        providerOptions: createChatOptions(context),
-        onStepFinish: async ({ usage }) => {
+        providerOptions: createChatOptions(chatContext),
+        onStepFinish: ({ usage }) => {
           try {
-            const stepUsage = await ai.getModelUsage(model.key, usage)
+            const stepUsage = modelsRegistry.getModelUsage(model.key, usage)
             const stepCost = stepUsage.cost.total ?? 0
             if (stepCost > 0) {
               userChatCost += stepCost
@@ -154,10 +168,15 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
             generation.abort(new AppError('internal:chat', (error as Error).message))
           }
         },
-        onFinish: async ({ totalUsage }) => {
+        onFinish: ({ totalUsage }) => {
           try {
             // Calculate model usage
-            chatUsage = await ai.getModelUsage(model.key, totalUsage)
+            chatUsage = modelsRegistry.getModelUsage(model.key, totalUsage)
+            dataStream.write({
+              type: 'data-usage',
+              data: chatUsage,
+              transient: true, // won't be persisted to storage
+            });
           } catch (error) {
             console.error('Failed to calculate model final usage:', {
               key: model.key,
@@ -188,14 +207,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
 
       dataStream.merge(
         result.toUIMessageStream({
-          sendSources: model.vendor === 'google', // for google search
+          sendSources: true, // Mainly used for google search sources
           messageMetadata: ({ part }) => {
-            console.log('messageMetadata', part.type)
             if (part.type === 'finish') {
-              return {
-                model: model.key,
-                usage: chatUsage ?? { tokens: {}, cost: {} },
-              }
+              return { model: model.key }
             }
           },
         }),
@@ -260,9 +275,11 @@ export const GET = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api
     let title = fallback
     try {
       const { text } = await generateText({
-        model: await ai.getLanguageModel(model),
-        system: chatTitlePrompt.toString({ maxLength: maxGeneratedLength }),
-        prompt: chat.title,
+        model: ai.getLanguageModel(model),
+        prompt: chatTitlePrompt.toString({
+          message: chat.title,
+          maxLength: maxGeneratedLength,
+        }),
         temperature: 0.2,
       });
       title = text

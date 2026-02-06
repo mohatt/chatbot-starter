@@ -1,9 +1,8 @@
 'use client';
-import { useRef, useState, type FormEvent, type ClipboardEvent, type KeyboardEvent } from 'react'
+import { useRef, useState, type SubmitEvent, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
 import { useUserBillingPeriodQuery } from '@/api/hooks/user'
-import { generateUUID } from '@/lib/utils'
 import { toast } from 'sonner'
 import {
   PromptInputBody,
@@ -32,7 +31,6 @@ export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'st
 export const ChatPrompt = (props: ChatPromptProps) => {
   const { chatId, sendMessage, stop, status, isPending, isDisabled } = props;
   const [input, setInput] = useState('');
-  const [messageId, setMessageId] = useState(generateUUID);
 
   const { data: billing, isLoading: isBillingLoading, error: billingError } = useUserBillingPeriodQuery()
   const chatCredits = billing?.chatCredits
@@ -58,7 +56,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
   } = useFileUpload({
     limit: config.chat.message.maxFileParts,
     buckets: ['images', 'retrieval'],
-    metadata: { namespace: 'chat', chatId, messageId },
+    metadata: { namespace: 'chat', chatId },
     onError: ({ file, message }) => {
       toast.error(file?.name ?? 'Upload Error', {
         description: message
@@ -75,7 +73,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     || hasPendingFiles
     || hasFailedFiles;
 
-  const handleSubmit = useEventCallback((e?: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useEventCallback((e?: SubmitEvent<HTMLFormElement>) => {
     e?.preventDefault();
     const text = input.trim()
     if (!text) {
@@ -83,7 +81,6 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     }
 
     void sendMessage({
-      id: messageId,
       parts: [
         ...files
           .filter((f) => f.status === 'uploaded' && f.url)
@@ -96,7 +93,6 @@ export const ChatPrompt = (props: ChatPromptProps) => {
         { type: 'text' as const, text }
       ],
     })
-    setMessageId(generateUUID())
     setInput('')
     clearFiles()
   })

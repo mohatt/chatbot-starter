@@ -3,7 +3,7 @@ import type { AnthropicProviderOptions } from '@ai-sdk/anthropic'
 import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
 import type { ChatContext } from './context'
 
-export function createChatOptions({ model }: ChatContext): Record<string, any> {
+export function createChatOptions({ model, modelMeta }: ChatContext): Record<string, any> {
   const { vendor, id } = model
   const isReasoning = model.key.modifiers.thinking === true
 
@@ -40,7 +40,7 @@ export function createChatOptions({ model }: ChatContext): Record<string, any> {
   if(vendor === 'openai') {
     return {
       openai: {
-        reasoningEffort: isReasoning ? 'medium' : 'low',
+        reasoningEffort: isReasoning ? 'medium' : (modelMeta.reasoning ? 'low' : undefined),
         reasoningSummary: isReasoning ? 'auto' : undefined
       } satisfies OpenAIResponsesProviderOptions,
     }

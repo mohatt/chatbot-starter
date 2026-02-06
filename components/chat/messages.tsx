@@ -179,6 +179,10 @@ function ChatMessage(props: ChatMessageProps) {
         addPart('thinking', part)
         continue
       }
+      if (part.type === 'source-url') {
+        $urlRefs[part.url] ??= part
+        continue
+      }
       flush()
       if (part.type === 'text') {
         const providerMetadata = part.providerMetadata as
