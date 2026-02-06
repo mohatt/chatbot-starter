@@ -307,7 +307,7 @@ function ChatMessage(props: ChatMessageProps) {
         }
       })}
       {!isStreaming && !isEditMode && (
-        <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
+        <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start mt-1' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
           {hasTextParts && (
             <MessageAction
               onClick={() => copyToClipboard(textParts.map(({ text }) => text).join(''))}
@@ -350,15 +350,15 @@ function ChatMessage(props: ChatMessageProps) {
               </>
             )
           )}
+          {metadata && 'model' in metadata && (
+            <ModelMessageInfo metadata={metadata} usage={modelUsage} className='ml-1' />
+          )}
           {sources.length > 0 && (
             <Sources className='ml-1'>
               {sources.map((item, i) => (
                 <SourceItem key={i} item={item} />
               ))}
             </Sources>
-          )}
-          {metadata && 'model' in metadata && (
-            <ModelMessageInfo metadata={metadata} usage={modelUsage} className='ml-1' />
           )}
         </MessageActions>
       )}

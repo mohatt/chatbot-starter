@@ -48,13 +48,13 @@ export function ModelMessageInfo(props: ModelMessageInfoProps) {
           </MessageAction>
         </PopoverTrigger>
         <PopoverContent className="relative w-80 p-0" align='start' side='top'>
-          <div className="flex items-center gap-2 rounded-t-md bg-secondary p-2 text-muted-foreground text-xs">
+          <div className="flex items-center gap-2 rounded-t-md bg-secondary p-3 text-muted-foreground text-xs">
             Model Info
           </div>
           <div className='space-y-2 p-3 font-medium text-sm'>
             <div>{modelInfo?.name ?? metadata.model?.id ?? 'Unknown model'}</div>
             {usageInfo && (
-              <div>{usageInfo}</div>
+              <div className='text-muted-foreground'>{usageInfo}</div>
             )}
           </div>
         </PopoverContent>
