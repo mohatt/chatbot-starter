@@ -19,6 +19,7 @@ export function createChatTools(context: ChatContext) {
   } satisfies ToolSet
 }
 
+export * from './utils'
 export * from './list-files'
 export * from './read-file'
 export * from './read-file-text'

@@ -7,22 +7,16 @@ const textPartSchema = z.object({
   text: z.string().trim().nonempty().max(2000),
 });
 
-const filePartSchema = z.object({
-  type: z.enum(["file"]),
-  mediaType: z.string().nonempty().max(32),
-  filename: z.string().trim().nonempty().max(128),
-  url: z.url(),
-});
-
-const messagePartSchema = z.union([textPartSchema, filePartSchema]);
-
 export const postRequestBodySchema = z.object({
   message: z.object({
     id: uuidV7,
     role: z.enum(["user"]),
-    parts: z.array(messagePartSchema)
+    parts: z.array(textPartSchema)
       .nonempty()
       .max(config.chat.message.maxParts),
+    metadata: z.object({
+      files: z.array(z.object({ id: uuidV7 })).default([]),
+    }),
   }),
   timeZone,
   regenerate: z.boolean().default(false),

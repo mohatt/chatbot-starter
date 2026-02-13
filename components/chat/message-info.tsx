@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { MessageAction } from '@/components/ai-elements/message'
+import { Badge } from '@/components/ui/badge'
 import { InfoIcon } from 'lucide-react'
 import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
@@ -52,7 +53,17 @@ export function ModelMessageInfo(props: ModelMessageInfoProps) {
             Model Info
           </div>
           <div className='space-y-2 p-3 font-medium text-sm'>
-            <div>{modelInfo?.name ?? metadata.model?.id ?? 'Unknown model'}</div>
+            <div className='flex items-center gap-2'>
+              <span>
+                {modelInfo?.name ?? metadata.model?.id ?? 'Unknown model'}
+              </span>
+              {metadata.model?.modifiers.thinking && (
+                <Badge variant='secondary' className='text-[0.7rem]'>thinking</Badge>
+              )}
+              {metadata.model?.modifiers.webSearch && (
+                <Badge variant='secondary' className='text-[0.7rem]'>web search</Badge>
+              )}
+            </div>
             {usageInfo && (
               <div className='text-muted-foreground'>{usageInfo}</div>
             )}

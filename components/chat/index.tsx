@@ -63,7 +63,7 @@ export function Chat(props: ChatIdProps) {
           ...req.body
         }
         return { body }
-      })
+      }),
     }),
     onData: useEventCallback(({ type, data }) => {
       if (type === 'data-notification') {
@@ -80,8 +80,7 @@ export function Chat(props: ChatIdProps) {
         }
       }
     }),
-    onFinish: useEventCallback((res) => {
-      console.log(res.isAbort) // isAbort is true when stop() is called
+    onFinish: useEventCallback(() => {
       queryClient.invalidateQueries({
         queryKey: useUserBillingPeriodQuery.getKey(),
       })

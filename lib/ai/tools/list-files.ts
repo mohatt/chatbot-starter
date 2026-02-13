@@ -1,12 +1,9 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import { formatFileSize } from '@/lib/utils'
-import type { FileRecord } from '@/lib/db'
+import { createFileToolModelOutput, type FileToolRecord } from './utils'
 import type { ChatContext } from '../context'
 
-export type ListFilesOutput = Array<Pick<FileRecord, 'id' | 'name' | 'mimeType' | 'url' | 'size' | 'metadata'> & {
-  createdAt: string
-}>
+export type ListFilesOutput = Array<FileToolRecord>
 
 export function listFiles({ project, api }: ChatContext) {
   if (!project) {
@@ -28,26 +25,13 @@ export function listFiles({ project, api }: ChatContext) {
         }
         return {
           type: 'json',
-          value: fileList.map(({ id, name, mimeType, size, metadata, url, createdAt }) => {
-            return {
-              fileId: id,
-              fileName: name,
-              mediaType: mimeType,
-              size: formatFileSize(size),
-              downloadUrl: url,
-              uploadedAt: createdAt,
-              ...(metadata?.retrieval && {
-                totalTextChunks: metadata.retrieval.vectors,
-                totalTokens: metadata.retrieval.tokens,
-              }),
-            }
-          })
+          value: fileList.map(createFileToolModelOutput),
         }
       },
       async execute(): Promise<ListFilesOutput> {
         const { data } = await api.db.files.findMany({ projectId: project.id })
         return data.map(({ id, name, mimeType, size, metadata, url, createdAt }) => {
-          return { id, name, mimeType, size, url, metadata, createdAt: createdAt.toISOString() }
+          return { id, name, mimeType, size, url, metadata, createdAt }
         })
       },
     })

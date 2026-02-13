@@ -67,7 +67,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
     if (!dbFiles) return
 
     for (const dbFile of dbFiles) {
-      const { id, bucket, name, size, mimeType, url } = dbFile
+      const { id, bucket, name, size, mimeType, url, metadata, createdAt } = dbFile
       upsertFile({
         id,
         name,
@@ -77,6 +77,8 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
         status: 'uploaded',
         error: null,
         url,
+        metadata,
+        createdAt,
       })
       dbFilesRef.current.set(id, dbFile)
     }

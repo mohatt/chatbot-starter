@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
+import { createFileToolModelOutput } from './utils'
 import type { FileLoaderDoc } from '@/lib/document'
 import type { ChatContext } from '../context'
 
@@ -26,12 +27,12 @@ export function fileTextSearch({ api, project }: ChatContext) {
       description: 'Queries file text chunks and returns results sorted based on the distance metric score (It can\'t access images; Inspect the results carefully to find information relevant to user query).',
       inputSchema: z.object({
         query: z.string().describe('The query to use for vector similarity search.'),
-        topK: z
+        top_k: z
           .number()
           .int()
           .positive()
           .describe('The number of file search retrieval chunks to retrieve (Provide a number between 1 and 25; Higher values (like 20) provide more context; Lower values (like 3) focus on best matches; Default: 10 results (use this if unsure)).'),
-        fileIds: z
+        file_ids: z
           .array(z.uuid())
           .nullish()
           .describe('Optional file IDs to filter the file search retrieval documents (optional; Accepts an array of file IDs; The order of file IDs won\'t change the returned results).'),
@@ -47,23 +48,22 @@ export function fileTextSearch({ api, project }: ChatContext) {
         }
         return {
           type: 'json',
-          value: data.map(({ file: { id, name, ...file }, excerpt, [fullText]: text, ...result }) => ({
-            ...file,
-            ...result,
-            fileId: id,
-            filename: name,
+          value: data.map(({ file, excerpt, [fullText]: text, ...result }) => ({
             text: text ?? excerpt,
+            score: result.score,
+            page_number: result.pageNumber,
+            file_info: createFileToolModelOutput(file),
           })),
         }
       },
-      async execute({ query, topK, fileIds }): Promise<FileTextSearchOutput> {
+      async execute({ query, top_k, file_ids }): Promise<FileTextSearchOutput> {
         let filter = `projectId = '${project.id}'`
-        if (fileIds?.length) {
-          filter += ` AND file.id IN ('${fileIds.join(`', '`)}')`
+        if (file_ids?.length) {
+          filter += ` AND file.id IN ('${file_ids.join(`', '`)}')`
         }
-        const docs = await api.vectorDb.files.query(query, Math.min(25, topK), filter);
+        const docs = await api.vectorDb.files.query(query, Math.min(25, top_k), filter);
         if (!docs.length) {
-          const idsCount = fileIds?.length ?? 0
+          const idsCount = file_ids?.length ?? 0
           return {
             error: idsCount > 0
               ? `Received invalid file ID${idsCount === 1 ? '' : 's'}`

@@ -27,7 +27,7 @@ export const files = pgTable("files", {
     .references(() => messages.id, { onDelete: "set null" }),
   storageKey: varchar("storageKey", { length: 256 }).notNull(),
   url: text("url").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { mode: 'string' }).defaultNow().notNull(),
 }, (self) => [
   index('files_user_id_idx').on(self.userId, self.id.desc()),
   index('files_chat_id_idx').on(self.chatId, self.id.desc()),

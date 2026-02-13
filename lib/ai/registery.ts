@@ -36,7 +36,7 @@ export class ModelsRegistry {
     const meta = getModelMeta({
       providers: this.catalog,
       provider,
-      id,
+      model: id,
     })
     if (!meta) {
       throw new Error(`Model ${id} is not supported`)

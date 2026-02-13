@@ -15,6 +15,7 @@ import {
   createChatContext,
   createChatOptions,
   createModelsRegistry,
+  createFileToolModelOutput,
   type ChatMessage,
   type ModelUsage,
 } from '@/lib/ai'
@@ -28,40 +29,67 @@ import { postRequestBodySchema, patchRequestBodySchema } from './schema'
 import type { ChatRecord } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ api, request, params, session }) => {
-  const { db, ai, authz, billing, storage } = api;
+  const { db, ai, authz, billing } = api;
   const id = uuidV7.parse(params.id)
   const { user } = await session()
   const { message, projectId, timeZone, regenerate, createChat, model } = postRequestBodySchema.parse(await request.json())
-  const messageText: string[] = []
-  const messageFiles: string[] = []
-  for (const part of message.parts) {
-    if (part.type === 'text') {
-      messageText.push(part.text)
-      continue
-    }
-    const file = storage.parseUrl(part.url)
-    if (file?.metadata.namespace !== 'chat' || file.metadata.chatId !== id) {
-      throw new AppError('bad_request:chat')
-    }
-    messageFiles.push(file.id)
-    messageText.push(`[File: ${part.filename}`)
-  }
-
-  if (messageFiles.length > config.chat.message.maxFileParts) {
-    throw new AppError('bad_request:chat')
-  }
 
   const billingPeriod = await billing.getCurrentPeriod(user)
   const { chatCredits } = billingPeriod.period
   if(chatCredits.remaining <= 0) {
     throw new AppError('rate_limit:chat')
   }
+  let chatCreditsUpdated = false
+  const updateChatCredits = async (chatUsageDelta: number) => {
+    if(chatCreditsUpdated) return
+    chatCreditsUpdated = true
+    await billingPeriod.update({ chatUsageDelta })
+      .catch((error) => {
+        console.error('Failed to update user chat usage:', {
+          userId: user.id,
+          error,
+        });
+      })
+  }
+
+  const fileIds = message.metadata.files.map((f) => f.id)
+  if (fileIds.length > config.chat.message.maxFileParts) {
+    throw new AppError('bad_request:chat')
+  }
+  const files = fileIds.length > 0
+    ? await db.files.findByIdsForUser(fileIds, user.id)
+    : []
+  if (files.length !== fileIds.length) {
+    throw new AppError('bad_request:chat')
+  }
+  const fileIdsToUpdate: string[] = []
+  for (const f of files) {
+    if ((f.chatId && f.chatId !== id) || (f.messageId && f.messageId !== message.id)) {
+      throw new AppError('bad_request:chat')
+    }
+    if (f.chatId !== id || f.messageId !== message.id) {
+      fileIdsToUpdate.push(f.id)
+    }
+  }
+
+  const uiMessage: ChatMessage = {
+    ...message,
+    metadata: {
+      files: files.map(({ id, name, mimeType, size, metadata, url, createdAt }) => {
+        return { id, name, mimeType, size, url, metadata, createdAt }
+      })
+    }
+  }
 
   let chat: ChatRecord
   if (createChat) {
     chat = await db.chats.create({
       id,
-      title: messageText.join('\n'),
+      title: [
+        ...files.map((f) => `[File: ${f.name}`)
+          .concat(files.length > 0 ? '' : []),
+        ...message.parts.map(({ text }) => text)
+      ].join('\n'),
       userId: user.id,
       projectId,
     })
@@ -91,21 +119,16 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   }
 
   const { data: dbMessages } = await db.messages.findMany(id, 25);
-  const uiMessages = [...dbMessages, message];
+  const uiMessages = [...dbMessages, uiMessage];
 
-  await db.messages.insertMany(id, [message])
+  await db.messages.insertMany(id, [uiMessage])
 
   // Update attached files if any
-  if (messageFiles.length > 0) {
-    const updatedFiles = await db.files.updateByIdsForUser(messageFiles, user.id, {
+  if (fileIdsToUpdate.length > 0) {
+    await db.files.updateByIdsForUser(fileIdsToUpdate, user.id, {
       chatId: id,
       messageId: message.id,
     })
-    if (updatedFiles.length !== messageFiles.length) {
-      // Guard against invalid file urls from being stored
-      await db.messages.deleteMany(id, message.id)
-      throw new AppError('bad_request:chat')
-    }
   }
 
   const location = geolocation(request)
@@ -117,11 +140,11 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
   // When triggered, the abort reason will be sent as an error part
   const generation = new AbortController()
 
-  // Model usage is set during streamText.onFinish and saved to db later
+  // Final model usage is set during `onFinish()` and saved to db at the end of the stream
   let chatUsage: ModelUsage | null = null
-  // Usage cost is incremented during streamText.onStepFinish
-  // Stream is aborted if it reaches max value
-  let userChatCost = chatCredits.used
+  // Steps cost is incremented during `onStepFinish()`
+  // Stream is aborted during `prepareStep()` if user usage reaches max value
+  let chatStepsCost = 0
 
   const stream = createUIMessageStream<ChatMessage>({
     generateId: generateUUID,
@@ -131,6 +154,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         chat,
         model,
         modelMeta,
+        message: uiMessage,
         project,
         timeZone,
         location,
@@ -138,27 +162,46 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       })
       const systemPrompt = project != null ? projectChatPrompt : chatPrompt
       const chatTools = createChatTools(chatContext)
+      const modelMessages = await convertToModelMessages(uiMessages.flatMap((msg) => {
+        if (msg.role !== 'user' || !msg.metadata?.files?.length) return msg
+        return [
+          {
+            role: 'system',
+            parts: [
+              {
+                type: 'text' as const,
+                text: `User has attached these files with their next message:\n${JSON.stringify(
+                  msg.metadata.files.map(createFileToolModelOutput)
+                )}`,
+              },
+            ],
+          },
+          msg,
+        ]
+      }), { tools: chatTools })
+
       const result = streamText({
         model: chatModel,
         system: systemPrompt.toString(chatContext),
-        messages: await convertToModelMessages(uiMessages),
+        messages: modelMessages,
         temperature: isReasoning ? undefined : 0.2,
-        maxOutputTokens: 12_288,
+        maxOutputTokens: 20_480,
         activeTools: Object.keys(chatTools) as Array<keyof typeof chatTools>,
         tools: chatTools,
-        stopWhen: stepCountIs(5),
+        stopWhen: stepCountIs(8),
         abortSignal: AbortSignal.any([request.signal, generation.signal]),
         providerOptions: createChatOptions(chatContext),
+        prepareStep: async () => {
+          if (chatStepsCost + chatCredits.used >= chatCredits.max) {
+            generation.abort(new AppError('rate_limit:chat'))
+            await updateChatCredits(chatStepsCost)
+          }
+          return {}
+        },
         onStepFinish: ({ usage }) => {
           try {
             const stepUsage = modelsRegistry.getModelUsage(model.key, usage)
-            const stepCost = stepUsage.cost.total ?? 0
-            if (stepCost > 0) {
-              userChatCost += stepCost
-              if(userChatCost >= chatCredits.max) {
-                generation.abort(new AppError('rate_limit:chat'))
-              }
-            }
+            chatStepsCost += stepUsage.cost.total ?? 0
           } catch (error) {
             console.error('Failed to calculate model step usage:', {
               key: model.key,
@@ -184,7 +227,6 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
               error
             })
           }
-          console.log(chatUsage)
           dataStream.write({
             type: 'data-notification',
             data: { message: `Tokens used: ${totalUsage.totalTokens}`, level: 'info' },
@@ -198,10 +240,9 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
               errorText: (generation.signal.reason as AppError).message,
             });
           }
-          console.log('streamText aborted');
         },
-        onError: (err) => {
-          console.error('streamText error:', err);
+        onError: (error) => {
+          console.error('streamText error:', { error });
         }
       });
 
@@ -209,7 +250,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
         result.toUIMessageStream({
           sendSources: true, // Mainly used for google search sources
           messageMetadata: ({ part }) => {
-            if (part.type === 'finish') {
+            if (part.type === 'start') {
               return { model: model.key }
             }
           },
@@ -231,15 +272,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
 
       const totalCost = chatUsage?.cost.total ?? 0
       if (totalCost > 0) {
-        tasks.push(
-          billingPeriod.update({ chatUsageDelta: totalCost })
-            .catch((error) => {
-              console.error('Failed to update user chat usage:', {
-                userId: user.id,
-                error,
-              });
-            })
-        )
+        tasks.push(updateChatCredits(totalCost))
       }
 
       await Promise.all(tasks)

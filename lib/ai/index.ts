@@ -55,6 +55,7 @@ export * from './options'
 export * from './prompts'
 export {
   createChatTools,
+  createFileToolModelOutput,
   type ChatTools,
   type ChatToolSet,
 } from './tools'

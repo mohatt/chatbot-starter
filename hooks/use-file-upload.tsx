@@ -9,13 +9,10 @@ import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
 import { Slot, Slottable } from "@radix-ui/react-slot"
 import { CloudUploadIcon } from "lucide-react"
 import type { inferVariables } from 'react-query-kit'
+import type { FileToolRecord } from '@/lib/ai/tools'
 import type { AppError } from '@/lib/errors'
 
-export interface ClientUpload<B extends string> {
-  id: string
-  name: string;
-  size: number
-  mimeType: string;
+export interface ClientUpload<B extends string> extends Omit<FileToolRecord, 'url'> {
   bucket: B;
   status: "idle" | "pending" | "uploaded" | "error";
   url?: string | null;
@@ -173,7 +170,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
     }
 
     setFiles((prev) => prev.concat(
-      capped.map(([id, fileBucket, { name, mimeType, blob }]) => {
+      capped.map(([id, fileBucket, { name, mimeType, blob }]): ClientUpload<B> => {
         const previewUrl = mimeType.startsWith('image/')
           ? URL.createObjectURL(blob)
           : null
@@ -185,6 +182,8 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
           size: blob.size,
           mimeType,
           previewUrl,
+          metadata: {},
+          createdAt: new Date().toISOString(),
           url: null,
           error: null,
         }
@@ -198,11 +197,15 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(pro
           updateFile(id, { status: "pending" })
           return mutateAsync({ id, file: blob, bucket: fileBucket as any, metadata })
         })
-        .then((uploadedFile) => {
+        .then((uploaded) => {
           updateFile(id, {
             status: "uploaded",
-            mimeType: uploadedFile.mimeType,
-            url: uploadedFile.url,
+            name: uploaded.name,
+            size: uploaded.size,
+            mimeType: uploaded.mimeType,
+            url: uploaded.url,
+            metadata: uploaded.metadata,
+            createdAt: uploaded.createdAt,
           })
         })
         .catch((err: AppError) => {

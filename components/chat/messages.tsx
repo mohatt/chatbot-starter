@@ -152,6 +152,17 @@ function ChatMessage(props: ChatMessageProps) {
       current.group.push(part as any)
     }
 
+    if(metadata?.files?.length) {
+      metadata.files.forEach(file => {
+        addPart('files', {
+          type: 'file',
+          filename: file.name,
+          mediaType: file.mimeType,
+          url: file.url,
+        })
+      })
+    }
+
     for (const part of parts) {
       if (part.type === 'step-start') continue
       if (part.type === 'file') {
@@ -210,7 +221,7 @@ function ChatMessage(props: ChatMessageProps) {
       fileRefs: $fileRefs,
       sources: [...Object.values($fileRefs), ...Object.values($urlRefs)]
     }
-  }, [parts])
+  }, [parts, metadata])
 
   const hasTextParts = textParts.length > 0
   return (

@@ -1,30 +1,26 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import type { FileLoaderDoc } from '@/lib/document'
+import { createFileToolModelOutput, type FileToolLoaderRecord } from './utils'
 import type { ChatContext } from '../context'
 
 // Using a symbol to prevent it from being stored to db
 const textChunks = Symbol('textChunks')
 
-export type ReadFileTextOutput = FileLoaderDoc['metadata']['file'] & {
+export type ReadFileTextOutput = FileToolLoaderRecord & {
   chunkCount: number
   [textChunks]: {
     text: string
     index: number
-    pageNumber?: number
+    page_number?: number
   }[]
 } | null
 
-export function readFileText({ api, project }: ChatContext) {
-  if (!project) {
-    return null
-  }
-
+export function readFileText({ api, chat }: ChatContext) {
   return {
     read_file_text: tool({
       description: 'Reads all text chunks for a user file (doesn\'t work on images).',
       inputSchema: z.object({
-        fileId: z.uuid().describe('The file ID to read.'),
+        file_id: z.uuid().describe('The user file ID.'),
       }),
       strict: true,
       toModelOutput({ output }) {
@@ -35,19 +31,17 @@ export function readFileText({ api, project }: ChatContext) {
             value: 'File not found',
           }
         }
-        const { id, name, [textChunks]: text, ...file } = result
+        const { [textChunks]: text, ...file } = result
         return {
           type: 'json',
           value: {
-            ...file,
-            fileId: id,
-            filename: name,
-            text: text ?? '[Redacted]'
+            ...createFileToolModelOutput(file),
+            text: text ?? '[recall this function to get full text]',
           },
         }
       },
-      async execute({ fileId }): Promise<ReadFileTextOutput> {
-        const filter = `file.id = '${fileId}'`
+      async execute({ file_id }): Promise<ReadFileTextOutput> {
+        const filter = `file.id = '${file_id}' AND userId = '${chat.userId}'`
         const results = await api.vectorDb.files.query('any', 50, filter);
         let result: ReadFileTextOutput = null
         if (results.length > 0) {
@@ -64,7 +58,7 @@ export function readFileText({ api, project }: ChatContext) {
             }
             result[textChunks].push({
               index: metadata.index,
-              pageNumber: 'pageNumber' in metadata ? metadata.pageNumber : undefined,
+              page_number: 'pageNumber' in metadata ? metadata.pageNumber : undefined,
               text: data,
             })
           }

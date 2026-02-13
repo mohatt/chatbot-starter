@@ -18,12 +18,12 @@ export class FileModel extends DbModel {
     }
   }
 
-  async findById(id: string): Promise<FileRecord | null> {
+  async findByIdForUser(id: string, userId: string): Promise<FileRecord | null> {
     try {
       const [selectedFile] = await this.db
         .select()
         .from(files)
-        .where(eq(files.id, id));
+        .where(and(eq(files.id, id), eq(files.userId, userId)));
       return selectedFile ?? null;
     } catch (_error) {
       throw new AppError("bad_request:database", "Failed to fetch file by id");
@@ -68,23 +68,30 @@ export class FileModel extends DbModel {
     }
   }
 
+  async findByIdsForUser(ids: string[], userId: string): Promise<FileRecord[]> {
+    if (ids.length === 0) return [];
+    try {
+      const rows = await this.db
+        .select()
+        .from(files)
+        .where(and(inArray(files.id, ids), eq(files.userId, userId)));
+      return rows;
+    } catch (_error) {
+      throw new AppError("bad_request:database", "Failed to fetch user files");
+    }
+  }
+
   async updateByIdsForUser(ids: string[], userId: string, values: { chatId: string; messageId: string }): Promise<FileRecord[]> {
+    if (ids.length === 0) return [];
     try {
       const updatedFiles = await this.db
         .update(files)
         .set(values)
-        .where(
-          and(
-            inArray(files.id, ids),
-            eq(files.userId, userId),
-            isNull(files.chatId),
-            isNull(files.messageId),
-          )
-        )
+        .where(and(inArray(files.id, ids), eq(files.userId, userId)))
         .returning();
       return updatedFiles;
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to update ephemeral files for user");
+      throw new AppError("bad_request:database", "Failed to update user files");
     }
   }
 

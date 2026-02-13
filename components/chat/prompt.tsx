@@ -81,17 +81,14 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     }
 
     void sendMessage({
-      parts: [
-        ...files
+      parts: [{ type: 'text' as const, text }],
+      metadata: {
+        files: files
           .filter((f) => f.status === 'uploaded' && f.url)
-          .map(({ name, url, mimeType }) => ({
-            type: 'file' as const,
-            filename: name,
-            mediaType: mimeType,
-            url: url!
-          })),
-        { type: 'text' as const, text }
-      ],
+          .map(({ id, name, mimeType, size, metadata, url, createdAt }) => {
+            return { id, name, mimeType, size, url: url!, metadata, createdAt }
+          }),
+      }
     })
     setInput('')
     clearFiles()

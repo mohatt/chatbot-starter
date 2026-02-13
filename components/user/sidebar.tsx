@@ -170,7 +170,7 @@ function UserChatCredits() {
     })
     return {
       limit: fmt.format(max),
-      remaining: fmt.format(remaining),
+      remaining: fmt.format(remaining > 0 ? Math.max(remaining, 0.01) : 0),
       resetDate: new Date(data.endDate).toLocaleString(undefined, {
         dateStyle: 'medium',
       }),
