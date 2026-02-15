@@ -50,6 +50,8 @@ export class Billing {
       id,
       tier,
       billingId,
+      createdAt,
+      updatedAt,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       chatCredits: {
@@ -57,8 +59,6 @@ export class Billing {
         remaining: Math.max(0, maxChatUsage - chatUsage),
         max: maxChatUsage,
       },
-      createdAt: createdAt.toISOString(),
-      updatedAt: updatedAt.toISOString(),
     }
   }
 }

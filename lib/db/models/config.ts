@@ -18,7 +18,7 @@ export class ConfigModel extends DbModel {
           target: [configs.group, configs.key],
           set: {
             value: input.value,
-            updatedAt: new Date(),
+            updatedAt: new Date().toISOString(),
           },
         })
         .returning()

@@ -17,10 +17,10 @@ export const billingPeriods = pgTable("billingPeriods", {
       .notNull(),
     maxChatUsage: numeric("maxChatUsage", { precision: 12, scale: 6, mode: "number" })
       .notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    updatedAt: timestamp("updatedAt")
+    createdAt: timestamp("createdAt", { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt", { mode: 'string'})
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => new Date().toISOString())
       .notNull(),
   },
   (table) => [

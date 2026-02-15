@@ -11,7 +11,7 @@ export const projects = pgTable("projects", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   prompt: text("prompt").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { mode: 'string' }).defaultNow().notNull(),
 }, (self) => [
   // Listing projects for a user (sidebar)
   index('projects_user_id_idx').on(self.userId, self.id.desc()),
@@ -29,7 +29,7 @@ export const chats = pgTable("chats", {
     .notNull()
     .default("private"),
   isTitlePending: boolean("isTitlePending").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { mode: 'string' }).defaultNow().notNull(),
 }, (self) => [
   // Project chat listing (user + project, ordered by recency)
   index('chats_user_project_id_idx').on(
@@ -51,7 +51,7 @@ export const messages = pgTable("messages", {
   role: varchar("role", { enum: ['user', 'assistant'] }).notNull(),
   parts: json("parts").notNull().$type<UIMessage['parts']>(),
   metadata: jsonb("metadata").notNull().$type<UIMessage['metadata']>(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { mode: 'string' }).defaultNow().notNull(),
 }, (self) => [
   index('messages_chat_id_idx').on(self.chatId, self.id.desc()),
 ]);
