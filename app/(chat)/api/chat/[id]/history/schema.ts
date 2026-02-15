@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 import { config } from '@/lib/config'
 import { uuidV7 } from '@/lib/schema'
 
@@ -11,7 +11,6 @@ export const getRequestBodySchema = z.object({
     .min(10)
     .max(config.chat.history.maxLimit)
     .default(config.chat.history.defaultLimit),
-});
+})
 
-export type GetRequestBody = z.input<typeof getRequestBodySchema>;
-
+export type GetRequestBody = z.input<typeof getRequestBodySchema>

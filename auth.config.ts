@@ -1,9 +1,9 @@
-import { config } from 'dotenv';
+import { config } from 'dotenv'
 import { createAuthClient } from '@/lib/auth/client'
 import { loadPartialEnv } from '@/lib/env'
 import { Db } from '@/lib/db'
 
-config({ path: '.env.development.local' });
+config({ path: '.env.development.local' })
 
 const env = loadPartialEnv({
   POSTGRES_URL: true,

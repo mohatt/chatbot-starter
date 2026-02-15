@@ -63,7 +63,11 @@ export function ChatTitle({ chat, showPrivacyIcon, msPerChar = 32 }: ChatTitlePr
     <span className='inline-flex items-center min-w-0'>
       {showPrivacyIcon && (
         <span className='mr-2'>
-          {privacy === 'public' ? <GlobeIcon className='size-4' /> : <LockIcon className='size-4' />}
+          {privacy === 'public' ? (
+            <GlobeIcon className='size-4' />
+          ) : (
+            <LockIcon className='size-4' />
+          )}
         </span>
       )}
       <span className='truncate min-w-0'>{shown}</span>

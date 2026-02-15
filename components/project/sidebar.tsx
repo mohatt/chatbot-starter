@@ -1,22 +1,19 @@
-'use client';
+'use client'
 import { useCallback, useMemo, useState } from 'react'
 import { useProjectsQuery } from '@/api/hooks/projects'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarMenu, SidebarMenuAction,
+  SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
-  SidebarMenuItem, SidebarMenuSkeleton,
+  SidebarMenuItem,
+  SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LoadingDots } from '@/components/loading'
-import {
-  ChevronRight,
-  FolderPlus,
-  MoreHorizontal,
-  Trash2,
-} from 'lucide-react'
+import { ChevronRight, FolderPlus, MoreHorizontal, Trash2 } from 'lucide-react'
 import { useChatSettingsDialog } from '@/components/chat/dialogs/settings'
 import { useDeleteChatDialog } from '@/components/chat/dialogs/delete'
 import { useDeleteProjectDialog } from './dialogs/delete'
@@ -31,43 +28,41 @@ export interface ProjectSidebarProps {
 export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
   const deleteDialog = useDeleteProjectDialog()
   const deleteAllDialog = useDeleteAllProjectsDialog()
-  const chatSettingsDialog = useChatSettingsDialog();
-  const deleteChatDialog = useDeleteChatDialog();
-  const [chatTitleEditor, setChatTitleEditor] = useState<ChatRecord | null>(null);
+  const chatSettingsDialog = useChatSettingsDialog()
+  const deleteChatDialog = useDeleteChatDialog()
+  const [chatTitleEditor, setChatTitleEditor] = useState<ChatRecord | null>(null)
 
-  const { data, error, fetchNextPage, isLoading, hasNextPage, isFetchingNextPage } = useProjectsQuery({
-    refetchOnMount: false,
-  })
-  const projects = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
-  );
-  const isEmpty = !isLoading && !error && projects.length === 0;
+  const { data, error, fetchNextPage, isLoading, hasNextPage, isFetchingNextPage } =
+    useProjectsQuery({
+      refetchOnMount: false,
+    })
+  const projects = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data])
+  const isEmpty = !isLoading && !error && projects.length === 0
   const handleLoadMore = useCallback(() => {
-    fetchNextPage({ cancelRefetch: false });
-  }, [fetchNextPage]);
+    fetchNextPage({ cancelRefetch: false })
+  }, [fetchNextPage])
 
   return (
-    <Collapsible asChild defaultOpen className="group/collapsible">
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <Collapsible asChild defaultOpen className='group/collapsible'>
+      <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
         <CollapsibleTrigger asChild>
           <SidebarGroupLabel className='cursor-pointer relative'>
             <span>Projects</span>
-            <ChevronRight className="ml-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            <ChevronRight className='ml-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
             {projects.length > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <SidebarMenuAction
                     onClick={(e) => {
                       deleteAllDialog.open()
-                      e.stopPropagation();
+                      e.stopPropagation()
                     }}
                     className='text-muted-foreground group-data-[state=closed]/collapsible:hidden'
                   >
                     <Trash2 />
                   </SidebarMenuAction>
                 </TooltipTrigger>
-                <TooltipContent align="end" className="hidden md:block">
+                <TooltipContent align='end' className='hidden md:block'>
                   Delete all projects
                 </TooltipContent>
               </Tooltip>
@@ -82,13 +77,12 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
                 <span>New project</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {isLoading && (
+            {isLoading &&
               Array.from({ length: 2 }).map((_, index) => (
                 <SidebarMenuItem key={`project-skeleton-${index}`}>
                   <SidebarMenuSkeleton showIcon />
                 </SidebarMenuItem>
-              ))
-            )}
+              ))}
             {projects.map((project) => (
               <ProjectsSidebarItem
                 key={project.id}
@@ -103,16 +97,14 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
             ))}
             {isEmpty && (
               <SidebarMenuItem>
-                <div className="text-xs text-sidebar-foreground/70 px-2 py-1 whitespace-nowrap">
+                <div className='text-xs text-sidebar-foreground/70 px-2 py-1 whitespace-nowrap'>
                   Create a project to organize chats.
                 </div>
               </SidebarMenuItem>
             )}
             {error && (
               <SidebarMenuItem>
-                <div className="text-xs text-destructive px-2 py-1">
-                  Failed loading projects.
-                </div>
+                <div className='text-xs text-destructive px-2 py-1'>Failed loading projects.</div>
               </SidebarMenuItem>
             )}
             {isFetchingNextPage && (
@@ -125,14 +117,14 @@ export function ProjectsSidebar({ onUpsert }: ProjectSidebarProps) {
                 <SidebarMenuButton
                   size='sm'
                   tooltip='Load more projects'
-                  className="text-sidebar-foreground/70"
+                  className='text-sidebar-foreground/70'
                   disabled={isFetchingNextPage}
                   onClick={handleLoadMore}
                 >
                   {isFetchingNextPage ? (
                     <LoadingDots className='text-lg' />
                   ) : (
-                    <MoreHorizontal className="text-sidebar-foreground/70" />
+                    <MoreHorizontal className='text-sidebar-foreground/70' />
                   )}
                   <span>{isFetchingNextPage ? 'Loading' : 'More'}</span>
                 </SidebarMenuButton>

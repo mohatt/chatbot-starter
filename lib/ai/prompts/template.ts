@@ -25,7 +25,7 @@ export class PromptTemplate<Input extends Record<string, any> = {}> {
     }
 
     const input = args[0]
-    const params = format?.(input ?? {} as Input) ?? input ?? {}
+    const params = format?.(input ?? ({} as Input)) ?? input ?? {}
 
     // Parse if blocks e.g. {% if name %}Hi {{ name }}!{% endif %}
     const withConditionals = template.replace(
@@ -33,7 +33,7 @@ export class PromptTemplate<Input extends Record<string, any> = {}> {
       (_block, key: string, content: string) => {
         const value = params[key]
         return value != null && value !== '' && value !== false ? content : ''
-      }
+      },
     )
 
     // Parse template vars e.g. {{ name }}
@@ -50,7 +50,7 @@ export class PromptTemplate<Input extends Record<string, any> = {}> {
     return {
       id: generateUUID(),
       role: this.options.as ?? 'system',
-      parts: [{ type: 'text', text: this.toString(...args) }]
+      parts: [{ type: 'text', text: this.toString(...args) }],
     }
   }
 }

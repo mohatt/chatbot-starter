@@ -12,55 +12,53 @@ export interface SourcesProps {
 }
 
 export function Sources({ children, className }: SourcesProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
     if (!api) return
 
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap() + 1)
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap() + 1)
+    })
+  }, [api])
 
   return (
     <div className={cn('group inline items-center gap-1', className)}>
       <Popover>
         <PopoverTrigger asChild>
-          <Badge className="hover:bg-secondary/80" variant='secondary' asChild>
+          <Badge className='hover:bg-secondary/80' variant='secondary' asChild>
             <button type='button'>Sources</button>
           </Badge>
         </PopoverTrigger>
-        <PopoverContent className="relative w-80 p-0" align='start' side='top'>
-          <Carousel className="w-full" setApi={setApi}>
-            <div className="flex items-center justify-between gap-2 rounded-t-md bg-secondary p-2">
+        <PopoverContent className='relative w-80 p-0' align='start' side='top'>
+          <Carousel className='w-full' setApi={setApi}>
+            <div className='flex items-center justify-between gap-2 rounded-t-md bg-secondary p-2'>
               <button
-                type="button"
-                className="shrink-0"
-                aria-label="Previous"
+                type='button'
+                className='shrink-0'
+                aria-label='Previous'
                 onClick={() => api?.scrollPrev()}
               >
-                <ArrowLeftIcon className="size-4 text-muted-foreground" />
+                <ArrowLeftIcon className='size-4 text-muted-foreground' />
               </button>
               <button
-                type="button"
-                className="shrink-0"
-                aria-label="Next"
+                type='button'
+                className='shrink-0'
+                aria-label='Next'
                 onClick={() => api?.scrollNext()}
               >
-                <ArrowRightIcon className="size-4 text-muted-foreground" />
+                <ArrowRightIcon className='size-4 text-muted-foreground' />
               </button>
-              <div className="flex flex-1 items-center justify-end px-3 py-1 text-muted-foreground text-xs">
+              <div className='flex flex-1 items-center justify-end px-3 py-1 text-muted-foreground text-xs'>
                 {current}/{count}
               </div>
             </div>
-            <CarouselContent>
-              {children}
-            </CarouselContent>
+            <CarouselContent>{children}</CarouselContent>
           </Carousel>
         </PopoverContent>
       </Popover>
@@ -91,7 +89,7 @@ function extractSourceProps(item: SourceUrlItem | SourceFileItem) {
     const title = item.name
     let subtitle: ReactNode = null
     let description: ReactNode = item.mimeType
-    const isImage = item.mimeType.startsWith('image/');
+    const isImage = item.mimeType.startsWith('image/')
     if (item.url) {
       if (isImage) {
         subtitle = item.mimeType
@@ -99,10 +97,10 @@ function extractSourceProps(item: SourceUrlItem | SourceFileItem) {
       } else {
         subtitle = (
           <Link
-            className="flex items-center gap-2 hover:underline"
+            className='flex items-center gap-2 hover:underline'
             href={item.url}
-            rel="noreferrer"
-            target="_blank"
+            rel='noreferrer'
+            target='_blank'
           >
             <span>Open</span>
             <SquareArrowOutUpRightIcon className='size-3' />
@@ -117,10 +115,10 @@ function extractSourceProps(item: SourceUrlItem | SourceFileItem) {
     title: item.title || item.url,
     subtitle: (
       <Link
-        className="flex items-center gap-2 hover:underline"
+        className='flex items-center gap-2 hover:underline'
         href={item.url}
-        rel="noreferrer"
-        target="_blank"
+        rel='noreferrer'
+        target='_blank'
       >
         <span>{new URL(item.url).hostname}</span>
         <SquareArrowOutUpRightIcon className='size-3' />
@@ -131,17 +129,17 @@ function extractSourceProps(item: SourceUrlItem | SourceFileItem) {
 }
 
 export function SourceItem({ item, className }: SourceItemProps) {
-  const { title, subtitle, description } = extractSourceProps(item);
+  const { title, subtitle, description } = extractSourceProps(item)
   return (
-    <div className={cn("min-w-full space-y-2 p-4 pl-8", className)}>
+    <div className={cn('min-w-full space-y-2 p-4 pl-8', className)}>
       <div className='space-y-1'>
-        <h4 className="truncate font-medium text-sm leading-tight">{title}</h4>
-        {subtitle && (
-          <p className="truncate break-all text-muted-foreground text-xs">{subtitle}</p>
+        <h4 className='truncate font-medium text-sm leading-tight'>{title}</h4>
+        {subtitle && <p className='truncate break-all text-muted-foreground text-xs'>{subtitle}</p>}
+        {description && (
+          <p className='line-clamp-3 text-muted-foreground text-sm leading-relaxed'>
+            {description}
+          </p>
         )}
-        {description && <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
-          {description}
-        </p>}
       </div>
     </div>
   )

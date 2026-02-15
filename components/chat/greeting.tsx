@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion'
 import { Suggestion } from '@/components/ai-elements/suggestion'
 import { cn } from '@/lib/utils'
 import type { UseChatResult } from './hooks'
@@ -9,7 +9,7 @@ export const ChatGreeting = () => {
     <>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="font-semibold text-xl md:text-2xl"
+        className='font-semibold text-xl md:text-2xl'
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.4 }}
@@ -18,7 +18,7 @@ export const ChatGreeting = () => {
       </motion.div>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="text-xl text-zinc-500 md:text-2xl"
+        className='text-xl text-zinc-500 md:text-2xl'
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.6 }}
@@ -26,25 +26,25 @@ export const ChatGreeting = () => {
         How can I help you today?
       </motion.div>
     </>
-  );
-};
+  )
+}
 
 const suggestions = [
-  "What are the latest trends in AI?",
-  "How does machine learning work?",
-  "Explain quantum computing",
-  "Best practices for React development",
-  "Tell me about TypeScript benefits",
-  "How to optimize database queries?",
-  "What is the difference between SQL and NoSQL?",
-  "Explain cloud computing basics",
-  "What are the advantages of using Next.js?",
+  'What are the latest trends in AI?',
+  'How does machine learning work?',
+  'Explain quantum computing',
+  'Best practices for React development',
+  'Tell me about TypeScript benefits',
+  'How to optimize database queries?',
+  'What is the difference between SQL and NoSQL?',
+  'Explain cloud computing basics',
+  'What are the advantages of using Next.js?',
   "Write code to demonstrate Dijkstra's algorithm",
-  "Help me write an essay about Silicon Valley",
-];
+  'Help me write an essay about Silicon Valley',
+]
 
 export interface ChatSuggestionsProps extends Pick<UseChatResult, 'sendMessage'> {
-  className?: string;
+  className?: string
 }
 
 export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps) {
@@ -52,11 +52,11 @@ export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps
     suggestions
       .slice()
       .sort(() => Math.random() - 0.5)
-      .slice(0, 4)
-  );
+      .slice(0, 4),
+  )
 
   return (
-    <div className={cn("grid w-full gap-3 sm:grid-cols-2", className)}>
+    <div className={cn('grid w-full gap-3 sm:grid-cols-2', className)}>
       {randomSuggestions.current.map((suggestion, index) => (
         <motion.div
           key={suggestion}
@@ -66,10 +66,10 @@ export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps
           transition={{ delay: 0.5 + 0.05 * index }}
         >
           <Suggestion
-            className="h-auto w-full whitespace-normal p-3 text-left"
+            className='h-auto w-full whitespace-normal p-3 text-left'
             suggestion={suggestion}
             onClick={(text) => {
-              void sendMessage({ text });
+              void sendMessage({ text })
             }}
           >
             {suggestion}
@@ -77,5 +77,5 @@ export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps
         </motion.div>
       ))}
     </div>
-  );
+  )
 }

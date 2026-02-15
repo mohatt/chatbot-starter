@@ -1,5 +1,5 @@
-import { AuthView } from "@daveyplate/better-auth-ui"
-import { authViewPaths } from "@daveyplate/better-auth-ui/server"
+import { AuthView } from '@daveyplate/better-auth-ui'
+import { authViewPaths } from '@daveyplate/better-auth-ui/server'
 
 export const dynamicParams = false
 
@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export default async function AuthPage({ params }: PageProps<'/auth/[path]'>) {
   const { path } = await params
   return (
-    <main className="flex items-center justify-center h-screen">
+    <main className='flex items-center justify-center h-screen'>
       <AuthView path={path} />
     </main>
   )

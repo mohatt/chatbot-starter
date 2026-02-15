@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* include auth ui styles */
-@import "@daveyplate/better-auth-ui/css";
+@import '@daveyplate/better-auth-ui/css';
 
 /* include utility classes in streamdown */
 @source "../node_modules/streamdown/dist/*.js";
@@ -157,7 +157,7 @@
     @apply bg-background text-foreground;
   }
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
 }

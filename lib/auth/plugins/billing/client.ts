@@ -1,9 +1,9 @@
-import type { BetterAuthClientPlugin } from "better-auth/client";
-import type { billing } from "./index";
+import type { BetterAuthClientPlugin } from 'better-auth/client'
+import type { billing } from './index'
 
-export function billingClient(){
+export function billingClient() {
   return {
-    id: "billing",
+    id: 'billing',
     $InferServerPlugin: {} as ReturnType<typeof billing>,
-  } satisfies BetterAuthClientPlugin;
+  } satisfies BetterAuthClientPlugin
 }

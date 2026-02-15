@@ -34,6 +34,6 @@ export function listFiles({ project, api }: ChatContext) {
           return { id, name, mimeType, size, url, metadata, createdAt }
         })
       },
-    })
+    }),
   } satisfies ToolSet
 }

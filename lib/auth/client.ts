@@ -14,10 +14,10 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
     secret: env.AUTH_SECRET,
     trustedOrigins: [config.baseUrl],
     database: drizzleAdapter(db.client, {
-      provider: "pg",
+      provider: 'pg',
       camelCase: true,
       usePlural: true,
-      schema: authSchema
+      schema: authSchema,
     }),
     emailAndPassword: {
       enabled: true,
@@ -31,8 +31,8 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
         afterDelete: async (_user) => {
           // We rely on FK cascades for projects and chats
           // As for files, userId FK will be set to NULL and mark them as orphaned (cronjob will clean them up)
-        }
-      }
+        },
+      },
     },
     session: {
       cookieCache: {
@@ -45,8 +45,8 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
         generateId: 'uuid',
       },
       ipAddress: {
-        ipAddressHeaders: ["x-forwarded-for", "x-real-ip"],
-      }
+        ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
+      },
     },
     plugins: [
       anonymous({
@@ -56,13 +56,13 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
           const toId = newUser.user.id
           console.log('Moving app data from anonymous user to the new user', { fromId, toId })
           await db.client.transaction(async (tx) => {
-            const projects = db.projects.withDb(tx);
-            const chats = db.chats.withDb(tx);
-            const files = db.files.withDb(tx);
+            const projects = db.projects.withDb(tx)
+            const chats = db.chats.withDb(tx)
+            const files = db.files.withDb(tx)
 
-            await projects.moveOwnership(fromId, toId);
-            await chats.moveOwnership(fromId, toId);
-            await files.moveOwnership(fromId, toId);
+            await projects.moveOwnership(fromId, toId)
+            await chats.moveOwnership(fromId, toId)
+            await files.moveOwnership(fromId, toId)
           })
         },
       }),
@@ -78,7 +78,7 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
           throw new APIError('BAD_REQUEST', { message: 'Avatar image uploads are not allowed.' })
         }
       }),
-    }
-  });
+    },
+  })
   return auth
 }

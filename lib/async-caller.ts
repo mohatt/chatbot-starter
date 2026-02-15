@@ -1,47 +1,46 @@
-import PQueue, { type QueueAddOptions } from "p-queue";
-import pRetry, { type RetryContext } from "p-retry";
+import PQueue, { type QueueAddOptions } from 'p-queue'
+import pRetry, { type RetryContext } from 'p-retry'
 import { config } from '@/lib/config'
 
 const defaultFailedAttemptHandler = ({ error }: RetryContext) => {
   if (
-    error.message.startsWith("Cancel") ||
-    error.message.startsWith("AbortError") ||
-    error.name === "AbortError"
+    error.message.startsWith('Cancel') ||
+    error.message.startsWith('AbortError') ||
+    error.name === 'AbortError'
   ) {
-    throw error;
+    throw error
   }
-  if ((error as any)?.code === "ECONNABORTED") {
-    throw error;
+  if ((error as any)?.code === 'ECONNABORTED') {
+    throw error
   }
-  const status =
-    (error as any)?.response?.status ?? (error as any)?.status;
+  const status = (error as any)?.response?.status ?? (error as any)?.status
   if (status && !config.retryStatusCodes.includes(+status)) {
-    throw error;
+    throw error
   }
-  if ((error as any)?.error?.code === "insufficient_quota") {
-    const err = new Error(error?.message);
-    err.name = "InsufficientQuotaError";
-    throw err;
+  if ((error as any)?.error?.code === 'insufficient_quota') {
+    const err = new Error(error?.message)
+    err.name = 'InsufficientQuotaError'
+    throw err
   }
-};
+}
 
 export interface AsyncCallerOptions {
   /**
    * The maximum number of concurrent calls that can be made.
    * Defaults to `Infinity`, which means no limit.
    */
-  maxConcurrency?: number;
+  maxConcurrency?: number
   /**
    * The maximum number of retries that can be made for a single call,
    * with an exponential backoff between each attempt. Defaults to 6.
    */
-  maxRetries?: number;
+  maxRetries?: number
   /**
    * Custom handler to handle failed attempts. Takes the originally thrown
    * error object as input, and should itself throw an error if the input
    * error is not retryable.
    */
-  onFailedAttempt?: (ctx: RetryContext) => any | Promise<any>;
+  onFailedAttempt?: (ctx: RetryContext) => any | Promise<any>
 }
 
 /**
@@ -58,8 +57,8 @@ export interface AsyncCallerOptions {
  * exponential backoff between each attempt.
  */
 export class AsyncCaller {
-  private readonly options: Required<AsyncCallerOptions>;
-  private readonly queue: PQueue;
+  private readonly options: Required<AsyncCallerOptions>
+  private readonly queue: PQueue
 
   constructor(options: AsyncCallerOptions = {}) {
     this.options = {
@@ -68,14 +67,14 @@ export class AsyncCaller {
       onFailedAttempt: defaultFailedAttemptHandler,
       ...options,
     }
-    this.queue = new PQueue({ concurrency: this.options.maxConcurrency, });
+    this.queue = new PQueue({ concurrency: this.options.maxConcurrency })
   }
 
   async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
-    return this.callWithOptions({}, callable, ...args);
+    return this.callWithOptions({}, callable, ...args)
   }
 
   callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
@@ -89,24 +88,22 @@ export class AsyncCaller {
           () =>
             callable(...args).catch((error) => {
               if (error instanceof Error) {
-                throw error;
+                throw error
               } else {
-                throw new Error(error);
+                throw new Error(error)
               }
             }),
           {
             onFailedAttempt: this.options.onFailedAttempt,
             retries: this.options.maxRetries,
             randomize: true,
-          }
+          },
         ),
-      options
-    );
+      options,
+    )
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
-    return this.call(() =>
-      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
-    );
+    return this.call(() => fetch(...args).then((res) => (res.ok ? res : Promise.reject(res))))
   }
 }

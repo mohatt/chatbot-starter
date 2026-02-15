@@ -4,8 +4,8 @@ import { DbModel, type PaginatedResult } from './base'
 import { projects } from '../schema'
 import type { ChatRecord } from './chat'
 
-export type ChatProjectRecord = typeof projects.$inferSelect;
-export type ChatProjectRecordInput = Omit<typeof projects.$inferInsert, 'createdAt'>;
+export type ChatProjectRecord = typeof projects.$inferSelect
+export type ChatProjectRecordInput = Omit<typeof projects.$inferInsert, 'createdAt'>
 
 export interface ChatsByProjectRecord {
   project: ChatProjectRecord
@@ -13,14 +13,14 @@ export interface ChatsByProjectRecord {
 }
 
 export class ChatProjectModel extends DbModel {
-  readonly schema = projects;
+  readonly schema = projects
 
   async findById(id: string): Promise<ChatProjectRecord | null> {
     try {
-      const [selectedProject] = await this.db.select().from(projects).where(eq(projects.id, id));
-      return selectedProject ?? null;
+      const [selectedProject] = await this.db.select().from(projects).where(eq(projects.id, id))
+      return selectedProject ?? null
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to fetch project by id");
+      throw new AppError('bad_request:database', 'Failed to fetch project by id')
     }
   }
 
@@ -33,16 +33,20 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async updateByIdForUser(id: string, userId: string, project: Partial<Pick<ChatProjectRecordInput, 'name' | 'prompt'>>): Promise<ChatProjectRecord | null> {
+  async updateByIdForUser(
+    id: string,
+    userId: string,
+    project: Partial<Pick<ChatProjectRecordInput, 'name' | 'prompt'>>,
+  ): Promise<ChatProjectRecord | null> {
     try {
       const [updatedProject] = await this.db
         .update(projects)
         .set(project)
         .where(and(eq(projects.id, id), eq(projects.userId, userId)))
-        .returning();
+        .returning()
       return updatedProject ?? null
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to update project");
+      throw new AppError('bad_request:database', 'Failed to update project')
     }
   }
 
@@ -67,17 +71,16 @@ export class ChatProjectModel extends DbModel {
     }
   }
 
-  async findMany({ userId }: { userId: string }, limit: number, cursor?: string): Promise<PaginatedResult<ChatProjectRecord>> {
+  async findMany(
+    { userId }: { userId: string },
+    limit: number,
+    cursor?: string,
+  ): Promise<PaginatedResult<ChatProjectRecord>> {
     try {
       const rows = await this.db
         .select()
         .from(projects)
-        .where(
-          and(
-            eq(projects.userId, userId),
-            cursor ? lt(projects.id, cursor) : undefined,
-          ),
-        )
+        .where(and(eq(projects.userId, userId), cursor ? lt(projects.id, cursor) : undefined))
         .orderBy(desc(projects.id))
         .limit(limit + 1)
       const hasMore = rows.length > limit
@@ -96,21 +99,23 @@ export class ChatProjectModel extends DbModel {
       const moved = await this.db
         .update(projects)
         .set({ userId: toUserId })
-        .where(eq(projects.userId, fromUserId));
+        .where(eq(projects.userId, fromUserId))
       return moved.rowCount ?? 0
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to transfer projects ownership");
+      throw new AppError('bad_request:database', 'Failed to transfer projects ownership')
     }
   }
 
-  async findManyWithChats({ userId }: { userId: string }, limit: number, chatsLimit: number, cursor?: string): Promise<PaginatedResult<ChatsByProjectRecord>> {
+  async findManyWithChats(
+    { userId }: { userId: string },
+    limit: number,
+    chatsLimit: number,
+    cursor?: string,
+  ): Promise<PaginatedResult<ChatsByProjectRecord>> {
     try {
       const projectRows = await this.db.query.projects.findMany({
         where: (fields, $) =>
-          and(
-            $.eq(fields.userId, userId),
-            cursor ? $.lt(fields.id, cursor) : undefined,
-          ),
+          and($.eq(fields.userId, userId), cursor ? $.lt(fields.id, cursor) : undefined),
         orderBy: (fields, $) => [$.desc(fields.id)],
         limit: limit + 1,
         with: {
@@ -129,8 +134,7 @@ export class ChatProjectModel extends DbModel {
         const chatsForProject = projectWithChats.chats ?? []
         const hasMoreChats = chatsForProject.length > chatsLimit
         const chatData = hasMoreChats ? chatsForProject.slice(0, chatsLimit) : chatsForProject
-        const chatCursor =
-          hasMoreChats && chatData.length ? chatData[chatData.length - 1].id : null
+        const chatCursor = hasMoreChats && chatData.length ? chatData[chatData.length - 1].id : null
 
         const { chats: _unused, ...project } = projectWithChats
 

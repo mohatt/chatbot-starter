@@ -11,11 +11,7 @@ export default defineConfig({
     setupFiles: ['./tests/util/setup-test.ts'],
     coverage: {
       provider: 'v8',
-      include: [
-        'app/**/*.{ts,tsx}',
-        'lib/**/*.{ts,tsx}',
-        'components/**/*.{ts,tsx}',
-      ],
+      include: ['app/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}'],
     },
     chaiConfig: {
       truncateThreshold: 500,

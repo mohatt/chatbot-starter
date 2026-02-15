@@ -1,11 +1,16 @@
-'use client';
+'use client'
 import { useRef, useState, useEffect } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useQueryClient } from '@tanstack/react-query'
-import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from '@/components/ai-elements/conversation';
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
 import { toast } from 'sonner'
 import { DefaultChatTransport } from 'ai'
-import { type StickToBottomContext } from 'use-stick-to-bottom';
+import { type StickToBottomContext } from 'use-stick-to-bottom'
 import { fetchWithOfflineHandler, generateUUID, getTimeZone } from '@/lib/utils'
 import { LoadingDots } from '@/components/loading'
 import { ChatHeader } from './header'
@@ -21,7 +26,7 @@ import type { PostRequestBody } from '@/app/(chat)/api/chat/[id]/schema'
 import type { ModelUsage } from '@/lib/ai'
 
 export function Chat(props: ChatIdProps) {
-  const { id, projectId } = props;
+  const { id, projectId } = props
   const newChat = useNewChatRef(props)
   const isNewChat = newChat.current != null
   const [isStoredChat, setIsStoredChat] = useState(!isNewChat)
@@ -30,11 +35,19 @@ export function Chat(props: ChatIdProps) {
   const queryClient = useQueryClient()
   const { data: settings } = useClientSettings()
   const { mutate: addNewChatToCache } = useNewChatMutation()
-  const { data: chatData, error: chatDataError, isLoading: isChatDataLoading } = useChatQuery({
+  const {
+    data: chatData,
+    error: chatDataError,
+    isLoading: isChatDataLoading,
+  } = useChatQuery({
     variables: { id },
     enabled: isStoredChat,
   })
-  const { data: historyData, error: historyDataError, isLoading: isHistoryLoading } = useChatHistoryQuery({
+  const {
+    data: historyData,
+    error: historyDataError,
+    isLoading: isHistoryLoading,
+  } = useChatHistoryQuery({
     variables: { id },
     enabled: !isNewChat,
   })
@@ -60,7 +73,7 @@ export function Chat(props: ChatIdProps) {
           regenerate: req.trigger === 'regenerate-message' || req.messageId != null,
           model: settings.chatModel.key,
           projectId,
-          ...req.body
+          ...req.body,
         }
         return { body }
       }),
@@ -89,7 +102,7 @@ export function Chat(props: ChatIdProps) {
         pageParams: [null],
       })
     }),
-  });
+  })
   const statusRef = useRef(status)
   statusRef.current = status
 
@@ -164,12 +177,12 @@ export function Chat(props: ChatIdProps) {
 
   return (
     <>
-      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col">
+      <div className='overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col'>
         <ChatHeader chat={chatData ?? newChat.current?.chat} />
 
-        <div className="relative flex-1">
-          <div className="absolute inset-0">
-            <div className="h-full flex min-w-0 flex-col" >
+        <div className='relative flex-1'>
+          <div className='absolute inset-0'>
+            <div className='h-full flex min-w-0 flex-col'>
               <Conversation contextRef={scrollRef} initial='instant'>
                 {isDataLoading && (
                   <ConversationEmptyState>
@@ -193,7 +206,7 @@ export function Chat(props: ChatIdProps) {
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+        <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
           <ChatPrompt
             chatId={id}
             isPending={isDataLoading}
@@ -205,5 +218,5 @@ export function Chat(props: ChatIdProps) {
         </div>
       </div>
     </>
-  );
+  )
 }

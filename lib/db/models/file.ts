@@ -3,18 +3,18 @@ import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
 import { files, type FileRecordMetadata } from '../schema'
 
-export type FileRecord = typeof files.$inferSelect;
-export type FileRecordInput = Omit<typeof files.$inferInsert, 'createdAt'> & { userId: string };
+export type FileRecord = typeof files.$inferSelect
+export type FileRecordInput = Omit<typeof files.$inferInsert, 'createdAt'> & { userId: string }
 
 export class FileModel extends DbModel {
-  readonly schema = files;
+  readonly schema = files
 
   async create(file: FileRecordInput): Promise<FileRecord> {
     try {
-      const [insertedFile] = await this.db.insert(files).values(file).returning();
+      const [insertedFile] = await this.db.insert(files).values(file).returning()
       return insertedFile
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to create new file");
+      throw new AppError('bad_request:database', 'Failed to create new file')
     }
   }
 
@@ -23,17 +23,22 @@ export class FileModel extends DbModel {
       const [selectedFile] = await this.db
         .select()
         .from(files)
-        .where(and(eq(files.id, id), eq(files.userId, userId)));
-      return selectedFile ?? null;
+        .where(and(eq(files.id, id), eq(files.userId, userId)))
+      return selectedFile ?? null
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to fetch file by id");
+      throw new AppError('bad_request:database', 'Failed to fetch file by id')
     }
   }
 
-  async findMany(filters: { projectId: string } | { orphan: boolean }, limit = 50, cursor?: string | null): Promise<PaginatedResult<FileRecord>> {
-    const where = 'projectId' in filters
-      ? eq(files.projectId, filters.projectId)
-      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
+  async findMany(
+    filters: { projectId: string } | { orphan: boolean },
+    limit = 50,
+    cursor?: string | null,
+  ): Promise<PaginatedResult<FileRecord>> {
+    const where =
+      'projectId' in filters
+        ? eq(files.projectId, filters.projectId)
+        : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
 
     try {
       const rows = await this.db
@@ -54,14 +59,12 @@ export class FileModel extends DbModel {
   }
 
   async countMany(filters: { projectId: string } | { orphan: boolean }): Promise<number> {
-    const where = 'projectId' in filters
-      ? eq(files.projectId, filters.projectId)
-      : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
+    const where =
+      'projectId' in filters
+        ? eq(files.projectId, filters.projectId)
+        : or(isNull(files.userId), and(isNull(files.projectId), isNull(files.messageId)))
     try {
-      const [result] = await this.db
-        .select({ value: count() })
-        .from(files)
-        .where(where)
+      const [result] = await this.db.select({ value: count() }).from(files).where(where)
       return result.value
     } catch (_error) {
       throw new AppError('bad_request:database', 'Failed to count files')
@@ -69,29 +72,33 @@ export class FileModel extends DbModel {
   }
 
   async findByIdsForUser(ids: string[], userId: string): Promise<FileRecord[]> {
-    if (ids.length === 0) return [];
+    if (ids.length === 0) return []
     try {
       const rows = await this.db
         .select()
         .from(files)
-        .where(and(inArray(files.id, ids), eq(files.userId, userId)));
-      return rows;
+        .where(and(inArray(files.id, ids), eq(files.userId, userId)))
+      return rows
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to fetch user files");
+      throw new AppError('bad_request:database', 'Failed to fetch user files')
     }
   }
 
-  async updateByIdsForUser(ids: string[], userId: string, values: { chatId: string; messageId: string }): Promise<FileRecord[]> {
-    if (ids.length === 0) return [];
+  async updateByIdsForUser(
+    ids: string[],
+    userId: string,
+    values: { chatId: string; messageId: string },
+  ): Promise<FileRecord[]> {
+    if (ids.length === 0) return []
     try {
       const updatedFiles = await this.db
         .update(files)
         .set(values)
         .where(and(inArray(files.id, ids), eq(files.userId, userId)))
-        .returning();
-      return updatedFiles;
+        .returning()
+      return updatedFiles
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to update user files");
+      throw new AppError('bad_request:database', 'Failed to update user files')
     }
   }
 
@@ -100,10 +107,10 @@ export class FileModel extends DbModel {
       const [deletedFile] = await this.db
         .delete(files)
         .where(and(eq(files.id, id), eq(files.userId, userId)))
-        .returning();
-      return deletedFile ?? null;
+        .returning()
+      return deletedFile ?? null
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to delete user file by id");
+      throw new AppError('bad_request:database', 'Failed to delete user file by id')
     }
   }
 
@@ -115,7 +122,7 @@ export class FileModel extends DbModel {
         .returning({ id: files.id })
       return deletedRows.map((row) => row.id)
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to batch delete files by ids");
+      throw new AppError('bad_request:database', 'Failed to batch delete files by ids')
     }
   }
 
@@ -124,10 +131,10 @@ export class FileModel extends DbModel {
       const moved = await this.db
         .update(files)
         .set({ userId: toUserId })
-        .where(eq(files.userId, fromUserId));
+        .where(eq(files.userId, fromUserId))
       return moved.rowCount ?? 0
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to transfer files ownership");
+      throw new AppError('bad_request:database', 'Failed to transfer files ownership')
     }
   }
 }

@@ -3,7 +3,10 @@ import type { FileLoaderDoc } from '@/lib/document'
 import type { FileRecord } from '@/lib/db'
 
 // File record coming from db
-export type FileToolRecord = Pick<FileRecord, 'id' | 'name' | 'mimeType' | 'url' | 'size' | 'metadata' | 'createdAt'>
+export type FileToolRecord = Pick<
+  FileRecord,
+  'id' | 'name' | 'mimeType' | 'url' | 'size' | 'metadata' | 'createdAt'
+>
 
 // File metadata coming from vector db
 export type FileToolLoaderRecord = FileLoaderDoc['metadata']['file'] & { chunkCount?: number }
@@ -30,16 +33,17 @@ export type FileToolModelOutput = {
   tota_pages?: number
 }
 
-export function createFileToolModelOutput(file: FileToolRecord | FileToolLoaderRecord): FileToolModelOutput {
+export function createFileToolModelOutput(
+  file: FileToolRecord | FileToolLoaderRecord,
+): FileToolModelOutput {
   const isImage = file.mimeType.startsWith('image/')
   const isPdf = file.mimeType === 'application/pdf'
   let record: FileToolModelOutput = {
     file_id: file.id,
     file_name: file.name,
     media_type: file.mimeType,
-    read_file_command: isImage || isPdf
-      ? `function_call:read_file(file_id: ${file.id})`
-      : undefined,
+    read_file_command:
+      isImage || isPdf ? `function_call:read_file(file_id: ${file.id})` : undefined,
     read_file_text_command: isImage
       ? undefined
       : `function_call:read_file_text(file_id: ${file.id})`,

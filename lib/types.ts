@@ -10,7 +10,7 @@ export interface AppConfig {
   chat: {
     title: {
       model: ModelKey
-      fallback: string,
+      fallback: string
       maxGeneratedLength: number
     }
     message: {

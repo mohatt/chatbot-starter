@@ -10,21 +10,21 @@ import { toast } from 'sonner'
 export interface DeleteAllProjectsDialogProps extends BaseDialogProps {}
 
 export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
-  const { open, onOpenChange } = props;
+  const { open, onOpenChange } = props
   const { mutate, error, isPending } = useDeleteProjectsMutation()
   const { activeProjectId } = useAppParams()
-  const router = useRouter();
+  const router = useRouter()
 
   const handleDelete = useCallback(() => {
     mutate(undefined, {
       onSuccess: () => {
-        onOpenChange(false);
+        onOpenChange(false)
         if (activeProjectId) {
-          router.replace("/");
+          router.replace('/')
         }
         setTimeout(() => {
           toast.success('All projects deleted successfully.')
-        }, 100);
+        }, 100)
       },
       onError: (err) => {
         toast.error(err.message)
@@ -38,7 +38,11 @@ export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
       onOpenChange={onOpenChange}
       onSubmit={handleDelete}
       title='Delete all projects?'
-      description={<>This will delete <b>all your projects</b>.</>}
+      description={
+        <>
+          This will delete <b>all your projects</b>.
+        </>
+      }
       submit='Delete All'
       variant='destructive'
       error={error && 'Failed to delete all projects.'}
@@ -49,8 +53,8 @@ export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
         <AlertTitle>Warning</AlertTitle>
         <AlertDescription>
           <p>
-            This will permanently delete all your projects and their chats from our servers.
-            This action cannot be undone.
+            This will permanently delete all your projects and their chats from our servers. This
+            action cannot be undone.
           </p>
         </AlertDescription>
       </Alert>
@@ -63,12 +67,6 @@ export function useDeleteAllProjectsDialog() {
   return {
     open,
     close,
-    render: () => (
-      <DeleteAllProjectsDialog
-        key={key}
-        open={isOpen}
-        onOpenChange={setIsOpen}
-      />
-    )
+    render: () => <DeleteAllProjectsDialog key={key} open={isOpen} onOpenChange={setIsOpen} />,
   }
 }

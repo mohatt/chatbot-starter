@@ -11,7 +11,7 @@ import {
   MessageAttachments,
   MessageAttachment,
 } from '@/components/ai-elements/message'
-import { Streamdown } from "streamdown";
+import { Streamdown } from 'streamdown'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
 import {
   Item,
@@ -20,13 +20,13 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item"
+} from '@/components/ui/item'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupTextarea,
   InputGroupButton,
-} from "@/components/ui/input-group"
+} from '@/components/ui/input-group'
 import {
   AlertCircleIcon,
   RefreshCwIcon,
@@ -35,7 +35,7 @@ import {
   PencilIcon,
   BrainIcon,
 } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Sources, SourceItem, type SourceFileItem, type SourceUrlItem } from './sources'
 import { ModelMessageInfo } from './message-info'
@@ -43,14 +43,17 @@ import type { OpenaiResponsesTextProviderMetadata } from '@ai-sdk/openai'
 import type { ChatTools, ModelUsage } from '@/lib/ai'
 import type { UseChatResult } from './hooks'
 
-export interface ChatMessagesProps extends Pick<UseChatResult, 'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'>{
-  isReadonly: boolean;
+export interface ChatMessagesProps extends Pick<
+  UseChatResult,
+  'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'
+> {
+  isReadonly: boolean
   modelUsageMap: Record<string, ModelUsage>
 }
 
 export function ChatMessages(props: ChatMessagesProps) {
   const { isReadonly, messages, modelUsageMap, sendMessage, regenerate, status, error } = props
-  const [editorId, setEditorId] = useState<string | null>(null);
+  const [editorId, setEditorId] = useState<string | null>(null)
   const totalCount = messages.length
   const isStreaming = status === 'streaming'
   return (
@@ -91,8 +94,8 @@ export function ChatMessages(props: ChatMessagesProps) {
           />
         )
       })}
-      {status === "submitted" && <ThinkingMessage />}
-      {(status === "error" || error) && <ErrorMessage error={error} regenerate={regenerate} />}
+      {status === 'submitted' && <ThinkingMessage />}
+      {(status === 'error' || error) && <ErrorMessage error={error} regenerate={regenerate} />}
     </>
   )
 }
@@ -117,7 +120,16 @@ interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessa
 }
 
 function ChatMessage(props: ChatMessageProps) {
-  const { message, modelUsage, editorId, isReadonly, isStreaming = false, regenerate, sendMessage, setEditorId } = props
+  const {
+    message,
+    modelUsage,
+    editorId,
+    isReadonly,
+    isStreaming = false,
+    regenerate,
+    sendMessage,
+    setEditorId,
+  } = props
   const { id, role, parts, metadata } = message
   const { copyToClipboard, isCopied } = useCopyToClipboard()
   const scrollContext = useStickToBottomContext()
@@ -126,11 +138,11 @@ function ChatMessage(props: ChatMessageProps) {
   const isEditMode = editorId === id
 
   const { groupedParts, textParts, sources } = useMemo(() => {
-    type Part = typeof message['parts'][0]
+    type Part = (typeof message)['parts'][0]
     type FilePart = Extract<Part, { type: 'file' }>
     type ThinkPart = Extract<Part, { type: `tool-${string}` | 'reasoning' }>
     type TextPart = Extract<Part, { type: 'text' }>
-    type GroupPart = { type: 'files', group: FilePart[] } | { type: 'thinking', group: ThinkPart[] }
+    type GroupPart = { type: 'files'; group: FilePart[] } | { type: 'thinking'; group: ThinkPart[] }
 
     const $newParts: Array<Exclude<Part, FilePart | ThinkPart> | GroupPart> = []
     const $textParts: TextPart[] = []
@@ -143,7 +155,10 @@ function ChatMessage(props: ChatMessageProps) {
       $newParts.push(current)
       current = null
     }
-    const addPart = <T extends GroupPart['type']>(type: T, part: Extract<GroupPart, { type: T }>['group'][0]) => {
+    const addPart = <T extends GroupPart['type']>(
+      type: T,
+      part: Extract<GroupPart, { type: T }>['group'][0],
+    ) => {
       if (current?.type !== type) {
         flush()
         current = { type, group: [part as any] }
@@ -152,8 +167,8 @@ function ChatMessage(props: ChatMessageProps) {
       current.group.push(part as any)
     }
 
-    if(metadata?.files?.length) {
-      metadata.files.forEach(file => {
+    if (metadata?.files?.length) {
+      metadata.files.forEach((file) => {
         addPart('files', {
           type: 'file',
           filename: file.name,
@@ -202,7 +217,7 @@ function ChatMessage(props: ChatMessageProps) {
       if (part.type === 'text') {
         const providerMetadata = part.providerMetadata as
           | OpenaiResponsesTextProviderMetadata
-          | undefined;
+          | undefined
         // Get sources for openai web search results
         providerMetadata?.openai?.annotations?.forEach((item) => {
           if (item.type === 'url_citation') {
@@ -219,13 +234,19 @@ function ChatMessage(props: ChatMessageProps) {
       groupedParts: $newParts,
       textParts: $textParts,
       fileRefs: $fileRefs,
-      sources: [...Object.values($fileRefs), ...Object.values($urlRefs)]
+      sources: [...Object.values($fileRefs), ...Object.values($urlRefs)],
     }
   }, [parts, metadata])
 
   const hasTextParts = textParts.length > 0
   return (
-    <Message from={role} className={cn('justify-start [&>*:first-child]:mt-0', (isAssistant || isEditMode) && 'max-w-full')}>
+    <Message
+      from={role}
+      className={cn(
+        'justify-start [&>*:first-child]:mt-0',
+        (isAssistant || isEditMode) && 'max-w-full',
+      )}
+    >
       {groupedParts.map((part, i) => {
         if (part.type === 'files') {
           return (
@@ -238,9 +259,14 @@ function ChatMessage(props: ChatMessageProps) {
         }
 
         if (part.type === 'thinking') {
-          const isGroupStreaming = isStreaming && groupedParts[i+1] === undefined
+          const isGroupStreaming = isStreaming && groupedParts[i + 1] === undefined
           return (
-            <Reasoning key={`${i}-thinking`} isStreaming={isGroupStreaming} defaultOpen={showThinkingRef.current} className='mt-4'>
+            <Reasoning
+              key={`${i}-thinking`}
+              isStreaming={isGroupStreaming}
+              defaultOpen={showThinkingRef.current}
+              className='mt-4'
+            >
               <ReasoningTrigger />
               <ReasoningContent className='flex flex-col gap-4'>
                 {part.group.map((tPart, j) => {
@@ -260,8 +286,16 @@ function ChatMessage(props: ChatMessageProps) {
                     )
                   }
                   return (
-                    <Tool key={`${i}-${tPart.type}-${j}`} className='w-fit max-w-full border-0 mb-0'>
-                      <ToolHeader state={tPart.state} type={tPart.type} title={toolTitles[tPart.type]} className='p-0 w-fit' />
+                    <Tool
+                      key={`${i}-${tPart.type}-${j}`}
+                      className='w-fit max-w-full border-0 mb-0'
+                    >
+                      <ToolHeader
+                        state={tPart.state}
+                        type={tPart.type}
+                        title={toolTitles[tPart.type]}
+                        className='p-0 w-fit'
+                      />
                       <ToolContent>
                         <ToolInput input={tPart.input} />
                         <ToolOutput errorText={tPart.errorText} output={tPart.output} />
@@ -271,7 +305,7 @@ function ChatMessage(props: ChatMessageProps) {
                 })}
               </ReasoningContent>
             </Reasoning>
-          );
+          )
         }
 
         if (part.type === 'text') {
@@ -309,37 +343,42 @@ function ChatMessage(props: ChatMessageProps) {
                   {part.text}
                 </Streamdown>
               ) : (
-                <p className='whitespace-pre-wrap'>
-                  {part.text}
-                </p>
+                <p className='whitespace-pre-wrap'>{part.text}</p>
               )}
             </MessageContent>
-          );
+          )
         }
       })}
       {!isStreaming && !isEditMode && (
-        <MessageActions className={cn('text-muted-foreground gap-0', isAssistant ? 'justify-start mt-1' : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto')}>
+        <MessageActions
+          className={cn(
+            'text-muted-foreground gap-0',
+            isAssistant
+              ? 'justify-start mt-1'
+              : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto',
+          )}
+        >
           {hasTextParts && (
             <MessageAction
               onClick={() => copyToClipboard(textParts.map(({ text }) => text).join(''))}
-              label="Copy"
-              title="Copy"
+              label='Copy'
+              title='Copy'
               size='icon-sm'
               className={isCopied ? 'pointer-events-none' : ''}
             >
-              {isCopied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+              {isCopied ? <CheckIcon className='size-4' /> : <CopyIcon className='size-4' />}
             </MessageAction>
           )}
-          {!isReadonly && (
-            isAssistant ? (
+          {!isReadonly &&
+            (isAssistant ? (
               <>
                 <MessageAction
                   onClick={() => regenerate({ messageId: id })}
-                  label="Retry"
-                  title="Retry"
+                  label='Retry'
+                  title='Retry'
                   size='icon-sm'
                 >
-                  <RefreshCwIcon className="size-4" />
+                  <RefreshCwIcon className='size-4' />
                 </MessageAction>
               </>
             ) : (
@@ -351,16 +390,15 @@ function ChatMessage(props: ChatMessageProps) {
                       scrollContext.stopScroll()
                       setEditorId(id)
                     }}
-                    label="Edit"
-                    title="Edit"
+                    label='Edit'
+                    title='Edit'
                     size='icon-sm'
                   >
-                    <PencilIcon className="size-4" />
+                    <PencilIcon className='size-4' />
                   </MessageAction>
                 )}
               </>
-            )
-          )}
+            ))}
           {metadata && 'model' in metadata && (
             <ModelMessageInfo metadata={metadata} usage={modelUsage} className='ml-1' />
           )}
@@ -388,17 +426,19 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
   const [input, setInput] = useState(initialValue)
   return (
     <InputGroup>
-      <InputGroupTextarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <InputGroupAddon align="block-end">
-        <InputGroupButton className="ml-auto" size="sm" variant="secondary" onClick={() => onCancel()}>
+      <InputGroupTextarea value={input} onChange={(e) => setInput(e.target.value)} />
+      <InputGroupAddon align='block-end'>
+        <InputGroupButton
+          className='ml-auto'
+          size='sm'
+          variant='secondary'
+          onClick={() => onCancel()}
+        >
           Cancel
         </InputGroupButton>
         <InputGroupButton
-          size="sm"
-          variant="default"
+          size='sm'
+          variant='default'
           disabled={!input.trim()}
           onClick={() => {
             void onSubmit(input.trim())
@@ -412,25 +452,21 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
   )
 }
 
-function ErrorMessage(props: Pick<UseChatResult, 'error' | 'regenerate'>){
+function ErrorMessage(props: Pick<UseChatResult, 'error' | 'regenerate'>) {
   const { error, regenerate } = props
   return (
     <Message from='assistant'>
       <MessageContent>
-        <Item variant="outline" className='min-w-md'>
-          <ItemMedia variant="icon">
+        <Item variant='outline' className='min-w-md'>
+          <ItemMedia variant='icon'>
             <AlertCircleIcon className='text-destructive' />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Failed generating a response</ItemTitle>
-            {error && (
-              <ItemDescription>
-                {error.message}
-              </ItemDescription>
-            )}
+            {error && <ItemDescription>{error.message}</ItemDescription>}
           </ItemContent>
           <ItemActions>
-            <Button size="sm" variant="outline" onClick={() => regenerate()}>
+            <Button size='sm' variant='outline' onClick={() => regenerate()}>
               <RefreshCwIcon className='size-3.5' /> Retry
             </Button>
           </ItemActions>
@@ -440,15 +476,15 @@ function ErrorMessage(props: Pick<UseChatResult, 'error' | 'regenerate'>){
   )
 }
 
-function ThinkingMessage(){
+function ThinkingMessage() {
   return (
     <Message from='assistant'>
-      <div className="flex items-center gap-2">
-        <div className="animate-pulse">
-          <BrainIcon className="size-4" />
+      <div className='flex items-center gap-2'>
+        <div className='animate-pulse'>
+          <BrainIcon className='size-4' />
         </div>
-        <div className="flex w-full flex-col gap-2 md:gap-4"></div>
+        <div className='flex w-full flex-col gap-2 md:gap-4'></div>
       </div>
     </Message>
-  );
+  )
 }

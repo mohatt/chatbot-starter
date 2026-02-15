@@ -1,4 +1,4 @@
-'use client';
+'use client'
 import { useMemo } from 'react'
 import { useAppParams } from '@/hooks/use-app-params'
 import { useChatsQuery } from '@/api/hooks/chats'
@@ -17,13 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Folder,
-  FolderOpen,
-  MoreHorizontal,
-  Trash2,
-  Settings,
-} from 'lucide-react'
+import { Folder, FolderOpen, MoreHorizontal, Trash2, Settings } from 'lucide-react'
 import { LoadingDots } from '@/components/loading'
 import { ChatListItem } from '@/components/chat/list-item'
 import { cn, getProjectUrl } from '@/lib/utils'
@@ -33,36 +27,34 @@ import type { ChatProjectRecord, ChatRecord } from '@/lib/db'
 const MAX_CHATS_SLICE = 5
 
 export interface ProjectsSidebarItemProps {
-  project: ChatProjectRecord;
+  project: ChatProjectRecord
   onEdit: (project: ChatProjectRecord) => void
-  onDelete: (project: ChatProjectRecord) => void;
-  onChatEdit: (chat: ChatRecord | null) => void;
-  onChatDelete: (chat: ChatRecord) => void;
-  onChatSettings: (chat: ChatRecord) => void;
+  onDelete: (project: ChatProjectRecord) => void
+  onChatEdit: (chat: ChatRecord | null) => void
+  onChatDelete: (chat: ChatRecord) => void
+  onChatSettings: (chat: ChatRecord) => void
   activeChatEditId: ChatRecord | null
 }
 
 export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
-  const { project, onEdit, onDelete, onChatEdit, onChatDelete, onChatSettings, activeChatEditId } = props
-  const { isMobile, setOpenMobile } = useSidebar();
-  const { activeProjectId, activeChatId } = useAppParams();
+  const { project, onEdit, onDelete, onChatEdit, onChatDelete, onChatSettings, activeChatEditId } =
+    props
+  const { isMobile, setOpenMobile } = useSidebar()
+  const { activeProjectId, activeChatId } = useAppParams()
   const { data, isLoading } = useChatsQuery({
     variables: { projectId: project.id },
   })
 
-  const { chats, hasMore } = useMemo(
-    () => {
-      const fp = data?.pages[0]
-      return {
-        chats: fp?.data.slice(0, MAX_CHATS_SLICE) ?? [],
-        hasMore: !!fp && (fp.data.length > MAX_CHATS_SLICE || fp.nextCursor != null),
-      }
-    },
-    [data],
-  );
+  const { chats, hasMore } = useMemo(() => {
+    const fp = data?.pages[0]
+    return {
+      chats: fp?.data.slice(0, MAX_CHATS_SLICE) ?? [],
+      hasMore: !!fp && (fp.data.length > MAX_CHATS_SLICE || fp.nextCursor != null),
+    }
+  }, [data])
 
   return (
-    <Collapsible className="group/collapsible-sub" defaultOpen asChild>
+    <Collapsible className='group/collapsible-sub' defaultOpen asChild>
       <SidebarMenuItem>
         <SidebarMenuButton isActive={project.id === activeProjectId} asChild>
           <div>
@@ -70,8 +62,8 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
               <LoadingDots />
             ) : (
               <CollapsibleTrigger>
-                <Folder className="size-4 group-data-[state=open]/collapsible-sub:hidden" />
-                <FolderOpen className="size-4 group-data-[state=closed]/collapsible-sub:hidden" />
+                <Folder className='size-4 group-data-[state=open]/collapsible-sub:hidden' />
+                <FolderOpen className='size-4 group-data-[state=closed]/collapsible-sub:hidden' />
               </CollapsibleTrigger>
             )}
             <Link
@@ -99,7 +91,7 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
             ))}
             {hasMore && (
               <SidebarMenuItem>
-                <SidebarMenuButton size='sm' className="text-sidebar-foreground/70" asChild>
+                <SidebarMenuButton size='sm' className='text-sidebar-foreground/70' asChild>
                   <Link href={getProjectUrl(project)}>
                     <span>See All</span>
                   </Link>
@@ -112,21 +104,21 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuAction showOnHover>
               <MoreHorizontal />
-              <span className="sr-only">More</span>
+              <span className='sr-only'>More</span>
             </SidebarMenuAction>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-44 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align={isMobile ? "end" : "start"}
+            className='w-44 rounded-lg'
+            side={isMobile ? 'bottom' : 'right'}
+            align={isMobile ? 'end' : 'start'}
           >
             <DropdownMenuItem onClick={() => onEdit(project)}>
-              <Settings className="text-muted-foreground" />
+              <Settings className='text-muted-foreground' />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant='destructive' onClick={() => onDelete(project)}>
-              <Trash2 className="text-muted-foreground" />
+              <Trash2 className='text-muted-foreground' />
               <span>Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

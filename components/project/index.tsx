@@ -1,12 +1,13 @@
-'use client';
+'use client'
 import { useMemo, useState } from 'react'
 import { useProjectQuery } from '@/api/hooks/projects'
 import { useChatsQuery } from '@/api/hooks/chats'
 import { useFilesQuery } from '@/api/hooks/files'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { Item, ItemActions, ItemTitle } from "@/components/ui/item"
+import { Item, ItemActions, ItemTitle } from '@/components/ui/item'
 import {
-  DropdownMenu, DropdownMenuContent,
+  DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -21,7 +22,8 @@ import {
   FilePlusCorner,
   MoreHorizontal,
   Trash2,
-  Settings, CircleAlert,
+  Settings,
+  CircleAlert,
 } from 'lucide-react'
 import { ChatListItem } from '@/components/chat/list-item'
 import { useChatSettingsDialog } from '@/components/chat/dialogs/settings'
@@ -38,30 +40,39 @@ export interface ProjectIndexProps extends Pick<NewChatChildProps, 'sendMessage'
 }
 
 export function ProjectIndex({ id }: ProjectIndexProps) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
   const deleteDialog = useDeleteProjectDialog()
   const upsertDialog = useProjectUpsertDialog()
   const filesDialog = useProjectFilesDialog()
   const deleteAllChatsDialog = useDeleteAllChatsDialog()
-  const chatSettingsDialog = useChatSettingsDialog();
-  const deleteChatDialog = useDeleteChatDialog();
-  const [chatTitleEditor, setChatTitleEditor] = useState<ChatRecord | null>(null);
+  const chatSettingsDialog = useChatSettingsDialog()
+  const deleteChatDialog = useDeleteChatDialog()
+  const [chatTitleEditor, setChatTitleEditor] = useState<ChatRecord | null>(null)
 
-  const { data: project, error: projectError, isLoading: projectLoading } = useProjectQuery({
-    variables: { id }
+  const {
+    data: project,
+    error: projectError,
+    isLoading: projectLoading,
+  } = useProjectQuery({
+    variables: { id },
   })
-  const { data: files, error: filesError, isLoading: filesLoading } = useFilesQuery({
-    variables: { projectId: id }
+  const {
+    data: files,
+    error: filesError,
+    isLoading: filesLoading,
+  } = useFilesQuery({
+    variables: { projectId: id },
   })
-  const { data: chatsData, error: chatsError, isLoading: chatsLoading } = useChatsQuery({
-    variables: { projectId: id }
+  const {
+    data: chatsData,
+    error: chatsError,
+    isLoading: chatsLoading,
+  } = useChatsQuery({
+    variables: { projectId: id },
   })
-  const chats = useMemo(
-    () => chatsData?.pages.flatMap((page) => page.data) ?? [],
-    [chatsData],
-  );
+  const chats = useMemo(() => chatsData?.pages.flatMap((page) => page.data) ?? [], [chatsData])
   const isDataLoading = projectLoading || chatsLoading
-  const dataError = projectError || filesError || chatsError;
+  const dataError = projectError || filesError || chatsError
 
   if (isDataLoading) {
     return (
@@ -89,8 +100,8 @@ export function ProjectIndex({ id }: ProjectIndexProps) {
           <ItemTitle className='flex-1 min-w-0 text-2xl'>
             <FolderClosed className='shrink-0' />
             <button
-              name="project-title"
-              aria-label="Edit the title of this project"
+              name='project-title'
+              aria-label='Edit the title of this project'
               className='min-w-0 truncate'
               onClick={() => upsertDialog.open(project!)}
             >
@@ -100,16 +111,16 @@ export function ProjectIndex({ id }: ProjectIndexProps) {
           <DropdownMenu>
             <ItemActions>
               {files?.length ? (
-                <Button variant="outline" onClick={() => filesDialog.open(project)}>
+                <Button variant='outline' onClick={() => filesDialog.open(project)}>
                   <FilesIcon />
                   <span>Files</span>
-                  <Badge className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums">
+                  <Badge className='h-5 min-w-5 rounded-full px-1 font-mono tabular-nums'>
                     {files.length}
                   </Badge>
                 </Button>
               ) : (
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => filesDialog.open(project)}
                   disabled={filesLoading}
                 >
@@ -118,28 +129,31 @@ export function ProjectIndex({ id }: ProjectIndexProps) {
                 </Button>
               )}
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant='outline' size='icon'>
                   <MoreHorizontal />
-                  <span className="sr-only">More</span>
+                  <span className='sr-only'>More</span>
                 </Button>
               </DropdownMenuTrigger>
             </ItemActions>
             <DropdownMenuContent
-              className="w-44 rounded-lg"
-              side={isMobile ? "bottom" : "right"}
-              align={isMobile ? "end" : "start"}
+              className='w-44 rounded-lg'
+              side={isMobile ? 'bottom' : 'right'}
+              align={isMobile ? 'end' : 'start'}
             >
               <DropdownMenuItem onClick={() => upsertDialog.open(project)}>
-                <Settings className="text-muted-foreground" />
+                <Settings className='text-muted-foreground' />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant='destructive' onClick={() => deleteAllChatsDialog.open(project)}>
-                <Trash2 className="text-muted-foreground" />
+              <DropdownMenuItem
+                variant='destructive'
+                onClick={() => deleteAllChatsDialog.open(project)}
+              >
+                <Trash2 className='text-muted-foreground' />
                 <span>Delete all chats</span>
               </DropdownMenuItem>
               <DropdownMenuItem variant='destructive' onClick={() => deleteDialog.open(project)}>
-                <Trash2 className="text-muted-foreground" />
+                <Trash2 className='text-muted-foreground' />
                 <span>Delete project</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -160,7 +174,7 @@ export function ProjectIndex({ id }: ProjectIndexProps) {
             />
           ))}
           {chats.length === 0 && (
-            <div className="text-muted-foreground text-xl">
+            <div className='text-muted-foreground text-xl'>
               Chats in this project will appear here.
             </div>
           )}

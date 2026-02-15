@@ -1,4 +1,4 @@
-"use client";
+'use client'
 import { type ReactNode, useEffect } from 'react'
 import { isServer, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { config } from '@/lib/config'
@@ -12,7 +12,7 @@ function makeQueryClient() {
             return false
           }
           return failures < 3
-        }
+        },
       },
       queries: {
         // With SSR, we usually want to set some default staleTime
@@ -51,13 +51,9 @@ export function ApiClientProvider({ children }: { children: ReactNode }) {
   // Activate React Query Devtools in development
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+      window.__TANSTACK_QUERY_CLIENT__ = queryClient
     }
   }, [])
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }

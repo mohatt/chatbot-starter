@@ -1,13 +1,13 @@
-"use client";
+'use client'
 import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { createAuthClient } from "better-auth/react"
-import { anonymousClient } from "better-auth/client/plugins"
+import { createAuthClient } from 'better-auth/react'
+import { anonymousClient } from 'better-auth/client/plugins'
 import { useQueryClient } from '@tanstack/react-query'
 import { billingClient } from '@/lib/auth/plugins/billing/client'
-import { AuthUIProvider, useAuthenticate } from "@daveyplate/better-auth-ui"
+import { AuthUIProvider, useAuthenticate } from '@daveyplate/better-auth-ui'
 import { LoadingDots } from '@/components/loading'
-import Link from "next/link"
+import Link from 'next/link'
 
 export const authClient = createAuthClient({
   plugins: [anonymousClient(), billingClient()],
@@ -59,33 +59,28 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    void signIn()
-      .then((signedIn) => {
-        if (signedIn) {
-          return setSuccess(true)
-        }
+    void signIn().then((signedIn) => {
+      if (signedIn) {
+        return setSuccess(true)
+      }
 
-        const { search, pathname } = window.location
-        const searchParams = new URLSearchParams(search)
-        const redirectTo = searchParams.get("redirectTo") || pathname + search
-        router.replace(`/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`)
-      })
+      const { search, pathname } = window.location
+      const searchParams = new URLSearchParams(search)
+      const redirectTo = searchParams.get('redirectTo') || pathname + search
+      router.replace(`/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`)
+    })
   }, [loading, router])
 
   if (loading !== false || !success) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className='flex items-center justify-center h-screen'>
         <LoadingDots className='text-4xl' />
       </div>
     )
   }
 
   console.log('guest login done')
-  return (
-    <AuthProvider>
-      {children}
-    </AuthProvider>
-  )
+  return <AuthProvider>{children}</AuthProvider>
 }
 
 export function useAuth() {

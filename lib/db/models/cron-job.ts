@@ -4,16 +4,16 @@ import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
 import { cronJobs } from '../schema'
 
-export type CronJobRecord = typeof cronJobs.$inferSelect;
+export type CronJobRecord = typeof cronJobs.$inferSelect
 
 export class CronJobModel extends DbModel {
-  readonly schema = cronJobs;
+  readonly schema = cronJobs
 
   async acquireLock(id: string, ttl: number): Promise<CronJobRecord | null> {
     try {
-      const lockId = randomUUID();
-      const lockedAt = new Date();
-      const staleBefore = new Date(lockedAt.getTime() - ttl);
+      const lockId = randomUUID()
+      const lockedAt = new Date()
+      const staleBefore = new Date(lockedAt.getTime() - ttl)
       const [row] = await this.db
         .insert(cronJobs)
         .values({
@@ -35,10 +35,10 @@ export class CronJobModel extends DbModel {
             OR ${cronJobs.lockedAt} IS NULL
             OR ${cronJobs.lockedAt} < ${staleBefore}`,
         })
-        .returning();
-      return row ?? null;
+        .returning()
+      return row ?? null
     } catch (_error) {
-      throw new AppError('bad_request:database', 'Failed to acquire cron job lock');
+      throw new AppError('bad_request:database', 'Failed to acquire cron job lock')
     }
   }
 
@@ -53,12 +53,9 @@ export class CronJobModel extends DbModel {
           lockedAt: null,
           completedAt: new Date(),
         })
-        .where(and(
-          eq(cronJobs.id, id),
-          eq(cronJobs.lockId, lockId),
-        ));
+        .where(and(eq(cronJobs.id, id), eq(cronJobs.lockId, lockId)))
     } catch (_error) {
-      throw new AppError('bad_request:database', 'Failed to complete cron job run');
+      throw new AppError('bad_request:database', 'Failed to complete cron job run')
     }
   }
 }

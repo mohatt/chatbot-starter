@@ -59,7 +59,7 @@ export class ModelsRegistry {
       },
     })
     if (!cost) {
-      throw new Error(`Unable to calculate usage for model ${id}`);
+      throw new Error(`Unable to calculate usage for model ${id}`)
     }
     return {
       tokens: {

@@ -29,9 +29,7 @@ export function ModelMessageInfo(props: ModelMessageInfoProps) {
     if (!usage) return null
     const { tokens, cost } = usage
     const tokensLabel = tokens.total != null ? `${formatUsageTokens(tokens.total)} tokens` : null
-    const costLabel = cost.total != null && cost.total > 0
-      ? formatUsageCost(cost.total)
-      : null
+    const costLabel = cost.total != null && cost.total > 0 ? formatUsageCost(cost.total) : null
     if (tokensLabel && costLabel) return `${tokensLabel} · ${costLabel}`
     return tokensLabel ?? costLabel ?? null
   }, [usage])
@@ -40,33 +38,29 @@ export function ModelMessageInfo(props: ModelMessageInfoProps) {
     <div className={cn('group inline items-center', className)}>
       <Popover>
         <PopoverTrigger asChild>
-          <MessageAction
-            label="Model Info"
-            title="Model Info"
-            size='icon-sm'
-          >
-            <InfoIcon className="size-4" />
+          <MessageAction label='Model Info' title='Model Info' size='icon-sm'>
+            <InfoIcon className='size-4' />
           </MessageAction>
         </PopoverTrigger>
-        <PopoverContent className="relative w-80 p-0" align='start' side='top'>
-          <div className="flex items-center gap-2 rounded-t-md bg-secondary p-3 text-muted-foreground text-xs">
+        <PopoverContent className='relative w-80 p-0' align='start' side='top'>
+          <div className='flex items-center gap-2 rounded-t-md bg-secondary p-3 text-muted-foreground text-xs'>
             Model Info
           </div>
           <div className='space-y-2 p-3 font-medium text-sm'>
             <div className='flex items-center gap-2'>
-              <span>
-                {modelInfo?.name ?? metadata.model?.id ?? 'Unknown model'}
-              </span>
+              <span>{modelInfo?.name ?? metadata.model?.id ?? 'Unknown model'}</span>
               {metadata.model?.modifiers.thinking && (
-                <Badge variant='secondary' className='text-[0.7rem]'>thinking</Badge>
+                <Badge variant='secondary' className='text-[0.7rem]'>
+                  thinking
+                </Badge>
               )}
               {metadata.model?.modifiers.webSearch && (
-                <Badge variant='secondary' className='text-[0.7rem]'>web search</Badge>
+                <Badge variant='secondary' className='text-[0.7rem]'>
+                  web search
+                </Badge>
               )}
             </div>
-            {usageInfo && (
-              <div className='text-muted-foreground'>{usageInfo}</div>
-            )}
+            {usageInfo && <div className='text-muted-foreground'>{usageInfo}</div>}
           </div>
         </PopoverContent>
       </Popover>

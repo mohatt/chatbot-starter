@@ -4,7 +4,7 @@ import { config } from '@/lib/config'
 
 const clientSettingsKey = 'client-settings'
 const clientSettingsSchema = z.object({
-  chatModel: config.chat.models.getKeySchema()
+  chatModel: config.chat.models.getKeySchema(),
 })
 const defaultClientSettings = clientSettingsSchema.parse({})
 

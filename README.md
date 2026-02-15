@@ -54,7 +54,7 @@ Other env vars are provisioned by Vercel and can be pulled locally with:
 ```bash
 # Install Vercel CLI
 pnpm i -g vercel
-# Link local instance with Vercel and GitHub accounts 
+# Link local instance with Vercel and GitHub accounts
 vercel link
 # Download your environment variables locally
 vercel env pull .env.development.local
@@ -75,6 +75,7 @@ This will sync the current schema in [`lib/db/schema`](./lib/db/schema)` to your
 ### 5. Review app configurations
 
 Most app configurations live in [`lib/config.ts`](./lib/config.ts), including:
+
 - AI models registry and defaults
 - Chat limits (message parts, history)
 - File upload rules and size limits

@@ -12,8 +12,8 @@ export interface ChatContext {
   model: ResolvedModelEntry
   modelMeta: ModelMeta
   project?: ChatProjectRecord | null
-  message: ChatMessage;
-  dataStream: UIMessageStreamWriter<ChatMessage>;
+  message: ChatMessage
+  dataStream: UIMessageStreamWriter<ChatMessage>
   timeZone: string
   location?: Geo
 }

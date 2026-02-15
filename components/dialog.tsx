@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   AlertDialog as BaseAlertDialog,
   AlertDialogCancel,
@@ -23,17 +23,17 @@ import { LoadingDots } from '@/components/loading'
 import { CircleAlert } from 'lucide-react'
 
 export interface BaseDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 export interface ComposedDialogProps extends BaseDialogProps {
-  title: string;
-  onSubmit: () => void | Promise<void>;
-  description?: ReactNode;
-  children?: ReactNode;
-  submit?: string;
-  cancel?: string;
+  title: string
+  onSubmit: () => void | Promise<void>
+  description?: ReactNode
+  children?: ReactNode
+  submit?: string
+  cancel?: string
   error?: string | null
   isPending?: boolean
   isReady?: boolean
@@ -44,7 +44,20 @@ export interface AlertDialogProps extends ComposedDialogProps {
 }
 
 export function AlertDialog(props: AlertDialogProps) {
-  const { open, onOpenChange, title, description, submit = 'Ok', cancel = 'Cancel', children, onSubmit, variant, error, isPending, isReady = true } = props
+  const {
+    open,
+    onOpenChange,
+    title,
+    description,
+    submit = 'Ok',
+    cancel = 'Cancel',
+    children,
+    onSubmit,
+    variant,
+    error,
+    isPending,
+    isReady = true,
+  } = props
   return (
     <BaseAlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -52,10 +65,10 @@ export function AlertDialog(props: AlertDialogProps) {
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
-        {children && <div data-slot="alert-dialog-body">{children}</div>}
+        {children && <div data-slot='alert-dialog-body'>{children}</div>}
         <AlertDialogFooter className='sm:items-center'>
           {error && (
-            <div className="flex items-center gap-2 grow text-sm text-destructive">
+            <div className='flex items-center gap-2 grow text-sm text-destructive'>
               <CircleAlert className='size-4' />
               <span className='w-full'>{error}</span>
             </div>
@@ -84,34 +97,42 @@ export function AlertDialog(props: AlertDialogProps) {
 export interface FormDialogProps extends ComposedDialogProps {}
 
 export function FormDialog(props: FormDialogProps) {
-  const { open, onOpenChange, title, description, submit = 'Save', cancel = 'Cancel', children, onSubmit, error, isPending, isReady = true } = props
+  const {
+    open,
+    onOpenChange,
+    title,
+    description,
+    submit = 'Save',
+    cancel = 'Cancel',
+    children,
+    onSubmit,
+    error,
+    isPending,
+    isReady = true,
+  } = props
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className='sm:max-w-3xl'>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div data-slot="dialog-body">{children}</div>
+        <div data-slot='dialog-body'>{children}</div>
         <DialogFooter className='sm:items-center'>
           {error && (
-            <div className="flex items-center gap-2 grow text-sm text-destructive">
+            <div className='flex items-center gap-2 grow text-sm text-destructive'>
               <CircleAlert className='size-4' />
               <span className='w-full'>{error}</span>
             </div>
           )}
           {cancel && (
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isPending}>
+              <Button type='button' variant='outline' disabled={isPending}>
                 {cancel}
               </Button>
             </DialogClose>
           )}
-          <Button
-            type='button'
-            disabled={isPending || !isReady}
-            onClick={onSubmit}
-          >
+          <Button type='button' disabled={isPending || !isReady} onClick={onSubmit}>
             {isPending && <LoadingDots />}
             {submit}
           </Button>
@@ -120,7 +141,6 @@ export function FormDialog(props: FormDialogProps) {
     </Dialog>
   )
 }
-
 
 export function useDialogState() {
   const id = useId()

@@ -13,10 +13,9 @@ export class Storage {
 
   async upload(id: string, file: FileUpload, metadata: StorageMetadata) {
     const pathname = this.createPathname(id, file, metadata)
-    return put(pathname, file.blob, { access: 'public' })
-      .catch((err) => {
-        throw new AppError('internal:file', err)
-      });
+    return put(pathname, file.blob, { access: 'public' }).catch((err) => {
+      throw new AppError('internal:file', err)
+    })
   }
 
   async delete(pathname: string) {
@@ -50,12 +49,14 @@ export class Storage {
     if (pathParts.length !== 5) return null
 
     const [v, ns, nsId, bucket, filename] = pathParts
-    if (v !== 'v1'
-      || !['c', 'p'].includes(ns)
-      || !uuidV7.safeParse(nsId).success
-      || !filename
-      || !bucket
-    ) return null
+    if (
+      v !== 'v1' ||
+      !['c', 'p'].includes(ns) ||
+      !uuidV7.safeParse(nsId).success ||
+      !filename ||
+      !bucket
+    )
+      return null
 
     const dotIndex = filename.lastIndexOf('.')
     if (dotIndex <= 0) return null

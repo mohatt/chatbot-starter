@@ -4,33 +4,27 @@ import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api/hooks/
 import { useSidebar } from '@/components/ui/sidebar'
 import { generateUUID, getProjectUrl } from '@/lib/utils'
 import { toast } from 'sonner'
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSet,
-} from '@/components/ui/field'
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
 import { Alert, AlertTitle } from '@/components/ui/alert'
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { FormDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
 import type { ChatProjectRecord } from '@/lib/db'
 import type { AppError } from '@/lib/errors'
 
 export interface ProjectUpsertDialogProps extends BaseDialogProps {
-  project: ChatProjectRecord | null;
+  project: ChatProjectRecord | null
 }
 
 export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
-  const { project, open, onOpenChange } = props;
-  const [name, setName] = useState(project?.name ?? '');
-  const [prompt, setPrompt] = useState(project?.prompt ?? '');
+  const { project, open, onOpenChange } = props
+  const [name, setName] = useState(project?.name ?? '')
+  const [prompt, setPrompt] = useState(project?.prompt ?? '')
   const createMutation = useCreateProjectMutation()
   const updateMutation = useUpdateProjectMutation()
   const { mutateAsync, reset, error, isPending } = project ? updateMutation : createMutation
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile } = useSidebar()
   const router = useRouter()
 
   // handle project object updated due to cache invalidation
@@ -41,7 +35,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   }, [project, reset])
 
   const handleSubmit = () => {
-    if(isPending) return
+    if (isPending) return
 
     mutateAsync({
       id: project?.id ?? generateUUID(),
@@ -50,16 +44,16 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
     })
       .then((result) => {
         onOpenChange(false)
-        if(!project) {
+        if (!project) {
           router.push(getProjectUrl(result))
         }
         setTimeout(() => {
-          if(!project) {
+          if (!project) {
             // New project dialogs are opened from the sidebar
             setOpenMobile(false)
           }
           toast.success(`Project ${project ? 'updated' : 'added'} successfully.`)
-        }, 100);
+        }, 100)
       })
       .catch((err: AppError) => {
         toast.error(err.message)
@@ -76,32 +70,35 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       submit='Save'
       error={error && 'Failed to save project.'}
       isPending={isPending}
-      isReady={!!name.trim() && (name.trim() !== project?.name || prompt.trim() !== (project?.prompt ?? ''))}
+      isReady={
+        !!name.trim() &&
+        (name.trim() !== project?.name || prompt.trim() !== (project?.prompt ?? ''))
+      }
     >
       <FieldGroup>
         <FieldSet>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Name *</FieldLabel>
+              <FieldLabel htmlFor='name'>Name *</FieldLabel>
               <Input
-                id="name"
-                type="text"
-                placeholder="Enter Project Name"
+                id='name'
+                type='text'
+                placeholder='Enter Project Name'
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="prompt">Instructions</FieldLabel>
+              <FieldLabel htmlFor='prompt'>Instructions</FieldLabel>
               <FieldDescription>
                 How can the chat bot best help you with this project?
               </FieldDescription>
               <Textarea
-                id="prompt"
+                id='prompt'
                 value={prompt}
-                placeholder="e.g. “Respond in Spanish. Reference the latest JavaScript documentation. Keep answers short and focused."
-                onChange={e => setPrompt(e.target.value)}
-                className="min-h-50"
+                placeholder='e.g. “Respond in Spanish. Reference the latest JavaScript documentation. Keep answers short and focused.'
+                onChange={(e) => setPrompt(e.target.value)}
+                className='min-h-50'
               />
               {!project && (
                 <Alert className='text-muted-foreground'>
@@ -122,18 +119,16 @@ export function useProjectUpsertDialog() {
   const [project, setProject] = useState<ChatProjectRecord | null>(null)
 
   return {
-    open: useCallback((target: ChatProjectRecord | null) => {
-      setProject(target)
-      open()
-    }, [open]),
+    open: useCallback(
+      (target: ChatProjectRecord | null) => {
+        setProject(target)
+        open()
+      },
+      [open],
+    ),
     close,
     render: () => (
-      <ProjectUpsertDialog
-        key={key}
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        project={project}
-      />
-    )
+      <ProjectUpsertDialog key={key} open={isOpen} onOpenChange={setIsOpen} project={project} />
+    ),
   }
 }

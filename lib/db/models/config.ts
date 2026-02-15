@@ -3,11 +3,13 @@ import { AppError } from '@/lib/errors'
 import { DbModel } from './base'
 import { configs } from '../schema'
 
-export type ConfigRecord<V> = typeof configs.$inferSelect & { value: V | null };
-export type ConfigRecordInput<V> = Omit<typeof configs.$inferInsert, 'updatedAt'> & { value: V | null };
+export type ConfigRecord<V> = typeof configs.$inferSelect & { value: V | null }
+export type ConfigRecordInput<V> = Omit<typeof configs.$inferInsert, 'updatedAt'> & {
+  value: V | null
+}
 
 export class ConfigModel extends DbModel {
-  readonly schema = configs;
+  readonly schema = configs
 
   async upsert<V>(input: ConfigRecordInput<V>) {
     try {
@@ -33,22 +35,19 @@ export class ConfigModel extends DbModel {
       const [selectedRow] = await this.db
         .select()
         .from(configs)
-        .where(and(eq(configs.group, group), eq(configs.key, key)));
-      return (selectedRow ?? null) as ConfigRecord<V> | null;
+        .where(and(eq(configs.group, group), eq(configs.key, key)))
+      return (selectedRow ?? null) as ConfigRecord<V> | null
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to fetch config by group/key");
+      throw new AppError('bad_request:database', 'Failed to fetch config by group/key')
     }
   }
 
   async findByGroup<V>(group: string) {
     try {
-      const rows = await this.db
-        .select()
-        .from(configs)
-        .where(eq(configs.group, group));
-      return rows as ConfigRecord<V>[];
+      const rows = await this.db.select().from(configs).where(eq(configs.group, group))
+      return rows as ConfigRecord<V>[]
     } catch (_error) {
-      throw new AppError("bad_request:database", "Failed to fetch configs by group");
+      throw new AppError('bad_request:database', 'Failed to fetch configs by group')
     }
   }
 }

@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { loadEnv, type Env } from './env'
 import { AI } from './ai'
@@ -56,7 +56,7 @@ export class Api {
   }
 
   static getInstance() {
-    return this.instance ??= new Api()
+    return (this.instance ??= new Api())
   }
 }
 
@@ -72,11 +72,14 @@ export interface ApiHandlerOptions {
   namespace?: RouteNamespace
 }
 
-export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHandlerParams<T>) => Response| Promise<Response>, options?: ApiHandlerOptions) {
+export function createApiHandler<T extends RouteContext<any>>(
+  fn: (params: ApiHandlerParams<T>) => Response | Promise<Response>,
+  options?: ApiHandlerOptions,
+) {
   const ns = options?.namespace ?? 'api'
   return async (request: NextRequest, ctx: T): Promise<Response> => {
     try {
-      const api = Api.getInstance();
+      const api = Api.getInstance()
       const params = await ctx.params
       return await fn({
         api,
@@ -88,11 +91,11 @@ export function createApiHandler<T extends RouteContext<any>>(fn: (params: ApiHa
             throw new AppError(`unauthorized:${ns}`)
           }
           return session as AuthSession
-        }
+        },
       })
     } catch (error) {
       if (error instanceof AppError) {
-        return error.toResponse();
+        return error.toResponse()
       }
       if (error instanceof z.ZodError) {
         const firstIssue = error.issues[0]

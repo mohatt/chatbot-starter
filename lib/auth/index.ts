@@ -1,4 +1,4 @@
-import { headers } from 'next/headers';
+import { headers } from 'next/headers'
 import { createAuthClient } from './client'
 import type { NextRequest } from 'next/server'
 import type { Env } from '@/lib/env'

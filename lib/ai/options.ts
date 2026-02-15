@@ -8,7 +8,7 @@ export function createChatOptions({ model, modelMeta }: ChatContext): Record<str
   const { vendor, id } = model
   const isReasoning = model.key.modifiers.thinking === true
 
-  if(vendor === 'google') {
+  if (vendor === 'google') {
     const v2_5 = id.startsWith('google/gemini-2.5')
     const v3 = id.startsWith('google/gemini-3')
     return {
@@ -16,33 +16,35 @@ export function createChatOptions({ model, modelMeta }: ChatContext): Record<str
         // https://ai.google.dev/gemini-api/docs/thinking#javascript
         thinkingConfig: {
           includeThoughts: isReasoning,
-          ...(v3 ? {
-            // For reasoning let the model decide how much thinking to use (dynamic)
-            thinkingLevel: isReasoning ? undefined : 'low'
-          } : v2_5 ? {
-            thinkingBudget: isReasoning ? undefined : 1024
-          } : {}),
+          ...(v3
+            ? {
+                // For reasoning let the model decide how much thinking to use (dynamic)
+                thinkingLevel: isReasoning ? undefined : 'low',
+              }
+            : v2_5
+              ? {
+                  thinkingBudget: isReasoning ? undefined : 1024,
+                }
+              : {}),
         },
-      } satisfies GoogleGenerativeAIProviderOptions
+      } satisfies GoogleGenerativeAIProviderOptions,
     }
   }
 
-  if(vendor === 'anthropic') {
+  if (vendor === 'anthropic') {
     return {
       anthropic: {
         // https://platform.claude.com/docs/en/build-with-claude/extended-thinking
-        thinking: isReasoning
-          ? { type: "enabled", budgetTokens: 10_240 }
-          : undefined,
-      } satisfies AnthropicProviderOptions
+        thinking: isReasoning ? { type: 'enabled', budgetTokens: 10_240 } : undefined,
+      } satisfies AnthropicProviderOptions,
     }
   }
 
-  if(vendor === 'openai') {
+  if (vendor === 'openai') {
     return {
       openai: {
-        reasoningEffort: isReasoning ? 'medium' : (modelMeta.reasoning ? 'low' : undefined),
-        reasoningSummary: isReasoning ? 'auto' : undefined
+        reasoningEffort: isReasoning ? 'medium' : modelMeta.reasoning ? 'low' : undefined,
+        reasoningSummary: isReasoning ? 'auto' : undefined,
       } satisfies OpenAIResponsesProviderOptions,
     }
   }

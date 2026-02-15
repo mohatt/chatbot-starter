@@ -24,13 +24,13 @@ export class Billing {
     const periodRecord = await periodModel.ensureCurrent(user.billingId!, {
       tier,
       maxChatUsage,
-    });
+    })
     const period = this.createPeriod(periodRecord)
     const update = periodModel.updateById.bind(periodModel, periodRecord.id)
     return {
       period,
-      update: async (...args: Parameters<typeof update>) => update(...args)
-        .then((updated) => updated != null ? this.createPeriod(updated) : null)
+      update: async (...args: Parameters<typeof update>) =>
+        update(...args).then((updated) => (updated != null ? this.createPeriod(updated) : null)),
     }
   }
 
@@ -40,7 +40,8 @@ export class Billing {
   }
 
   private createPeriod(record: BillingPeriodRecord): BillingPeriod {
-    const { id, tier, billingId, year, month, chatUsage, maxChatUsage, createdAt, updatedAt } = record;
+    const { id, tier, billingId, year, month, chatUsage, maxChatUsage, createdAt, updatedAt } =
+      record
 
     // Calculate period start and end dates (UTC, first day of the month)
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0))

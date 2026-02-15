@@ -6,19 +6,21 @@ import type { ChatContext } from '../context'
 // Using a symbol to prevent it from being stored to db
 const textChunks = Symbol('textChunks')
 
-export type ReadFileTextOutput = FileToolLoaderRecord & {
-  chunkCount: number
-  [textChunks]: {
-    text: string
-    index: number
-    page_number?: number
-  }[]
-} | null
+export type ReadFileTextOutput =
+  | (FileToolLoaderRecord & {
+      chunkCount: number
+      [textChunks]: {
+        text: string
+        index: number
+        page_number?: number
+      }[]
+    })
+  | null
 
 export function readFileText({ api, chat }: ChatContext) {
   return {
     read_file_text: tool({
-      description: 'Can be used to read all text chunks for a user file (doesn\'t work on images).',
+      description: "Can be used to read all text chunks for a user file (doesn't work on images).",
       inputSchema: z.object({
         file_id: z.uuid().describe('The user file ID.'),
       }),
@@ -42,7 +44,7 @@ export function readFileText({ api, chat }: ChatContext) {
       },
       async execute({ file_id }): Promise<ReadFileTextOutput> {
         const filter = `file.id = '${file_id}' AND userId = '${chat.userId}'`
-        const results = await api.vectorDb.files.query('any', 50, filter);
+        const results = await api.vectorDb.files.query('any', 50, filter)
         let result: ReadFileTextOutput = null
         if (results.length > 0) {
           const sortedResults = results

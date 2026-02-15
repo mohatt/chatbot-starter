@@ -13,9 +13,9 @@ export const useChatHistoryQuery = createInfiniteQuery({
   queryKey: ['chatHistory'],
   initialPageParam: null as string | null,
   fetcher: async (vars: { id: string }, { pageParam }) => {
-    const query = new URLSearchParams();
-    if (pageParam) query.set('before', pageParam);
-    const url = `/api/chat/${vars.id}/history${query.size > 0 ? `?${query.toString()}` : ''}`;
+    const query = new URLSearchParams()
+    if (pageParam) query.set('before', pageParam)
+    const url = `/api/chat/${vars.id}/history${query.size > 0 ? `?${query.toString()}` : ''}`
     return fetcher<PaginatedResult<ChatMessage>>(url)
   },
   getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -26,10 +26,10 @@ export const useChatsQuery = createInfiniteQuery({
   queryKey: ['chats'],
   initialPageParam: null as string | null,
   fetcher: async (vars: { projectId: string | null }, { pageParam, client }) => {
-    const query = new URLSearchParams({ limit: String(25) });
-    if (vars.projectId != null) query.set('projectId', vars.projectId);
-    if (pageParam) query.set('cursor', pageParam);
-    const url = `/api/chat/history${query.size > 0 ? `?${query.toString()}` : ''}`;
+    const query = new URLSearchParams({ limit: String(25) })
+    if (vars.projectId != null) query.set('projectId', vars.projectId)
+    if (pageParam) query.set('cursor', pageParam)
+    const url = `/api/chat/history${query.size > 0 ? `?${query.toString()}` : ''}`
     const result = await fetcher<PaginatedResult<ChatRecord>>(url)
     for (const chat of result.data) {
       client.setQueryData(useChatQuery.getKey({ id: chat.id }), chat)
@@ -46,19 +46,19 @@ export const useUpdateChatMutation = createMutation({
     return fetcher<ChatRecord>(`/api/chat/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     })
   },
   onSuccess: (chat, { id }, _, { client }) => {
     client.setQueryData(useChatQuery.getKey({ id }), chat)
     client.setQueryData(useChatsQuery.getKey({ projectId: chat.projectId }), (prevData) => {
-      if(!prevData) return prevData;
+      if (!prevData) return prevData
       return {
         ...prevData,
         pages: prevData.pages.map((page) => ({
           ...page,
-          data: page.data.map((c) => c.id === id ? chat : c),
-        }))
+          data: page.data.map((c) => (c.id === id ? chat : c)),
+        })),
       }
     })
   },
@@ -70,9 +70,9 @@ export const useNewChatMutation = createMutation({
   mutationFn: async (vars: ChatRecord) => vars,
   onSuccess: (data, _, _1, { client }) => {
     client.setQueryData(useChatsQuery.getKey({ projectId: data.projectId }), (prevData) => {
-      if(!prevData) return prevData;
+      if (!prevData) return prevData
 
-      const { pages, pageParams } = prevData;
+      const { pages, pageParams } = prevData
       if (!pages.length) {
         return {
           pages: [{ data: [data], nextCursor: null }],
@@ -102,28 +102,31 @@ export const useDeleteChatMutation = createMutation({
   },
   onSuccess: ({ projectId }, { id }, _, { client }) => {
     client.setQueryData(useChatsQuery.getKey({ projectId }), (prevData) => {
-      if(!prevData) return prevData;
+      if (!prevData) return prevData
       return {
         ...prevData,
         pages: prevData.pages.map((page) => ({
           ...page,
           data: page.data.filter((c) => c.id !== id),
-        }))
+        })),
       }
     })
-  }
+  },
 })
 
 export const useDeleteChatsMutation = createMutation({
   mutationKey: ['deleteChats'],
   mutationFn: async (vars: { projectId: string | null }) => {
-    return fetcher<string[]>(`/api/chat/history${vars.projectId ? `?projectId=${vars.projectId}` : ''}`, {
-      method: 'DELETE',
-    })
+    return fetcher<string[]>(
+      `/api/chat/history${vars.projectId ? `?projectId=${vars.projectId}` : ''}`,
+      {
+        method: 'DELETE',
+      },
+    )
   },
   onSuccess: (_, { projectId }, _1, { client }) => {
     client.setQueryData(useChatsQuery.getKey({ projectId }), (prevData) => {
-      if(!prevData) return prevData;
+      if (!prevData) return prevData
       return {
         pages: [{ data: [], nextCursor: null }],
         pageParams: [null],

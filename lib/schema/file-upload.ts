@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { extension as mimeExtension, lookup as mimeLookup, extensions as mimeExtensions } from 'mime-types'
+import {
+  extension as mimeExtension,
+  lookup as mimeLookup,
+  extensions as mimeExtensions,
+} from 'mime-types'
 import { formatFileSize } from '@/lib/utils'
 
 export interface FileUpload<Ext extends string = string> {
@@ -40,7 +44,7 @@ export interface FileUploadRules<Ext extends string = string> {
 export function fileUpload<Ext extends string = string>(rules: FileUploadRules<Ext> = {}) {
   const { maxSize = Infinity, maxSizeByExt, maxSizeByAccept, accept, extensions } = rules
 
-  function matchesAccept(mimeType: string, rule: string){
+  function matchesAccept(mimeType: string, rule: string) {
     if (rule.endsWith('/*')) {
       const prefix = rule.slice(0, -1)
       return mimeType.startsWith(prefix)
@@ -55,9 +59,9 @@ export function fileUpload<Ext extends string = string>(rules: FileUploadRules<E
     const byExt = maxSizeByExt?.[ext]
     if (byExt != null) return byExt
 
-    const wildcardKey = Object
-      .keys(maxSizeByAccept ?? {})
-      .find((rule) => matchesAccept(mimeType, rule))
+    const wildcardKey = Object.keys(maxSizeByAccept ?? {}).find((rule) =>
+      matchesAccept(mimeType, rule),
+    )
     const wildcard = wildcardKey ? maxSizeByAccept?.[wildcardKey] : undefined
     return wildcard ?? maxSize
   }
@@ -82,7 +86,7 @@ export function fileUpload<Ext extends string = string>(rules: FileUploadRules<E
     }
 
     const mimeExt = mimeExtension(mimeType) as Ext | false
-    if(!mimeExt || (extensions && !extensions.includes(mimeExt))) {
+    if (!mimeExt || (extensions && !extensions.includes(mimeExt))) {
       throw new Error(`File type is not supported.`)
     }
 
@@ -96,44 +100,42 @@ export function fileUpload<Ext extends string = string>(rules: FileUploadRules<E
       size,
       mimeType,
       mimeExt,
-      blob: file
+      blob: file,
     }
   }
 
-  return z
-    .file()
-    .transform((val, ctx) => {
-      try {
-        return transform(val)
-      } catch (err) {
-        ctx.addIssue({
-          code: 'custom',
-          input: val,
-          message: (err as Error).message,
-        })
-        return z.NEVER
-      }
-    })
+  return z.file().transform((val, ctx) => {
+    try {
+      return transform(val)
+    } catch (err) {
+      ctx.addIssue({
+        code: 'custom',
+        input: val,
+        message: (err as Error).message,
+      })
+      return z.NEVER
+    }
+  })
 }
 
 export function getAllowedTypes(rules: Pick<FileUploadRules, 'accept' | 'extensions'>) {
   const accept = rules.accept ?? []
   rules.extensions?.forEach((ext) => {
     const mimeType = mimeLookup(ext)
-    if(mimeType) accept.push(mimeType)
+    if (mimeType) accept.push(mimeType)
   })
 
   const extensions = rules.extensions ?? []
   rules.accept?.forEach((mimeType) => {
-    if(mimeType.endsWith('/*')) {
+    if (mimeType.endsWith('/*')) {
       const mimePrefix = mimeType.slice(0, -1)
-      for(const type in mimeExtensions) {
-        if(type.startsWith(mimePrefix)) extensions.push(...mimeExtensions[type])
+      for (const type in mimeExtensions) {
+        if (type.startsWith(mimePrefix)) extensions.push(...mimeExtensions[type])
       }
       return
     }
     const ext = mimeExtension(mimeType)
-    if(ext) extensions.push(ext)
+    if (ext) extensions.push(ext)
   })
 
   return { accept, extensions }

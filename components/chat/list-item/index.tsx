@@ -1,44 +1,29 @@
-'use client';
+'use client'
 import { useState, type KeyboardEvent } from 'react'
 import { useUpdateChatMutation } from '@/api/hooks/chats'
 import { toast } from 'sonner'
-import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import {
-  Share,
-  Trash2,
-  PencilLine,
-} from 'lucide-react'
+import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { Share, Trash2, PencilLine } from 'lucide-react'
 import { ChatTitle } from './title'
 import { getChatUrl } from '@/lib/utils'
 import type { ChatRecord } from '@/lib/db'
-import {
-  DefaultVariant,
-  SidebarVariant,
-  DefaultEditVariant,
-  SidebarEditVariant,
-} from './variants'
+import { DefaultVariant, SidebarVariant, DefaultEditVariant, SidebarEditVariant } from './variants'
 
 export interface ChatListItemProps {
-  chat: ChatRecord;
-  onEdit: (chat: ChatRecord | null) => void;
-  onDelete: (chat: ChatRecord) => void;
-  onSettings: (chat: ChatRecord) => void;
-  isActive?: boolean;
-  isEdit?: boolean;
-  variant?: 'sidebar' | 'item';
+  chat: ChatRecord
+  onEdit: (chat: ChatRecord | null) => void
+  onDelete: (chat: ChatRecord) => void
+  onSettings: (chat: ChatRecord) => void
+  isActive?: boolean
+  isEdit?: boolean
+  variant?: 'sidebar' | 'item'
 }
 
 export function ChatListItem(props: ChatListItemProps) {
   const { chat, onEdit, onDelete, onSettings, isActive, isEdit, variant = 'sidebar' } = props
 
   if (isEdit) {
-    return (
-      <ChatListItemEdit
-        chat={chat}
-        onClose={() => onEdit(null)}
-        variant={variant}
-      />
-    )
+    return <ChatListItemEdit chat={chat} onClose={() => onEdit(null)} variant={variant} />
   }
 
   const Comp = variant === 'sidebar' ? SidebarVariant : DefaultVariant
@@ -48,36 +33,36 @@ export function ChatListItem(props: ChatListItemProps) {
       href={getChatUrl(chat)}
       onDoubleClick={() => onEdit(chat)}
       title={<ChatTitle chat={chat} />}
-      menu={(
+      menu={
         <>
           <DropdownMenuItem onClick={() => onEdit(chat)}>
-            <PencilLine className="text-muted-foreground" />
+            <PencilLine className='text-muted-foreground' />
             <span>Rename</span>
           </DropdownMenuItem>
-          <DropdownMenuItem  onClick={() => onSettings(chat)}>
-            <Share className="text-muted-foreground" />
+          <DropdownMenuItem onClick={() => onSettings(chat)}>
+            <Share className='text-muted-foreground' />
             <span>Share</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant='destructive' onClick={() => onDelete(chat)}>
-            <Trash2 className="text-muted-foreground" />
+            <Trash2 className='text-muted-foreground' />
             <span>Delete</span>
           </DropdownMenuItem>
         </>
-      )}
+      }
     />
   )
 }
 
 interface ChatListItemEditProps {
-  chat: ChatRecord;
-  onClose: () => void;
-  variant: 'sidebar' | 'item';
+  chat: ChatRecord
+  onClose: () => void
+  variant: 'sidebar' | 'item'
 }
 
 function ChatListItemEdit({ chat, onClose, variant }: ChatListItemEditProps) {
   const { mutate, isPending } = useUpdateChatMutation()
-  const [inputValue, setInputValue] = useState(chat.title);
+  const [inputValue, setInputValue] = useState(chat.title)
 
   const handleCancel = () => {
     if (isPending) return

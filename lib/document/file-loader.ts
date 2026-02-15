@@ -1,28 +1,34 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto'
 import { MDocument, type BaseChunkOptions } from '@mastra/rag'
-import { defaultsDeep } from 'lodash-es';
-import { parse as parseCSV } from "csv-parse";
+import { defaultsDeep } from 'lodash-es'
+import { parse as parseCSV } from 'csv-parse'
 import { htmlToText } from 'html-to-text'
 import { extractText, getMeta, getDocumentProxy } from 'unpdf'
 import { extractRawText } from 'mammoth'
 import type { FileUpload } from '@/lib/schema'
 import type { DocumentInterface } from './types'
 
-interface FileLoaderTypeDef<Options extends Record<string, any> = {}, Metadata extends Record<string, any> = {}> {
+interface FileLoaderTypeDef<
+  Options extends Record<string, any> = {},
+  Metadata extends Record<string, any> = {},
+> {
   options: Options
   metadata: Metadata
 }
 
 interface FileLoaderTypeMap {
-  pdf: FileLoaderTypeDef<{}, {
-    pageNumber: number
-    file: {
-      title?: string
-      author?: string
-      totalPages?: number
-      language?: string
+  pdf: FileLoaderTypeDef<
+    {},
+    {
+      pageNumber: number
+      file: {
+        title?: string
+        author?: string
+        totalPages?: number
+        language?: string
+      }
     }
-  }>
+  >
   docx: FileLoaderTypeDef
   txt: FileLoaderTypeDef
   md: FileLoaderTypeDef
@@ -33,14 +39,17 @@ interface FileLoaderTypeMap {
 export type FileLoaderType = Extract<keyof FileLoaderTypeMap, string>
 
 type FileLoaderDocMap = {
-  [Type in FileLoaderType]: DocumentInterface<FileLoaderTypeMap[Type]['metadata'] & FileLoaderMetadata & {
-    index: number
-    file: {
-      id: string
-      name: string
-      mimeType: string
-    }
-  }>
+  [Type in FileLoaderType]: DocumentInterface<
+    FileLoaderTypeMap[Type]['metadata'] &
+      FileLoaderMetadata & {
+        index: number
+        file: {
+          id: string
+          name: string
+          mimeType: string
+        }
+      }
+  >
 }
 
 export type FileLoaderDoc<Type extends FileLoaderType = FileLoaderType> = FileLoaderDocMap[Type]
@@ -63,8 +72,8 @@ export type FileLoaderOptions = {
 }
 
 export class FileLoader {
-  private readonly metadata: FileLoaderMetadata;
-  private readonly options: FileLoaderOptions & typeof FileLoader.defaultOptions;
+  private readonly metadata: FileLoaderMetadata
+  private readonly options: FileLoaderOptions & typeof FileLoader.defaultOptions
   private static readonly defaultOptions = {
     chunks: {
       maxSize: 1000,
@@ -73,23 +82,26 @@ export class FileLoader {
   } satisfies FileLoaderOptions
 
   constructor(metadata: FileLoaderMetadata, options?: FileLoaderOptions) {
-    this.metadata = metadata;
-    this.options = defaultsDeep({}, options, FileLoader.defaultOptions);
+    this.metadata = metadata
+    this.options = defaultsDeep({}, options, FileLoader.defaultOptions)
   }
 
   async load(id: string, file: FileLoaderInput): Promise<FileLoaderResult> {
     const typeUpper = file.mimeExt.toUpperCase() as Uppercase<typeof file.mimeExt>
     const loadMethod = `load${typeUpper}` as const
-    if(!(loadMethod in this)) {
+    if (!(loadMethod in this)) {
       throw new Error(`Unsupported file type: ${file.mimeExt}`)
     }
     return await this[loadMethod](id, file as any)
   }
 
-  private async loadPDF(id: string, file: FileLoaderInput<'pdf'>): Promise<FileLoaderResult<'pdf'>> {
+  private async loadPDF(
+    id: string,
+    file: FileLoaderInput<'pdf'>,
+  ): Promise<FileLoaderResult<'pdf'>> {
     const proxy = await getDocumentProxy(new Uint8Array(await file.blob.arrayBuffer()))
-    const { info } = await getMeta(proxy);
-    const { text, totalPages } = await extractText(proxy);
+    const { info } = await getMeta(proxy)
+    const { text, totalPages } = await extractText(proxy)
     const doc = new MDocument({
       docs: text.map((pageText, index) => ({
         text: pageText.trim(),
@@ -97,7 +109,7 @@ export class FileLoader {
           pageNumber: index + 1,
         },
       })),
-      type: 'text'
+      type: 'text',
     })
     const chunks = await doc.chunk({
       strategy: 'recursive',
@@ -110,12 +122,15 @@ export class FileLoader {
         title: info.Title || undefined,
         author: info.Author || undefined,
         language: info.Language || undefined,
-      }
-    }));
+      },
+    }))
   }
 
-  private async loadDOCX(id: string, file: FileLoaderInput<'docx'>): Promise<FileLoaderResult<'docx'>> {
-    const docx = await extractRawText({ buffer: Buffer.from(await file.blob.arrayBuffer()) });
+  private async loadDOCX(
+    id: string,
+    file: FileLoaderInput<'docx'>,
+  ): Promise<FileLoaderResult<'docx'>> {
+    const docx = await extractRawText({ buffer: Buffer.from(await file.blob.arrayBuffer()) })
     const doc = MDocument.fromText(docx.value)
     const chunks = await doc.chunk({
       strategy: 'recursive',
@@ -124,7 +139,10 @@ export class FileLoader {
     return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadTXT(id: string, file: FileLoaderInput<'txt'>): Promise<FileLoaderResult<'txt'>> {
+  private async loadTXT(
+    id: string,
+    file: FileLoaderInput<'txt'>,
+  ): Promise<FileLoaderResult<'txt'>> {
     const text = await file.blob.text()
     const doc = MDocument.fromText(text)
     const chunks = await doc.chunk({
@@ -145,7 +163,10 @@ export class FileLoader {
     return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadCSV(id: string, file: FileLoaderInput<'csv'>): Promise<FileLoaderResult<'csv'>> {
+  private async loadCSV(
+    id: string,
+    file: FileLoaderInput<'csv'>,
+  ): Promise<FileLoaderResult<'csv'>> {
     const text = await file.blob.text()
     const parser = parseCSV(text, {
       bom: true,
@@ -156,9 +177,9 @@ export class FileLoader {
       skipRecordsWithError: true,
     })
     let i = 0
-    let markdown = '';
+    let markdown = ''
     for await (const record of parser) {
-      i++;
+      i++
       const content: string[] = [`## Row ${i}`]
       Object.keys(record).forEach((key) => {
         content.push(`- ${key}: ${record[key]}`)
@@ -174,7 +195,10 @@ export class FileLoader {
     return this.transformDocuments(id, file, chunks)
   }
 
-  private async loadHTML(id: string, file: FileLoaderInput<'html'>): Promise<FileLoaderResult<'html'>> {
+  private async loadHTML(
+    id: string,
+    file: FileLoaderInput<'html'>,
+  ): Promise<FileLoaderResult<'html'>> {
     const html = await file.blob.text()
     const text = htmlToText(html, { baseElements: { selectors: ['html'] } })
     const doc = MDocument.fromText(text)
@@ -185,10 +209,18 @@ export class FileLoader {
     return this.transformDocuments(id, file, chunks)
   }
 
-  private transformDocuments<T extends FileLoaderType>(id: string, file: FileLoaderInput<T>, chunks: { text: string, metadata: Record<string, any> }[], metaFn: (metadata: Record<string, any>, index: number) => FileLoaderTypeMap[T]['metadata'] = () => ({})) {
-    let charCount = 0;
+  private transformDocuments<T extends FileLoaderType>(
+    id: string,
+    file: FileLoaderInput<T>,
+    chunks: { text: string; metadata: Record<string, any> }[],
+    metaFn: (
+      metadata: Record<string, any>,
+      index: number,
+    ) => FileLoaderTypeMap[T]['metadata'] = () => ({}),
+  ) {
+    let charCount = 0
     const docs = chunks.map(({ text, metadata }, index) => {
-      charCount += text.length;
+      charCount += text.length
       const docMeta = metaFn(metadata, index)
       return {
         id: randomUUID(),
@@ -198,7 +230,7 @@ export class FileLoader {
           ...this.metadata,
           index,
           file: {
-            ...('file' in docMeta ? docMeta.file as {} : {}),
+            ...('file' in docMeta ? (docMeta.file as {}) : {}),
             id,
             name: file.name,
             mimeType: file.mimeType,

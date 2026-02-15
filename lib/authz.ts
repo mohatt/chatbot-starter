@@ -11,7 +11,11 @@ type AuthzType = 'read' | 'write' | 'delete'
 type AuthzResourceType = keyof AuthzResourceMap
 type AuthzUser = Pick<AuthUser, 'id'>
 
-type AuthzPolicy<T> = (args: { user: AuthzUser | null; action: AuthzType; resource: T | null }) => boolean
+type AuthzPolicy<T> = (args: {
+  user: AuthzUser | null
+  action: AuthzType
+  resource: T | null
+}) => boolean
 type AuthzPolicyMap = {
   [K in AuthzResourceType]: AuthzPolicy<AuthzResourceMap[K]>
 }
@@ -26,7 +30,7 @@ export class Authorizer {
           return false
         }
         if (user.id !== resource.userId) {
-          return action === 'read' && resource.privacy === 'public';
+          return action === 'read' && resource.privacy === 'public'
         }
         return true
       },

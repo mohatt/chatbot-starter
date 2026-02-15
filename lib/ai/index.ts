@@ -1,7 +1,7 @@
-import { gateway } from '@ai-sdk/gateway';
-import { createHuggingFace } from '@ai-sdk/huggingface';
+import { gateway } from '@ai-sdk/gateway'
+import { createHuggingFace } from '@ai-sdk/huggingface'
 import { embed, embedMany } from 'ai'
-import type { Env } from '@/lib/env';
+import type { Env } from '@/lib/env'
 import type { ModelKey } from './config'
 import type { LanguageModel, EmbeddingModel } from './types'
 
@@ -9,7 +9,7 @@ export class AI {
   readonly embedding: EmbeddingModel
 
   constructor(private env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>) {
-    this.embedding = gateway.embeddingModel('openai/text-embedding-3-small');
+    this.embedding = gateway.embeddingModel('openai/text-embedding-3-small')
   }
 
   getLanguageModel(key: ModelKey): LanguageModel {

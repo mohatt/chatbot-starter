@@ -1,0 +1,10 @@
+.cache
+.codex
+.idea
+.next
+.vercel
+next-env.d.ts
+dist
+components/ai-elements
+components/ui
+pnpm-lock.yaml

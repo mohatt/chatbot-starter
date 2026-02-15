@@ -1,6 +1,11 @@
 import { getIp } from 'better-auth/api'
 import { v5 as uuidv5 } from 'uuid'
-import { APIError, type BetterAuthPlugin, type GenericEndpointContext, type User } from 'better-auth'
+import {
+  APIError,
+  type BetterAuthPlugin,
+  type GenericEndpointContext,
+  type User,
+} from 'better-auth'
 import type { UserWithAnonymous } from 'better-auth/client/plugins'
 import type { Db, BillingRecordInput } from '@/lib/db'
 
@@ -18,27 +23,27 @@ export function billing(db: Db) {
               create: {
                 before: async (user, ctx) => {
                   try {
-                    const identity = resolveBillingIdentity(user, ctx);
-                    await db.billing.ensure(identity);
+                    const identity = resolveBillingIdentity(user, ctx)
+                    await db.billing.ensure(identity)
                     return {
                       data: {
                         ...user,
                         billingId: identity.id,
                       },
-                    };
+                    }
                   } catch (error) {
-                    auth.logger.error('[billing] Failed to create billing profile', error);
-                    throw new APIError("BAD_REQUEST", {
-                      message: "Failed to create billing profile.",
+                    auth.logger.error('[billing] Failed to create billing profile', error)
+                    throw new APIError('BAD_REQUEST', {
+                      message: 'Failed to create billing profile.',
                       cause: error,
-                    });
+                    })
                   }
                 },
               },
             },
           },
         },
-      };
+      }
     },
     schema: {
       user: {
@@ -83,14 +88,14 @@ const IP_NAMESPACE = '5c327e7d-67cb-482a-9a34-1cb5fb274861'
  * signups rely on IP to derive a stable billing profile.
  */
 function resolveIpAddress(ctx: GenericEndpointContext | null) {
-  if (!ctx) return null;
-  const requestOrHeaders = ctx.request ?? ctx.headers;
-  const options = ctx.context?.options;
-  if (!requestOrHeaders || !options) return null;
+  if (!ctx) return null
+  const requestOrHeaders = ctx.request ?? ctx.headers
+  const options = ctx.context?.options
+  if (!requestOrHeaders || !options) return null
   try {
-    return getIp(requestOrHeaders, options) || null;
+    return getIp(requestOrHeaders, options) || null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -100,21 +105,24 @@ function resolveIpAddress(ctx: GenericEndpointContext | null) {
  *  - registered users hash email
  * Using UUIDv5 avoids collisions and keeps IDs stable across devices.
  */
-function resolveBillingIdentity(user: User | UserWithAnonymous, ctx: GenericEndpointContext | null): BillingRecordInput {
+function resolveBillingIdentity(
+  user: User | UserWithAnonymous,
+  ctx: GenericEndpointContext | null,
+): BillingRecordInput {
   const email = user.email.toLowerCase()
-  const isAnonymous = 'isAnonymous' in user ? user.isAnonymous : false;
-  const ipAddress = resolveIpAddress(ctx);
+  const isAnonymous = 'isAnonymous' in user ? user.isAnonymous : false
+  const ipAddress = resolveIpAddress(ctx)
 
   if (isAnonymous) {
-    const fingerprint = ipAddress ?? email;
+    const fingerprint = ipAddress ?? email
     return {
       id: uuidv5(fingerprint, IP_NAMESPACE),
       type: 'anonymous',
-    };
+    }
   }
 
   return {
     id: uuidv5(email, EMAIL_NAMESPACE),
     type: 'user',
-  };
+  }
 }

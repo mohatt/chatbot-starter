@@ -14,26 +14,30 @@ export interface UrlUploadOptions {
   asyncCaller?: AsyncCallerOptions
 }
 
-export function urlUpload<Type extends string = string>(rules: FileUploadRules<Type>, options?: UrlUploadOptions) {
+export function urlUpload<Type extends string = string>(
+  rules: FileUploadRules<Type>,
+  options?: UrlUploadOptions,
+) {
   const { maxSize = Infinity, accept, extensions } = rules
 
   const opts = {
     fetch: {
       timeout: 1e4,
       headers: {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-        'accept': '*/*',
+        'user-agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+        accept: '*/*',
         'accept-language': 'en-US,en;q=0.9',
         ...options?.fetch?.headers,
       },
       ...options?.fetch,
     },
-    asyncCaller: options?.asyncCaller
+    asyncCaller: options?.asyncCaller,
   }
 
   async function transform(url: string): Promise<FileUpload<Type>> {
     const { timeout, headers, signal } = opts.fetch
-    const caller = new AsyncCaller(opts.asyncCaller);
+    const caller = new AsyncCaller(opts.asyncCaller)
     const timeoutSignal = AbortSignal.timeout(timeout)
     const fetchSignal = signal ? AbortSignal.any([timeoutSignal, signal]) : timeoutSignal
     const res = await caller.fetch(url, {
@@ -46,28 +50,28 @@ export function urlUpload<Type extends string = string>(rules: FileUploadRules<T
       throw new Error('Unable to fetch content.')
     }
 
-    let size = Number(res.headers.get("content-length") || 0);
+    let size = Number(res.headers.get('content-length') || 0)
     if (size > maxSize) {
-      await res.body.cancel();
+      await res.body.cancel()
       throw new Error(`Content exceeds ${formatFileSize(maxSize)} limit.`)
     }
 
-    const fileName = getFilenameFromResponse(res);
-    const contentType = res.headers.get('content-type')?.split(';', 1)[0].trim();
+    const fileName = getFilenameFromResponse(res)
+    const contentType = res.headers.get('content-type')?.split(';', 1)[0].trim()
     const mimeType = contentType || (fileName && mimeLookup(fileName))
     if (!mimeType) {
-      await res.body.cancel();
+      await res.body.cancel()
       throw new Error(`Unable to determine content type.`)
     }
 
-    if(accept && !accept.includes(mimeType)) {
-      await res.body.cancel();
+    if (accept && !accept.includes(mimeType)) {
+      await res.body.cancel()
       throw new Error(`Content type is not supported.`)
     }
 
     const defaultExt = mimeExtension(mimeType) as Type | false
-    if(!defaultExt || (extensions && !extensions.includes(defaultExt))) {
-      await res.body.cancel();
+    if (!defaultExt || (extensions && !extensions.includes(defaultExt))) {
+      await res.body.cancel()
       throw new Error(`Content type is not supported.`)
     }
 
@@ -99,29 +103,30 @@ export function urlUpload<Type extends string = string>(rules: FileUploadRules<T
     }
   }
 
-  return z
-    .url()
-    .transform(async (val, ctx) => {
-      try {
-        return await transform(val)
-      } catch (err) {
-        ctx.addIssue({
-          code: 'custom',
-          input: val,
-          message: (err as Error).message,
-        })
-        return z.NEVER
-      }
-    })
+  return z.url().transform(async (val, ctx) => {
+    try {
+      return await transform(val)
+    } catch (err) {
+      ctx.addIssue({
+        code: 'custom',
+        input: val,
+        message: (err as Error).message,
+      })
+      return z.NEVER
+    }
+  })
 }
 
-function getFileNameFromHeaders(cd: string | null){
+function getFileNameFromHeaders(cd: string | null) {
   if (!cd) return null
 
   // RFC 5987: filename*=UTF-8''encoded%20name.ext
   const star = cd.match(/filename\*\s*=\s*([^;]+)/i)?.[1]
   if (star) {
-    const v = star.trim().replace(/^UTF-8''/i, '').replace(/^"|"$/g, '')
+    const v = star
+      .trim()
+      .replace(/^UTF-8''/i, '')
+      .replace(/^"|"$/g, '')
     try {
       return decodeURIComponent(v)
     } catch {
@@ -148,11 +153,15 @@ function getFileNameFromUrl(url: string) {
 }
 
 function getFilenameFromResponse(res: Response) {
-  const fileName = getFileNameFromHeaders(res.headers.get('content-disposition'))
-    || getFileNameFromUrl(res.url)
-    || null
-  return fileName && fileName
-    .replace(/[/\\?%*:|"<>]/g, '-') // strip illegal chars
-    .replace(/\s+/g, ' ')
-    .trim()
+  const fileName =
+    getFileNameFromHeaders(res.headers.get('content-disposition')) ||
+    getFileNameFromUrl(res.url) ||
+    null
+  return (
+    fileName &&
+    fileName
+      .replace(/[/\\?%*:|"<>]/g, '-') // strip illegal chars
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
 }

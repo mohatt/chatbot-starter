@@ -13,16 +13,19 @@ const envSchema = z.object({
   HUGGING_FACE_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().optional(),
-});
+})
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema>
 
 const noop = {} as unknown
 
 export function loadEnv(input = noop): Env {
-  return envSchema.parse(input === noop ? process.env : input);
+  return envSchema.parse(input === noop ? process.env : input)
 }
 
-export function loadPartialEnv<T extends z.util.Mask<keyof Env>>(pick: T & Record<Exclude<keyof T, keyof Env>, never>, input = noop) {
-  return envSchema.pick(pick).parse(input === noop ? process.env : input);
+export function loadPartialEnv<T extends z.util.Mask<keyof Env>>(
+  pick: T & Record<Exclude<keyof T, keyof Env>, never>,
+  input = noop,
+) {
+  return envSchema.pick(pick).parse(input === noop ? process.env : input)
 }

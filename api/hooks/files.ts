@@ -5,23 +5,24 @@ import type { PostRequestBody } from '@/app/(core)/api/files/schema'
 
 export const useFilesQuery = createQuery({
   queryKey: ['files'],
-  fetcher: async (vars: { projectId: string }) => fetcher<FileRecord[]>(`/api/files?projectId=${vars.projectId}`),
+  fetcher: async (vars: { projectId: string }) =>
+    fetcher<FileRecord[]>(`/api/files?projectId=${vars.projectId}`),
 })
 
 export const useUploadFileMutation = createMutation({
   mutationKey: ['uploadFile'],
   mutationFn: async (vars: PostRequestBody) => {
-    const body = new FormData();
-    body.append('id', vars.id);
-    body.append('file', vars.file);
-    body.append('bucket', vars.bucket);
-    body.append('metadata', JSON.stringify(vars.metadata));
+    const body = new FormData()
+    body.append('id', vars.id)
+    body.append('file', vars.file)
+    body.append('bucket', vars.bucket)
+    body.append('metadata', JSON.stringify(vars.metadata))
     return fetcher<FileRecord>(`/api/files`, { method: 'POST', body })
   },
   onSuccess: (file, { metadata }, _, { client }) => {
     if (metadata.namespace === 'project') {
       client.setQueryData(useFilesQuery.getKey({ projectId: metadata.projectId }), (prevData) => {
-        if(!prevData?.length) return [file];
+        if (!prevData?.length) return [file]
         // Dedupe based on file id
         const nextFiles = prevData.filter((f) => f.id !== file.id)
         // Append new file to files array (files use asc ordering)
@@ -39,7 +40,7 @@ export const useDeleteFileMutation = createMutation({
   onSuccess: ({ id, projectId }, _, _1, { client }) => {
     if (projectId) {
       client.setQueryData(useFilesQuery.getKey({ projectId }), (prevData) => {
-        if(!prevData) return prevData;
+        if (!prevData) return prevData
         // Remove based on file id
         return prevData.filter((f) => f.id !== id)
       })

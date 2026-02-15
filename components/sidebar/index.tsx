@@ -1,5 +1,5 @@
-"use client";
-import { UserSidebar } from "@/components/user/sidebar";
+'use client'
+import { UserSidebar } from '@/components/user/sidebar'
 import { useProjectUpsertDialog } from '@/components/project/dialogs/upsert'
 import {
   Sidebar,
@@ -10,17 +10,18 @@ import {
   useSidebar,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarRail, SidebarMenuAction,
-  SidebarTrigger
+  SidebarRail,
+  SidebarMenuAction,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { ChatsSidebar } from "@/components/chat/sidebar"
-import { ProjectsSidebar } from "@/components/project/sidebar"
+import { ChatsSidebar } from '@/components/chat/sidebar'
+import { ProjectsSidebar } from '@/components/project/sidebar'
 import { SquarePen, FolderPlus, Sparkles } from 'lucide-react'
-import Link from "next/link";
+import Link from 'next/link'
 
 export function AppSidebar() {
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile } = useSidebar()
   const projectDialog = useProjectUpsertDialog()
   return (
     <Sidebar collapsible='icon'>
@@ -28,17 +29,15 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem className='group-data-[collapsible=icon]:hidden'>
             <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size='lg'
+              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
               asChild
             >
-              <Link href="/" onClick={() => setOpenMobile(false)}>
-                <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Sparkles className="size-4" />
+              <Link href='/' onClick={() => setOpenMobile(false)}>
+                <span className='bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg'>
+                  <Sparkles className='size-4' />
                 </span>
-                <span className="font-semibold text-lg">
-                  RAG Chatbot
-                </span>
+                <span className='font-semibold text-lg'>RAG Chatbot</span>
               </Link>
             </SidebarMenuButton>
             <Tooltip>
@@ -47,18 +46,18 @@ export function AppSidebar() {
                   <SidebarTrigger />
                 </SidebarMenuAction>
               </TooltipTrigger>
-              <TooltipContent align="start" className="hidden md:block">
+              <TooltipContent align='start' className='hidden md:block'>
                 Close sidebar
               </TooltipContent>
             </Tooltip>
           </SidebarMenuItem>
-          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
-            <SidebarMenuButton className="group-hover:hidden" asChild>
-              <span className="bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg">
-                <Sparkles className="size-4" />
+          <SidebarMenuItem className='hidden group-data-[collapsible=icon]:list-item'>
+            <SidebarMenuButton className='group-hover:hidden' asChild>
+              <span className='bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg'>
+                <Sparkles className='size-4' />
               </span>
             </SidebarMenuButton>
-            <SidebarMenuButton tooltip='Open sidebar' className="hidden group-hover:flex" asChild>
+            <SidebarMenuButton tooltip='Open sidebar' className='hidden group-hover:flex' asChild>
               <SidebarTrigger />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -66,13 +65,13 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip='New chat' asChild>
-              <Link href="/" onClick={() => setOpenMobile(false)}>
+              <Link href='/' onClick={() => setOpenMobile(false)}>
                 <SquarePen />
                 <span>New chat</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:list-item">
+          <SidebarMenuItem className='hidden group-data-[collapsible=icon]:list-item'>
             <SidebarMenuButton tooltip='New project' onClick={() => projectDialog.open(null)}>
               <FolderPlus />
               <span>New project</span>
@@ -90,5 +89,5 @@ export function AppSidebar() {
       <SidebarRail />
       {projectDialog.render()}
     </Sidebar>
-  );
+  )
 }

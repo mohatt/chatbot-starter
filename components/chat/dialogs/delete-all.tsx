@@ -9,37 +9,40 @@ import { toast } from 'sonner'
 import type { ChatProjectRecord } from '@/lib/db'
 
 export interface DeleteAllChatsDialogProps extends BaseDialogProps {
-  project: Pick<ChatProjectRecord, 'id' | 'name'> | null;
+  project: Pick<ChatProjectRecord, 'id' | 'name'> | null
 }
 
 export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
-  const { open, onOpenChange, project } = props;
+  const { open, onOpenChange, project } = props
   const { mutate, error, isPending } = useDeleteChatsMutation()
-  const router = useRouter();
+  const router = useRouter()
   const { activeProjectId, activeChatId } = useAppParams()
   const projectId = project?.id ?? null
 
   const handleDelete = useCallback(() => {
-    mutate({ projectId }, {
-      onSuccess: () => {
-        onOpenChange(false);
-        if (activeChatId) {
-          if (projectId) {
-            if (activeProjectId === projectId) {
-              router.replace(`/project/${projectId}`);
+    mutate(
+      { projectId },
+      {
+        onSuccess: () => {
+          onOpenChange(false)
+          if (activeChatId) {
+            if (projectId) {
+              if (activeProjectId === projectId) {
+                router.replace(`/project/${projectId}`)
+              }
+            } else {
+              router.replace('/')
             }
-          } else {
-            router.replace("/");
           }
-        }
-        setTimeout(() => {
-          toast.success('All chats deleted successfully.')
-        }, 100);
+          setTimeout(() => {
+            toast.success('All chats deleted successfully.')
+          }, 100)
+        },
+        onError: (err) => {
+          toast.error(err.message)
+        },
       },
-      onError: (err) => {
-        toast.error(err.message)
-      },
-    })
+    )
   }, [activeChatId, activeProjectId, mutate, onOpenChange, projectId, router])
 
   return (
@@ -48,12 +51,19 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
       onOpenChange={onOpenChange}
       onSubmit={handleDelete}
       title='Delete all chats?'
-      description={(
+      description={
         <>
           This will delete <b>all your chats</b>{' '}
-          {project ? <>under <b>{project.name}</b> project</> : ''}.
+          {project ? (
+            <>
+              under <b>{project.name}</b> project
+            </>
+          ) : (
+            ''
+          )}
+          .
         </>
-      )}
+      }
       submit='Delete All'
       variant='destructive'
       error={error && 'Failed to delete all chats.'}
@@ -65,9 +75,14 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
         <AlertDescription>
           <p>
             This will permanently delete all your chats{' '}
-            {project ? <>under <b>{project.name}</b> project{' '}</> : ''}
-            and their history from our servers.
-            This action cannot be undone.
+            {project ? (
+              <>
+                under <b>{project.name}</b> project{' '}
+              </>
+            ) : (
+              ''
+            )}
+            and their history from our servers. This action cannot be undone.
           </p>
         </AlertDescription>
       </Alert>
@@ -80,18 +95,16 @@ export function useDeleteAllChatsDialog() {
   const [project, setProject] = useState<DeleteAllChatsDialogProps['project']>(null)
 
   return {
-    open: useCallback((targetProject: DeleteAllChatsDialogProps['project'] = null) => {
-      setProject(targetProject)
-      open()
-    }, [open]),
+    open: useCallback(
+      (targetProject: DeleteAllChatsDialogProps['project'] = null) => {
+        setProject(targetProject)
+        open()
+      },
+      [open],
+    ),
     close,
     render: () => (
-      <DeleteAllChatsDialog
-        key={key}
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        project={project}
-      />
-    )
+      <DeleteAllChatsDialog key={key} open={isOpen} onOpenChange={setIsOpen} project={project} />
+    ),
   }
 }

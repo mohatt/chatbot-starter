@@ -12,42 +12,44 @@ import {
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group"
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { FormDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { LockIcon, GlobeIcon, CopyIcon, CheckIcon } from 'lucide-react'
 import type { ChatRecord } from '@/lib/db'
 
 const privacyOptions: Array<{
-  id: ChatRecord['privacy'];
-  label: string;
-  description: string;
-  icon: ReactNode;
+  id: ChatRecord['privacy']
+  label: string
+  description: string
+  icon: ReactNode
 }> = [
   {
-    id: "private",
-    label: "Private",
-    description: "Only you can access this chat.",
+    id: 'private',
+    label: 'Private',
+    description: 'Only you can access this chat.',
     icon: <LockIcon className='size-5' />,
   },
   {
-    id: "public",
-    label: "Public",
-    description: "Anyone with the link can access this chat.",
+    id: 'public',
+    label: 'Public',
+    description: 'Anyone with the link can access this chat.',
     icon: <GlobeIcon className='size-5' />,
   },
-];
+]
 
 export interface ChatSettingsDialogProps extends BaseDialogProps {
-  chat: ChatRecord;
+  chat: ChatRecord
 }
 
 export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
-  const { chat, open, onOpenChange } = props;
-  const [privacy, setPrivacy] = useState(chat.privacy);
+  const { chat, open, onOpenChange } = props
+  const [privacy, setPrivacy] = useState(chat.privacy)
   const { copyToClipboard, isCopied } = useCopyToClipboard()
   const { mutate, reset, error, isPending } = useUpdateChatMutation()
 
@@ -58,7 +60,7 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
   }, [chat, reset])
 
   const handleSubmit = () => {
-    if(!chat || isPending) return
+    if (!chat || isPending) return
     if (!privacy || privacy === chat.privacy) {
       onOpenChange(false)
       return
@@ -71,7 +73,7 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
           onOpenChange(false)
           setTimeout(() => {
             toast.success('Chat settings updated successfully.')
-          }, 100);
+          }, 100)
         },
         onError: (err) => {
           toast.error(err.message)
@@ -94,10 +96,16 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
     >
       <FieldGroup>
         <FieldSet>
-          <RadioGroup name='privacy' value={privacy} onValueChange={setPrivacy as any} required disabled={isPending}>
+          <RadioGroup
+            name='privacy'
+            value={privacy}
+            onValueChange={setPrivacy as any}
+            required
+            disabled={isPending}
+          >
             {privacyOptions.map(({ id, label, description, icon }) => (
               <FieldLabel htmlFor={`privacy-${id}`} key={id}>
-                <Field orientation="horizontal">
+                <Field orientation='horizontal'>
                   {icon}
                   <FieldContent>
                     <FieldTitle>{label}</FieldTitle>
@@ -112,11 +120,11 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
             <Field>
               <InputGroup>
                 <InputGroupInput defaultValue={getChatUrl(chat, true)} readOnly />
-                <InputGroupAddon align="inline-end">
+                <InputGroupAddon align='inline-end'>
                   <InputGroupButton
-                    aria-label="Copy"
-                    title="Copy"
-                    size="icon-xs"
+                    aria-label='Copy'
+                    title='Copy'
+                    size='icon-xs'
                     onClick={() => copyToClipboard(getChatUrl(chat, true))}
                   >
                     {isCopied ? <CheckIcon /> : <CopyIcon />}
@@ -136,18 +144,17 @@ export function useChatSettingsDialog() {
   const [chat, setChat] = useState<ChatRecord | null>(null)
 
   return {
-    open: useCallback((target: ChatRecord) => {
-      setChat(target)
-      open()
-    }, [open]),
+    open: useCallback(
+      (target: ChatRecord) => {
+        setChat(target)
+        open()
+      },
+      [open],
+    ),
     close,
-    render: () => chat !== null && (
-      <ChatSettingsDialog
-        key={key}
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        chat={chat}
-      />
-    )
+    render: () =>
+      chat !== null && (
+        <ChatSettingsDialog key={key} open={isOpen} onOpenChange={setIsOpen} chat={chat} />
+      ),
   }
 }
