@@ -13,7 +13,7 @@ export type FileToolModelOutput = {
   file_id: string
   file_name: string
   media_type: string
-  read_file_command: string
+  read_file_command?: string
   read_file_text_command?: string
   size?: string
   url?: string
@@ -31,12 +31,16 @@ export type FileToolModelOutput = {
 }
 
 export function createFileToolModelOutput(file: FileToolRecord | FileToolLoaderRecord): FileToolModelOutput {
+  const isImage = file.mimeType.startsWith('image/')
+  const isPdf = file.mimeType === 'application/pdf'
   let record: FileToolModelOutput = {
     file_id: file.id,
     file_name: file.name,
     media_type: file.mimeType,
-    read_file_command: `function_call:read_file(file_id: ${file.id})`,
-    read_file_text_command: file.mimeType.startsWith('image/')
+    read_file_command: isImage || isPdf
+      ? `function_call:read_file(file_id: ${file.id})`
+      : undefined,
+    read_file_text_command: isImage
       ? undefined
       : `function_call:read_file_text(file_id: ${file.id})`,
   }

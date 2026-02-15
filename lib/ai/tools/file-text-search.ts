@@ -17,9 +17,23 @@ export type FileTextSearchOutput = {
   error?: string
 }
 
-export function fileTextSearch({ api, project }: ChatContext) {
-  if (!project) {
-    return null
+export function fileTextSearch({ api, project, chat, message }: ChatContext) {
+
+  function getQueryFilter(fileIds?: string[] | null) {
+    if (fileIds?.length) {
+      return `file.id IN ('${fileIds.join(`', '`)}') AND userId = '${chat.userId}'`
+    }
+
+    if (project) {
+      return `projectId = '${project.id}'`
+    }
+
+    const msgFileIds = message.metadata?.files?.map((f) => f.id)
+    if (msgFileIds?.length) {
+      return `file.id IN ('${msgFileIds.join(`', '`)}')`
+    }
+
+    return `chatId = '${chat.id}'`
   }
 
   return {
@@ -57,10 +71,7 @@ export function fileTextSearch({ api, project }: ChatContext) {
         }
       },
       async execute({ query, top_k, file_ids }): Promise<FileTextSearchOutput> {
-        let filter = `projectId = '${project.id}'`
-        if (file_ids?.length) {
-          filter += ` AND file.id IN ('${file_ids.join(`', '`)}')`
-        }
+        const filter = getQueryFilter(file_ids)
         const docs = await api.vectorDb.files.query(query, Math.min(25, top_k), filter);
         if (!docs.length) {
           const idsCount = file_ids?.length ?? 0
@@ -72,7 +83,7 @@ export function fileTextSearch({ api, project }: ChatContext) {
         }
         return {
           data: docs
-            .filter(([, score]) => score >= 0.7)
+            .filter(([, score]) => score > 0.015)
             .map(([{ data, metadata }, score]) => ({
               score,
               excerpt: `${data.slice(0, 64).trim()}…`,
