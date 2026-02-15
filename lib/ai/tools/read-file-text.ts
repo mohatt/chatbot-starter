@@ -18,7 +18,7 @@ export type ReadFileTextOutput = FileToolLoaderRecord & {
 export function readFileText({ api, chat }: ChatContext) {
   return {
     read_file_text: tool({
-      description: 'Reads all text chunks for a user file (doesn\'t work on images).',
+      description: 'Can be used to read all text chunks for a user file (doesn\'t work on images).',
       inputSchema: z.object({
         file_id: z.uuid().describe('The user file ID.'),
       }),

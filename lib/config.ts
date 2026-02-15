@@ -19,6 +19,7 @@ export const config = {
         provider: "vercel",
         webSearch: true,
         thinking: true,
+        default: true,
       },
       {
         id: "anthropic/claude-sonnet-4.5",
@@ -46,7 +47,6 @@ export const config = {
         id: "openai/gpt-4.1-mini",
         name: "GPT-4.1 Mini",
         provider: "vercel",
-        default: true,
         webSearch: true,
       },
       {

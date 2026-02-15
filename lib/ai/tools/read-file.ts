@@ -16,7 +16,7 @@ export type ReadFileOutput = {
 export function readFile({ api, chat }: ChatContext) {
   return {
     read_file: tool({
-      description: 'Reads the raw data of a user file (don\'t call me if you don\'t support the file media_type).',
+      description: 'Can be used to read the raw data of a user file (don\'t call me if you don\'t support the file media_type).',
       inputSchema: z.object({
         file_id: z.uuid().describe('The user file ID.'),
       }),

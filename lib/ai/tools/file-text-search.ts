@@ -38,7 +38,7 @@ export function fileTextSearch({ api, project, chat, message }: ChatContext) {
 
   return {
     file_text_search: tool({
-      description: 'Queries file text chunks and returns results sorted based on the distance metric score (It can\'t access images; Inspect the results carefully to find information relevant to user query).',
+      description: 'Can be used to query file text chunks and return the results sorted based on the distance metric score (It can\'t access images; Inspect the results carefully to find information relevant to user query).',
       inputSchema: z.object({
         query: z.string().describe('The query to use for vector similarity search.'),
         top_k: z
@@ -86,7 +86,7 @@ export function fileTextSearch({ api, project, chat, message }: ChatContext) {
             .filter(([, score]) => score > 0.015)
             .map(([{ data, metadata }, score]) => ({
               score,
-              excerpt: `${data.slice(0, 64).trim()}…`,
+              excerpt: `${data.slice(0, 160).trim()}…`,
               [fullText]: data,
               file: metadata.file,
               pageNumber: 'pageNumber' in metadata ? metadata.pageNumber : undefined,

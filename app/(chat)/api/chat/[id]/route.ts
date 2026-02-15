@@ -52,7 +52,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(async ({ ap
       })
   }
 
-  const fileIds = message.metadata.files.map((f) => f.id)
+  const fileIds = message.metadata?.files?.map((f) => f.id) ?? []
   if (fileIds.length > config.chat.message.maxFileParts) {
     throw new AppError('bad_request:chat')
   }

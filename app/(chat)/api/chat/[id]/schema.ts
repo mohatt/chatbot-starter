@@ -15,8 +15,8 @@ export const postRequestBodySchema = z.object({
       .nonempty()
       .max(config.chat.message.maxParts),
     metadata: z.object({
-      files: z.array(z.object({ id: uuidV7 })).default([]),
-    }),
+      files: z.array(z.object({ id: uuidV7 })).optional(),
+    }).optional(),
   }),
   timeZone,
   regenerate: z.boolean().default(false),

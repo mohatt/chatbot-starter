@@ -12,7 +12,7 @@ export function listFiles({ project, api }: ChatContext) {
 
   return {
     list_files: tool({
-      description: 'Lists user-uploaded files in the current project and their metadata.',
+      description: 'Can be used to list all user files in the current project.',
       inputSchema: z.object({}),
       strict: true,
       toModelOutput: ({ output }) => {
