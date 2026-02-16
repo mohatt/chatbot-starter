@@ -65,23 +65,18 @@ export const config = {
         webSearch: true,
       },
       {
+        id: 'google/gemini-3-flash',
+        name: 'Gemini 3 Flash',
+        provider: 'vercel',
+        thinking: true,
+        webSearch: true,
+      },
+      {
         id: 'google/gemini-3-pro-preview',
         name: 'Gemini 3 Pro',
         provider: 'vercel',
         thinking: true,
         webSearch: true,
-      },
-      // xAI
-      {
-        id: 'xai/grok-4.1-fast-non-reasoning',
-        name: 'Grok 4.1 Fast',
-        provider: 'vercel',
-      },
-      {
-        id: 'xai/grok-code-fast-1',
-        name: 'Grok Code Fast',
-        provider: 'vercel',
-        thinking: 'always',
       },
     ]),
     title: {

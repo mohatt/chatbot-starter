@@ -1,7 +1,6 @@
 import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google'
 import type { AnthropicProviderOptions } from '@ai-sdk/anthropic'
 import type { OpenAIResponsesProviderOptions } from '@ai-sdk/openai'
-import type { XaiProviderOptions } from '@ai-sdk/xai'
 import type { ChatContext } from './context'
 
 export function createChatOptions({ model, modelMeta }: ChatContext): Record<string, any> {
@@ -46,14 +45,6 @@ export function createChatOptions({ model, modelMeta }: ChatContext): Record<str
         reasoningEffort: isReasoning ? 'medium' : modelMeta.reasoning ? 'low' : undefined,
         reasoningSummary: isReasoning ? 'auto' : undefined,
       } satisfies OpenAIResponsesProviderOptions,
-    }
-  }
-
-  if (vendor === 'xai') {
-    return {
-      xai: {
-        parallel_function_calling: false,
-      } satisfies XaiProviderOptions,
     }
   }
 

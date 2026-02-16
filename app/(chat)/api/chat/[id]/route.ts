@@ -43,7 +43,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
     }
     let chatCreditsUpdated = false
     const updateChatCredits = async (chatUsageDelta: number) => {
-      if (chatCreditsUpdated) return
+      if (chatCreditsUpdated || chatUsageDelta <= 0) return
       chatCreditsUpdated = true
       await billingPeriod.update({ chatUsageDelta }).catch((error) => {
         console.error('Failed to update user chat usage:', {
@@ -240,7 +240,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
               })
             }
           },
-          onError: (error) => {
+          onError: ({ error }) => {
             console.error('streamText error:', { error })
           },
         })
@@ -257,22 +257,17 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
         )
       },
       onFinish: async ({ messages, finishReason, isAborted }) => {
-        console.log('saveMessage', { messages, finishReason, isAborted, chatUsage })
-        const tasks: Array<Promise<any>> = [
+        const chatCost = chatUsage?.cost.total ?? chatStepsCost ?? 0
+        console.log('onFinish', { messages, finishReason, isAborted, chatUsage, chatCost })
+        await Promise.all([
           db.messages.insertMany(id, messages).catch((error) => {
             console.error('Failed to save chat messages:', {
               chatId: id,
               error,
             })
           }),
-        ]
-
-        const totalCost = chatUsage?.cost.total ?? 0
-        if (totalCost > 0) {
-          tasks.push(updateChatCredits(totalCost))
-        }
-
-        await Promise.all(tasks)
+          updateChatCredits(chatCost),
+        ])
       },
       onError: (_err) => {
         return 'Oops, an error occurred!'
