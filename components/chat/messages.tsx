@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState } from 'react'
 import { useStickToBottomContext } from 'use-stick-to-bottom'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { isStaticToolUIPart } from 'ai'
@@ -8,10 +8,13 @@ import {
   MessageContent,
   MessageActions,
   MessageAction,
-  MessageAttachments,
-  MessageAttachment,
 } from '@/components/ai-elements/message'
+import { Attachments, Attachment, AttachmentPreview } from '@/components/ai-elements/attachments'
 import { Streamdown } from 'streamdown'
+import { cjk } from '@streamdown/cjk'
+import { code } from '@streamdown/code'
+import { math } from '@streamdown/math'
+import { mermaid } from '@streamdown/mermaid'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
 import {
   Item,
@@ -43,10 +46,12 @@ import type { OpenaiResponsesTextProviderMetadata } from '@ai-sdk/openai'
 import type { ChatTools, ModelUsage } from '@/lib/ai'
 import type { UseChatResult } from './hooks'
 
-export interface ChatMessagesProps extends Pick<
-  UseChatResult,
+// Pre-configured streamdown plugins with default settings
+const streamdownPlugins = { cjk, code, math, mermaid };
+
+export type ChatMessagesProps = Pick<UseChatResult,
   'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'
-> {
+> & {
   isReadonly: boolean
   modelUsageMap: Record<string, ModelUsage>
 }
@@ -133,7 +138,6 @@ function ChatMessage(props: ChatMessageProps) {
   const { id, role, parts, metadata } = message
   const { copyToClipboard, isCopied } = useCopyToClipboard()
   const scrollContext = useStickToBottomContext()
-  const showThinkingRef = useRef(isStreaming)
   const isAssistant = role === 'assistant'
   const isEditMode = editorId === id
 
@@ -250,11 +254,13 @@ function ChatMessage(props: ChatMessageProps) {
       {groupedParts.map((part, i) => {
         if (part.type === 'files') {
           return (
-            <MessageAttachments key={`${i}-files`}>
+            <Attachments key={`${i}-files`}>
               {part.group.map((filePart, j) => (
-                <MessageAttachment key={`${i}-file-${j}`} data={filePart} />
+                <Attachment key={`${i}-file-${j}`} data={filePart as any}>
+                  <AttachmentPreview />
+                </Attachment>
               ))}
-            </MessageAttachments>
+            </Attachments>
           )
         }
 
@@ -264,7 +270,6 @@ function ChatMessage(props: ChatMessageProps) {
             <Reasoning
               key={`${i}-thinking`}
               isStreaming={isGroupStreaming}
-              defaultOpen={showThinkingRef.current}
               className='mt-4'
             >
               <ReasoningTrigger />
@@ -280,6 +285,7 @@ function ChatMessage(props: ChatMessageProps) {
                         key={`${i}-${tPart.type}-${j}`}
                         mode={isReasoningStreaming ? 'streaming' : 'static'}
                         isAnimating={isReasoningStreaming}
+                        animated
                       >
                         {tPart.text}
                       </Streamdown>
@@ -298,7 +304,7 @@ function ChatMessage(props: ChatMessageProps) {
                       />
                       <ToolContent>
                         <ToolInput input={tPart.input} />
-                        <ToolOutput errorText={tPart.errorText} output={tPart.output} />
+                        <ToolOutput output={tPart.output} errorText={tPart.errorText} />
                       </ToolContent>
                     </Tool>
                   )
@@ -339,6 +345,8 @@ function ChatMessage(props: ChatMessageProps) {
                   caret={isTextStreaming ? 'block' : undefined}
                   mode={isTextStreaming ? 'streaming' : 'static'}
                   isAnimating={isTextStreaming}
+                  plugins={streamdownPlugins}
+                  animated
                 >
                   {part.text}
                 </Streamdown>

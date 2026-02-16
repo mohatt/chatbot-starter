@@ -161,3 +161,13 @@
     cursor: pointer;
   }
 }
+
+/**
+ * Workaround for issue#386
+ * @see https://github.com/vercel/streamdown/issues/386
+ * @todo remove this once fixed
+ */
+.dark [data-streamdown='code-block-body'] code span {
+  color: var(--shiki-dark, inherit) !important;
+  background-color: var(--shiki-dark-bg, transparent) !important;
+}

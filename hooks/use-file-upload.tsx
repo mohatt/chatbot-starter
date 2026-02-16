@@ -15,7 +15,7 @@ import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
 import { cn, generateUUID } from '@/lib/utils'
 import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
-import { Slot, Slottable } from '@radix-ui/react-slot'
+import { Slot } from 'radix-ui'
 import { CloudUploadIcon } from 'lucide-react'
 import type { inferVariables } from 'react-query-kit'
 import type { FileToolRecord } from '@/lib/ai/tools'
@@ -383,7 +383,7 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
 
   const renderUpload = (children: ReactElement) => {
     return (
-      <Slot
+      <Slot.Root
         data-slot='upload-container'
         className={cn(
           'relative overflow-hidden transition-colors',
@@ -405,8 +405,8 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
           <CloudUploadIcon className='size-8' />
           Drop your files here
         </div>
-        <Slottable>{children}</Slottable>
-      </Slot>
+        <Slot.Slottable>{children}</Slot.Slottable>
+      </Slot.Root>
     )
   }
 

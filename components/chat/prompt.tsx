@@ -8,7 +8,6 @@ import {
   PromptInputBody,
   PromptInputFooter,
   PromptInputTools,
-  PromptInputAttachment,
   PromptInputActionMenu,
   PromptInputActionMenuItem,
   PromptInputActionMenuTrigger,
@@ -17,6 +16,7 @@ import {
 import { InputGroup, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group'
 import { Alert, AlertTitle } from '@/components/ui/alert'
 import { ChatModelSelector } from '@/components/chat/model-selector'
+import { PromptAttachment } from './prompt-attachment'
 import {
   CornerDownLeftIcon,
   ImageIcon,
@@ -161,19 +161,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
           {files.length > 0 && (
             <div className='flex flex-wrap items-center gap-2 p-3 pb-1 w-full'>
               {files.map((file) => (
-                <PromptInputAttachment
-                  key={file.id}
-                  data={{
-                    id: file.id,
-                    type: 'file',
-                    url: file.url ?? file.previewUrl ?? '',
-                    filename: file.name,
-                    mediaType: file.mimeType,
-                  }}
-                  isPending={file.status === 'idle' || file.status === 'pending'}
-                  error={file.error}
-                  onRemove={removeFile}
-                />
+                <PromptAttachment key={file.id} file={file} onRemove={removeFile} />
               ))}
             </div>
           )}
