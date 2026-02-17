@@ -62,7 +62,6 @@ export type FileLoaderResult<Type extends FileLoaderType = FileLoaderType> = {
 }
 
 export type FileLoaderMetadata = {
-  userId: string
   chatId?: string
   projectId?: string
 }

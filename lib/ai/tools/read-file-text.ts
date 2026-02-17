@@ -43,7 +43,11 @@ export function readFileText({ api, chat }: ChatContext) {
         }
       },
       async execute({ file_id }): Promise<ReadFileTextOutput> {
-        const filter = `file.id = '${file_id}' AND userId = '${chat.userId}'`
+        const file = await api.db.files.findByIdForUser(file_id, chat.userId)
+        if (!file) {
+          return null
+        }
+        const filter = `file.id = '${file.id}'`
         const results = await api.vectorDb.files.query('any', 50, filter)
         let result: ReadFileTextOutput = null
         if (results.length > 0) {

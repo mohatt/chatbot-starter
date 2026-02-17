@@ -12,9 +12,8 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(
     const { user } = await session()
     const { id, file, bucket, metadata } = postRequestBodySchema.parse(await request.formData())
 
-    // External refs passed to file loader and stored in db
+    // External refs passed to file loader and stored in vector doc metadata
     const fileLoaderMetadata: FileLoaderMetadata = {
-      userId: user.id,
       projectId: metadata.namespace === 'project' ? metadata.projectId : undefined,
       chatId: metadata.namespace === 'chat' ? metadata.chatId : undefined,
     }
@@ -23,6 +22,7 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(
     const dbFile: FileRecordInput = {
       ...fileLoaderMetadata,
       id,
+      userId: user.id,
       name: file.name,
       mimeType: file.mimeType,
       size: file.size,

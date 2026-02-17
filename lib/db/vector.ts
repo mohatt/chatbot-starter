@@ -70,7 +70,7 @@ export class VectorDb {
   index: Index
   files: VectorNamespace<FileLoaderDoc['metadata']>
 
-  constructor(env: Env) {
+  constructor(env: Pick<Env, 'UPSTASH_VECTOR_REST_URL' | 'UPSTASH_VECTOR_REST_TOKEN'>) {
     this.index = Index.fromEnv(env)
     this.files = new VectorNamespace(this.index, 'files:v1')
   }
