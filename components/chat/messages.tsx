@@ -47,9 +47,10 @@ import type { ChatTools, ModelUsage } from '@/lib/ai'
 import type { UseChatResult } from './hooks'
 
 // Pre-configured streamdown plugins with default settings
-const streamdownPlugins = { cjk, code, math, mermaid };
+const streamdownPlugins = { cjk, code, math, mermaid }
 
-export type ChatMessagesProps = Pick<UseChatResult,
+export type ChatMessagesProps = Pick<
+  UseChatResult,
   'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'
 > & {
   isReadonly: boolean
@@ -267,11 +268,7 @@ function ChatMessage(props: ChatMessageProps) {
         if (part.type === 'thinking') {
           const isGroupStreaming = isStreaming && groupedParts[i + 1] === undefined
           return (
-            <Reasoning
-              key={`${i}-thinking`}
-              isStreaming={isGroupStreaming}
-              className='mt-4'
-            >
+            <Reasoning key={`${i}-thinking`} isStreaming={isGroupStreaming} className='mt-4'>
               <ReasoningTrigger />
               <ReasoningContent className='flex flex-col gap-4'>
                 {part.group.map((tPart, j) => {

@@ -26,9 +26,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           enableSystem
         >
           <ToasterProvider position='top-center' />
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
+          <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
