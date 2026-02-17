@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToasterProvider } from '@/components/toaster-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { config } from '@/lib/config'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'RAG Chatbot',
-  description: 'Docs in, answers out — powered by Next.js, Vercel AI SDK, and Postgres.',
+  title: config.appName,
+  description: config.appDescription,
 }
 
 export const viewport = {

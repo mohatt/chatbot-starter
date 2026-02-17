@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ChatsSidebar } from '@/components/chat/sidebar'
 import { ProjectsSidebar } from '@/components/project/sidebar'
 import { SquarePen, FolderPlus, Sparkles } from 'lucide-react'
+import { config } from '@/lib/config'
 import Link from 'next/link'
 
 export function AppSidebar() {
@@ -37,7 +38,7 @@ export function AppSidebar() {
                 <span className='bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg'>
                   <Sparkles className='size-4' />
                 </span>
-                <span className='font-semibold text-lg'>RAG Chatbot</span>
+                <span className='font-semibold text-lg'>{config.appName}</span>
               </Link>
             </SidebarMenuButton>
             <Tooltip>

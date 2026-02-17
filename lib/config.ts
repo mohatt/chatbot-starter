@@ -8,7 +8,8 @@ function getDeploymentBaseUrl() {
 
 export const config = {
   appId: 'chatbot-starter',
-  appName: 'Chatbot',
+  appName: 'Chatbot Starter',
+  appDescription: 'Full‑stack AI chatbot starter kit.',
   baseUrl: getDeploymentBaseUrl(),
   chat: {
     models: new ModelsConfig([

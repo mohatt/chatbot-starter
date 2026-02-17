@@ -6,6 +6,7 @@ import type { FileUploadRules } from '@/lib/schema'
 export interface AppConfig {
   appId: string
   appName: string
+  appDescription: string
   baseUrl: string
   chat: {
     title: {

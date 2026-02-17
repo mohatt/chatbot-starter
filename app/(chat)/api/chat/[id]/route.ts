@@ -226,11 +226,6 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
                 error,
               })
             }
-            dataStream.write({
-              type: 'data-notification',
-              data: { message: `Tokens used: ${totalUsage.totalTokens}`, level: 'info' },
-              transient: true, // won't be persisted to storage
-            })
           },
           onAbort: () => {
             if (generation.signal.aborted) {
@@ -256,9 +251,8 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
           }),
         )
       },
-      onFinish: async ({ messages, finishReason, isAborted }) => {
+      onFinish: async ({ messages }) => {
         const chatCost = chatUsage?.cost.total ?? chatStepsCost ?? 0
-        console.log('onFinish', { messages, finishReason, isAborted, chatUsage, chatCost })
         await Promise.all([
           db.messages.insertMany(id, messages).catch((error) => {
             console.error('Failed to save chat messages:', {

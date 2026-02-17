@@ -10,7 +10,7 @@ export default async function Layout({ children }: LayoutProps<'/'>) {
   const [session, cookieStore] = await Promise.all([auth.getSession(), cookies()])
   const isCollapsed = cookieStore.get('sidebar_state')?.value !== 'true'
   const Auth = session ? AuthProvider : GuestAuthProvider
-  console.log('Layout session', session?.user)
+
   return (
     <ClientShell>
       <Auth>

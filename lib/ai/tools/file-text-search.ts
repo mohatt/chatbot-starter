@@ -97,14 +97,13 @@ export function fileTextSearch({ api, project, chat, message }: ChatContext) {
         }
 
         return {
-          data: filteredDocs
-            .map(([{ data, metadata }, score]) => ({
-              score,
-              excerpt: `${data.slice(0, 160).trim()}…`,
-              [fullText]: data,
-              file: metadata.file,
-              pageNumber: 'pageNumber' in metadata ? metadata.pageNumber : undefined,
-            })),
+          data: filteredDocs.map(([{ data, metadata }, score]) => ({
+            score,
+            excerpt: `${data.slice(0, 160).trim()}…`,
+            [fullText]: data,
+            file: metadata.file,
+            pageNumber: 'pageNumber' in metadata ? metadata.pageNumber : undefined,
+          })),
         }
       },
     }),
