@@ -3,8 +3,6 @@ import { ModelsConfig } from '@/lib/ai/config'
 
 function getDeploymentBaseUrl() {
   const host = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL
-  console.log(process.env)
-  throw new Error('Deployment URL is not set')
   return host ? `https://${host}` : 'http://localhost:3000'
 }
 

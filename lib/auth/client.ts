@@ -13,6 +13,7 @@ export type AuthEnv = Pick<Env, 'AUTH_SECRET' | 'AUTH_DISABLE_EMAIL' | 'AUTH_DIS
 export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
   const isMailerEnabled = !!mailer?.isEnabled
   const sendMailFn = <T extends Function>(fn: T) => (isMailerEnabled ? fn : undefined)
+  console.log('Creating auth client', { url: config.baseUrl })
   const auth = betterAuth({
     appName: config.appName,
     baseURL: config.baseUrl,
