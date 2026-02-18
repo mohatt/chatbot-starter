@@ -4,7 +4,9 @@ import { ModelsConfig } from '@/lib/ai/config'
 function getDeploymentBaseUrl() {
   // This usually point to the deployment url (eg. site-7q03y4pi5.vercel.app)
   // const host = process.env.VERCEL_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL
-  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+  const host =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
   return host ? `https://${host}` : 'http://localhost:3000'
 }
 
