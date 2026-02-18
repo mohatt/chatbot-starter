@@ -5,10 +5,12 @@ import type { Env } from '@/lib/env'
 import type { ModelKey } from './config'
 import type { LanguageModel, EmbeddingModel } from './types'
 
+export type AIEnv = Pick<Env, 'AI_GATEWAY_API_KEY' | 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>
+
 export class AI {
   readonly embedding: EmbeddingModel
 
-  constructor(private env: Pick<Env, 'HUGGING_FACE_API_KEY' | 'VERCEL_OIDC_TOKEN'>) {
+  constructor(private env: AIEnv) {
     this.embedding = gateway.embeddingModel('openai/text-embedding-3-small')
   }
 
