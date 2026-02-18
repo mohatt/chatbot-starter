@@ -1,13 +1,16 @@
 import { betterAuth, APIError } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { anonymous, openAPI, createAuthMiddleware } from 'better-auth/plugins'
-import type { Env } from '@/lib/env'
-import type { Db } from '@/lib/db'
+import { billing } from './plugins/billing'
+import { Mailer, VerifyEmail, ResetPassword } from '@/lib/mailer'
 import { config } from '@/lib/config'
 import * as authSchema from '@/lib/db/schema/auth'
-import { billing } from './plugins/billing'
+import type { Env } from '@/lib/env'
+import type { Db } from '@/lib/db'
 
-export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
+export function createAuthClient(env: Pick<Env, 'AUTH_SECRET'>, db: Db, mailer?: Mailer) {
+  const isMailerEnabled = !!mailer?.isEnabled
+  const sendMailFn = <T extends Function>(fn: T) => (isMailerEnabled ? fn : undefined)
   const auth = betterAuth({
     appName: config.appName,
     baseURL: config.baseUrl,
@@ -21,6 +24,22 @@ export function createAuthClient(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
     }),
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: isMailerEnabled,
+      resetPasswordTokenExpiresIn: 3600 * 24,
+      sendResetPassword: sendMailFn(async ({ user, url }) => {
+        const { email, name } = user
+        const { subject, body } = ResetPassword({ name, email, url })
+        await mailer?.send({ to: email, subject, react: body })
+      }),
+    },
+    emailVerification: {
+      sendVerificationEmail: sendMailFn(async ({ user, url }) => {
+        const { email, name } = user
+        const { subject, body } = VerifyEmail({ name, email, url })
+        await mailer?.send({ to: email, subject, react: body })
+      }),
+      autoSignInAfterVerification: true,
+      expiresIn: 3600 * 24,
     },
     user: {
       changeEmail: {

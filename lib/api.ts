@@ -8,6 +8,7 @@ import { Auth, type AuthSession } from './auth'
 import { Authorizer } from './authz'
 import { Billing } from './billing'
 import { Storage } from './storage'
+import { Mailer } from './mailer'
 import { AppError, type RouteNamespace } from './errors'
 
 export class Api {
@@ -31,7 +32,7 @@ export class Api {
   }
 
   get auth(): Auth {
-    return this.set('auth', new Auth(this.db, this.env))
+    return this.set('auth', new Auth(this.env, this.db, this.mailer))
   }
 
   get authz(): Authorizer {
@@ -44,6 +45,10 @@ export class Api {
 
   get storage(): Storage {
     return this.set('storage', new Storage(this.env))
+  }
+
+  get mailer(): Mailer {
+    return this.set('mailer', new Mailer(this.env))
   }
 
   private set<K extends keyof this, V extends this[K]>(key: K, value: V): V {

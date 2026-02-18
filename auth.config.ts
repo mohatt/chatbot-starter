@@ -10,4 +10,4 @@ const env = loadPartialEnv({
   AUTH_SECRET: true,
 })
 
-export const auth = createAuthClient(new Db(env), env)
+export const auth = createAuthClient(env, new Db(env))

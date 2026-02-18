@@ -3,12 +3,13 @@ import { createAuthClient } from './client'
 import type { NextRequest } from 'next/server'
 import type { Env } from '@/lib/env'
 import type { Db } from '@/lib/db'
+import type { Mailer } from '@/lib/mailer'
 
 export class Auth {
   readonly client: ReturnType<typeof createAuthClient>
 
-  constructor(db: Db, env: Pick<Env, 'AUTH_SECRET'>) {
-    this.client = createAuthClient(db, env)
+  constructor(env: Pick<Env, 'AUTH_SECRET'>, db: Db, mailer?: Mailer) {
+    this.client = createAuthClient(env, db, mailer)
   }
 
   async getSession(request?: NextRequest) {

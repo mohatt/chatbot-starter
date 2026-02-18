@@ -12,6 +12,7 @@ A full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped c
 - **Web search** support for OpenAI, Anthropic, and Google Gemini models
 - **Projects + chats** with per-project history and organized sidebar
 - **Auth + access control** with public/private chat visibility
+- **System emails** for user account management
 - **Usage tracking & limits** with per-user chat credits
 - **Advanced routing + client-side caching** for seamless navigation and performance
 
@@ -24,6 +25,7 @@ A full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped c
 - Upstash Vector (RAG)
 - Vercel Blob (file storage)
 - BetterAuth for authentication
+- Resend API for sending emails
 - Hosted on Vercel
 
 ## Deploy Your Own
@@ -60,7 +62,17 @@ vercel link
 vercel env pull .env.development.local
 ```
 
-> **Recommended:** Set secrets in the Vercel dashboard so they’re automatically included whenever you pull envs.
+> **Recommended:** Set env vars in the Vercel dashboard so they’re automatically included whenever you pull envs.
+
+#### Enable system emails for user account management (Optional)
+
+To enable user account emails (email verification and password reset), configure:
+
+```bash
+RESEND_API_KEY="abc-123"
+EMAIL_SENDER_NAME="Your App Name"
+EMAIL_SENDER_ADDRESS="no-reply@yourdomain.com"
+```
 
 ### 4. Apply database migrations
 
@@ -70,7 +82,7 @@ After your Postgres URL is set locally, run:
 pnpm db:push
 ```
 
-This will sync the current schema in [`lib/db/schema`](./lib/db/schema)` to your Postgres database.
+This will sync the current schema in [`lib/db/schema`](./lib/db/schema) to your Postgres database.
 
 ### 5. Review app configurations
 

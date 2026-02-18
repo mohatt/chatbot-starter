@@ -1,18 +1,24 @@
 import { z } from 'zod'
 
+const optional = z.string().optional()
+const required = z.string().trim().nonempty()
+
 const envSchema = z.object({
-  NODE_ENV: z.string().optional(),
-  AUTH_SECRET: z.string().trim().nonempty(),
-  CRON_SECRET: z.string().trim().nonempty(),
-  POSTGRES_URL: z.string().trim().nonempty(),
-  UPSTASH_VECTOR_REST_URL: z.string().trim().nonempty(),
-  UPSTASH_VECTOR_REST_TOKEN: z.string().trim().nonempty(),
-  BLOB_READ_WRITE_TOKEN: z.string().trim().nonempty(),
-  BLOB_BASE_URL: z.string().trim().nonempty(),
-  VERCEL_OIDC_TOKEN: z.string().trim().nonempty(),
-  HUGGING_FACE_API_KEY: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
-  OPENAI_BASE_URL: z.string().optional(),
+  NODE_ENV: optional,
+  AUTH_SECRET: required,
+  CRON_SECRET: required,
+  POSTGRES_URL: required,
+  UPSTASH_VECTOR_REST_URL: required,
+  UPSTASH_VECTOR_REST_TOKEN: required,
+  BLOB_READ_WRITE_TOKEN: required,
+  BLOB_BASE_URL: required,
+  VERCEL_OIDC_TOKEN: required,
+  HUGGING_FACE_API_KEY: optional,
+  OPENAI_API_KEY: optional,
+  OPENAI_BASE_URL: optional,
+  RESEND_API_KEY: optional,
+  EMAIL_SENDER_NAME: optional,
+  EMAIL_SENDER_ADDRESS: optional,
 })
 
 export type Env = z.infer<typeof envSchema>
