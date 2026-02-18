@@ -1,11 +1,14 @@
 import { z } from 'zod'
 
 const optional = z.string().optional()
+const optionalBool = z.stringbool().optional()
 const required = z.string().trim().nonempty()
 
 const envSchema = z.object({
   NODE_ENV: optional,
   AUTH_SECRET: required,
+  AUTH_DISABLE_ANONYMOUS: optionalBool,
+  AUTH_DISABLE_EMAIL: optionalBool,
   CRON_SECRET: required,
   POSTGRES_URL: required,
   UPSTASH_VECTOR_REST_URL: required,

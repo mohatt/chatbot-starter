@@ -8,7 +8,9 @@ import * as authSchema from '@/lib/db/schema/auth'
 import type { Env } from '@/lib/env'
 import type { Db } from '@/lib/db'
 
-export function createAuthClient(env: Pick<Env, 'AUTH_SECRET'>, db: Db, mailer?: Mailer) {
+export type AuthEnv = Pick<Env, 'AUTH_SECRET' | 'AUTH_DISABLE_EMAIL' | 'AUTH_DISABLE_ANONYMOUS'>
+
+export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
   const isMailerEnabled = !!mailer?.isEnabled
   const sendMailFn = <T extends Function>(fn: T) => (isMailerEnabled ? fn : undefined)
   const auth = betterAuth({
@@ -23,7 +25,7 @@ export function createAuthClient(env: Pick<Env, 'AUTH_SECRET'>, db: Db, mailer?:
       schema: authSchema,
     }),
     emailAndPassword: {
-      enabled: true,
+      enabled: !env.AUTH_DISABLE_EMAIL,
       requireEmailVerification: isMailerEnabled,
       resetPasswordTokenExpiresIn: 3600 * 24,
       sendResetPassword: sendMailFn(async ({ user, url }) => {
@@ -90,11 +92,17 @@ export function createAuthClient(env: Pick<Env, 'AUTH_SECRET'>, db: Db, mailer?:
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path !== '/update-user') return
+        if (ctx.path === '/sign-in/anonymous' && env.AUTH_DISABLE_ANONYMOUS) {
+          throw new APIError('FORBIDDEN', {
+            message: 'Anonymous sign-in is currently not allowed.',
+          })
+        }
 
-        const { image } = ctx.body
-        if (image != null) {
-          throw new APIError('BAD_REQUEST', { message: 'Avatar image uploads are not allowed.' })
+        if (ctx.path === '/update-user') {
+          const { image } = ctx.body
+          if (image != null) {
+            throw new APIError('BAD_REQUEST', { message: 'Avatar image uploads are not allowed.' })
+          }
         }
       }),
     },
