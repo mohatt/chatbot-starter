@@ -25,7 +25,8 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
       schema: authSchema,
     }),
     emailAndPassword: {
-      enabled: !env.AUTH_DISABLE_EMAIL,
+      enabled: true,
+      disableSignUp: env.AUTH_DISABLE_EMAIL,
       requireEmailVerification: isMailerEnabled,
       resetPasswordTokenExpiresIn: 3600 * 24,
       sendResetPassword: sendMailFn(async ({ user, url }) => {
