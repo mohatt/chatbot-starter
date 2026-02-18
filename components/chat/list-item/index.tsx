@@ -1,6 +1,6 @@
 'use client'
 import { useState, type KeyboardEvent } from 'react'
-import { useUpdateChatMutation } from '@/api/hooks/chats'
+import { useUpdateChatMutation } from '@/api-client/hooks/chats'
 import { toast } from 'sonner'
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { Share, Trash2, PencilLine } from 'lucide-react'

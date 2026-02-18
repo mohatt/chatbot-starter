@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/auth-provider'
-import { useUserBillingPeriodQuery } from '@/api/hooks/user'
+import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
 import {
   DropdownMenu,
   DropdownMenuContent,

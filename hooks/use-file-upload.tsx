@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useLazyRef } from '@/hooks/use-lazy-ref'
-import { useUploadFileMutation } from '@/api/hooks/files'
+import { useUploadFileMutation } from '@/api-client/hooks/files'
 import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
 import { cn, generateUUID } from '@/lib/utils'

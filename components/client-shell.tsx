@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ApiClientProvider } from '@/api/client-provider'
+import { ApiClientProvider } from '@/api-client/client-provider'
 
 export function ClientShell({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)

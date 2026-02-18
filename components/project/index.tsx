@@ -1,8 +1,8 @@
 'use client'
 import { useMemo, useState } from 'react'
-import { useProjectQuery } from '@/api/hooks/projects'
-import { useChatsQuery } from '@/api/hooks/chats'
-import { useFilesQuery } from '@/api/hooks/files'
+import { useProjectQuery } from '@/api-client/hooks/projects'
+import { useChatsQuery } from '@/api-client/hooks/chats'
+import { useFilesQuery } from '@/api-client/hooks/files'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Item, ItemActions, ItemTitle } from '@/components/ui/item'
 import {

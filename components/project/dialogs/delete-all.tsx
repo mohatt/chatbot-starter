@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDeleteProjectsMutation } from '@/api/hooks/projects'
+import { useDeleteProjectsMutation } from '@/api-client/hooks/projects'
 import { useAppParams } from '@/hooks/use-app-params'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'

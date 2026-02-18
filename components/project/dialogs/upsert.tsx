@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api/hooks/projects'
+import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api-client/hooks/projects'
 import { useSidebar } from '@/components/ui/sidebar'
 import { generateUUID, getProjectUrl } from '@/lib/utils'
 import { toast } from 'sonner'
