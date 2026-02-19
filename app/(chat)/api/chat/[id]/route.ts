@@ -130,7 +130,8 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
     }
 
     const location = geolocation(request)
-    const project = chat.projectId ? await db.projects.findById(chat.projectId) : null
+    const project = projectId ? await db.projects.findById(projectId) : null
+    const projectFiles = projectId ? await db.files.countMany({ projectId }) : null
 
     // Can be used to abort the generation stream
     // When triggered, the abort reason will be sent as an error part
@@ -152,6 +153,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
           modelMeta,
           message: uiMessage,
           project,
+          projectFiles,
           timeZone,
           location,
           dataStream,

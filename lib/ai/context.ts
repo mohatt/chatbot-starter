@@ -12,6 +12,7 @@ export interface ChatContext {
   model: ResolvedModelEntry
   modelMeta: ModelMeta
   project?: ChatProjectRecord | null
+  projectFiles?: number | null
   message: ChatMessage
   dataStream: UIMessageStreamWriter<ChatMessage>
   timeZone: string

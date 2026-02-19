@@ -22,7 +22,10 @@ The user's location is {{ location }}.
   },
 })
 
-export type ProjectChatPromptInput = Pick<ChatContext, 'location' | 'timeZone' | 'project'>
+export type ProjectChatPromptInput = Pick<
+  ChatContext,
+  'location' | 'timeZone' | 'project' | 'projectFiles'
+>
 
 export const projectChatPrompt = new PromptTemplate<ProjectChatPromptInput>({
   template: `You are a friendly conversational assistant.
@@ -30,6 +33,9 @@ Keep your responses human, concise, helpful and match the user’s tone. Respond
 This conversation was started in the context of the following user project:
 - Project name: {{ projectName }}
 - Project instructions: {{ projectPrompt }}
+{% if projectFiles %}
+- User has uploaded {{ projectFiles }} to the project
+{% endif %}
 --
 You have access to different tools that can help you list, access and search user files within the project.
 Those tools can also be used on the files that might be attached to user messages.
@@ -45,7 +51,7 @@ Those tools can also be used on the files that might be attached to user message
 The user's time is {{ dateTime }} ({{ timeZone }}).
 The user's location is {{ location }}.
 `,
-  format: ({ timeZone, location, project }) => {
+  format: ({ timeZone, location, project, projectFiles }) => {
     const { city, country } = location ?? {}
     const { name, prompt } = project!
     return {
@@ -54,6 +60,7 @@ The user's location is {{ location }}.
       location: city && country ? `${city}, ${country}` : 'Unknown',
       projectName: name,
       projectPrompt: prompt || 'None',
+      projectFiles: projectFiles ? `${projectFiles} file${projectFiles === 1 ? '' : 's'}` : null,
     }
   },
 })
