@@ -1,4 +1,5 @@
 import { Resend, type CreateEmailOptions } from 'resend'
+import { config } from '@/lib/config'
 import type { Env } from '../env'
 import type { DistributiveOmit } from '@tanstack/react-query'
 
@@ -15,13 +16,13 @@ export class Mailer {
       return
     }
 
-    if (!EMAIL_SENDER_NAME || !EMAIL_SENDER_ADDRESS) {
+    if (!EMAIL_SENDER_ADDRESS) {
       throw new Error('Email sender name and address must be set in environment variables.')
     }
 
     this._instance = {
       client: new Resend(RESEND_API_KEY),
-      fromName: EMAIL_SENDER_NAME,
+      fromName: EMAIL_SENDER_NAME ?? config.appName,
       fromAddress: EMAIL_SENDER_ADDRESS,
     }
   }

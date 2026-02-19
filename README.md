@@ -72,7 +72,6 @@ To enable user account emails (email verification and password reset), configure
 
 ```bash
 RESEND_API_KEY="abc-123"
-EMAIL_SENDER_NAME="Your App Name"
 EMAIL_SENDER_ADDRESS="no-reply@yourdomain.com"
 ```
 

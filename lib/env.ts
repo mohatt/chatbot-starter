@@ -33,14 +33,6 @@ const envSchema = envSchemaBase.superRefine((env, ctx) => {
   }
 
   if (env.RESEND_API_KEY) {
-    if (!env.EMAIL_SENDER_NAME) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'EMAIL_SENDER_NAME is required when RESEND_API_KEY is set.',
-        path: ['EMAIL_SENDER_NAME'],
-      })
-    }
-
     if (!env.EMAIL_SENDER_ADDRESS) {
       ctx.addIssue({
         code: 'custom',
