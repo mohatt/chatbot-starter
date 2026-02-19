@@ -29,6 +29,7 @@ import { config } from '@/lib/config'
 import type { ChatProjectRecord, FileRecord } from '@/lib/db'
 import type { AppError } from '@/lib/errors'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export interface ProjectFilesDialogProps extends BaseDialogProps {
   project: ChatProjectRecord
@@ -187,7 +188,15 @@ function ProjectFileItem(props: ProjectFileItemProps) {
     >
       {isImage ? (
         <ItemMedia variant='image'>
-          <img src={file.url ?? file.previewUrl ?? ''} alt={file.name} />
+          <Image
+            src={file.url ?? file.previewUrl ?? ''}
+            alt={file.name}
+            width={96}
+            height={96}
+            loading='eager'
+            placeholder={config.uploads.images.placeholder}
+            unoptimized
+          />
         </ItemMedia>
       ) : (
         <ItemMedia variant='icon'>

@@ -3,8 +3,10 @@ import { Carousel, CarouselContent, type CarouselApi } from '@/components/ui/car
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeftIcon, ArrowRightIcon, SquareArrowOutUpRightIcon } from 'lucide-react'
+import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export interface SourcesProps {
   children: ReactNode
@@ -93,7 +95,17 @@ function extractSourceProps(item: SourceUrlItem | SourceFileItem) {
     if (item.url) {
       if (isImage) {
         subtitle = item.mimeType
-        description = <img src={item.url} alt={title} width={128} height={128} />
+        description = (
+          <Image
+            src={item.url}
+            alt={title}
+            width={128}
+            height={128}
+            loading='lazy'
+            placeholder={config.uploads.images.placeholder}
+            unoptimized
+          />
+        )
       } else {
         subtitle = (
           <Link

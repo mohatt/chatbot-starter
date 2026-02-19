@@ -122,6 +122,8 @@ export const config = {
         extensions: ['png', 'jpg', 'webp', 'gif'],
         maxSize: 5 * 1024 * 1024,
       },
+      placeholder:
+        'data:image/gif;base64,R0lGODlhAgABAIAAANna3sXK0ywAAAAAAgABAAACAkQKADs=' as const,
     },
     retrieval: {
       rules: {

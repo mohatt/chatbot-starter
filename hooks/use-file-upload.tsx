@@ -121,26 +121,48 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
     })
   })
 
-  const openFileDialog = useCallback((bucket?: B) => {
-    const { inputRef } = bucketRefs.current.find(({ id }) => id === bucket)!
-    inputRef.current?.click()
+  const openFileDialog = useCallback(
+    (bucket?: B) => {
+      const { inputRef } = bucketRefs.current.find(({ id }) => id === bucket)!
+      inputRef.current?.click()
+    },
+    [bucketRefs],
+  )
+
+  const validateFile = useCallback(
+    (file: File, bucket?: B) => {
+      const refs = bucketRefs.current
+      if (bucket !== undefined) {
+        const bucketRef = refs.find(({ id }) => id === bucket)
+        return bucketRef ? ([bucket, bucketRef.schema!.safeParse(file)] as const) : undefined
+      }
+      let i = 0
+      for (const { id, schema } of refs) {
+        i++
+        if (id !== undefined) {
+          const result = schema!.safeParse(file)
+          if (result.success || i === refs.length) return [id, result] as const
+        }
+      }
+      return undefined
+    },
+    [bucketRefs],
+  )
+
+  const updateFile = useCallback((id: string, data: Partial<Omit<ClientUpload<never>, 'id'>>) => {
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...data } : f)))
   }, [])
 
-  const validateFile = useCallback((file: File, bucket?: B) => {
-    const refs = bucketRefs.current
-    if (bucket !== undefined) {
-      const bucketRef = refs.find(({ id }) => id === bucket)
-      return bucketRef ? ([bucket, bucketRef.schema!.safeParse(file)] as const) : undefined
-    }
-    let i = 0
-    for (const { id, schema } of refs) {
-      i++
-      if (id !== undefined) {
-        const result = schema!.safeParse(file)
-        if (result.success || i === refs.length) return [id, result] as const
-      }
-    }
-    return undefined
+  const clearFiles = useCallback(() => {
+    setFiles((prev) =>
+      prev.filter((file) => {
+        const url = file.previewUrl ?? file.url
+        if (url?.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+        return false
+      }),
+    )
   }, [])
 
   const uploadFiles = useEventCallback((input: File[] | FileList, bucket?: B) => {
@@ -253,10 +275,6 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
     })
   }, [])
 
-  const updateFile = useCallback((id: string, data: Partial<Omit<ClientUpload<never>, 'id'>>) => {
-    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...data } : f)))
-  }, [])
-
   const removeFile = useCallback((id: string) => {
     setFiles((prev) =>
       prev.filter((f) => {
@@ -268,18 +286,6 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
           return false
         }
         return true
-      }),
-    )
-  }, [])
-
-  const clearFiles = useCallback(() => {
-    setFiles((prev) =>
-      prev.filter((file) => {
-        const url = file.previewUrl ?? file.url
-        if (url?.startsWith('blob:')) {
-          URL.revokeObjectURL(url)
-        }
-        return false
       }),
     )
   }, [])

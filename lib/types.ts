@@ -34,6 +34,7 @@ export interface AppConfig {
   uploads: {
     images: {
       rules: FileUploadRules<'png' | 'jpg' | 'webp' | 'gif'>
+      placeholder: string
     }
     retrieval: {
       rules: FileUploadRules<FileLoaderType>

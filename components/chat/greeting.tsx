@@ -51,6 +51,7 @@ export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps
   const randomSuggestions = useRef(
     suggestions
       .slice()
+      /* eslint-disable-next-line react-hooks/purity */
       .sort(() => Math.random() - 0.5)
       .slice(0, 4),
   )

@@ -33,7 +33,7 @@ export function useCopyToClipboard(props?: UseCopyToClipboardProps) {
         console.error(error)
       }
     },
-    [timeout, onCopy],
+    [timeout, onCopy, showToast],
   )
 
   return { isCopied, copyToClipboard }

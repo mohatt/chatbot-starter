@@ -1,8 +1,10 @@
 'use client'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { Loader2Icon, PaperclipIcon, XIcon } from 'lucide-react'
+import { config } from '@/lib/config'
+import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import type { ClientUpload } from '@/hooks/use-file-upload'
 
 export interface PromptAttachmentProps {
@@ -31,12 +33,14 @@ export function PromptAttachment(props: PromptAttachmentProps) {
           <div className='relative size-5 shrink-0'>
             <div className='absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0'>
               {isImage ? (
-                <img
-                  alt={file.name || 'attachment'}
+                <Image
+                  alt={file.name || 'Attachment'}
                   className='size-5 object-cover'
-                  height={20}
                   src={url}
                   width={20}
+                  height={20}
+                  loading='eager'
+                  unoptimized
                 />
               ) : (
                 <div className='flex size-5 items-center justify-center text-muted-foreground'>
@@ -73,12 +77,15 @@ export function PromptAttachment(props: PromptAttachmentProps) {
         <div className='w-auto space-y-3'>
           {isImage && (
             <div className='flex max-h-96 w-80 items-center justify-center overflow-hidden rounded-md border'>
-              <img
-                alt={file.name || 'attachment preview'}
+              <Image
+                alt={file.name || 'Attachment preview'}
                 className='max-h-full max-w-full object-contain'
-                height={384}
                 src={url}
                 width={320}
+                height={384}
+                loading='eager'
+                placeholder={config.uploads.images.placeholder}
+                unoptimized
               />
             </div>
           )}

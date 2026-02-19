@@ -69,7 +69,7 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
       const redirectTo = searchParams.get('redirectTo') || pathname + search
       router.replace(`/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`)
     })
-  }, [loading, router])
+  }, [loading, success, router])
 
   if (loading !== false || !success) {
     return (

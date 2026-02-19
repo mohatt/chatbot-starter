@@ -53,7 +53,7 @@ export function ApiClientProvider({ children }: { children: ReactNode }) {
     if (process.env.NODE_ENV === 'development') {
       window.__TANSTACK_QUERY_CLIENT__ = queryClient
     }
-  }, [])
+  }, [queryClient])
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }

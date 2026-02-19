@@ -139,7 +139,7 @@ export function Chat(props: ChatIdProps) {
     // Use api data if it's fetched, otherwise use temporary new chat data
     const newChatData = chatData ?? newChat.current.chat
     addNewChatToCache(newChatData)
-  }, [isStoredChat, chatData, addNewChatToCache])
+  }, [newChat, isStoredChat, chatData, addNewChatToCache])
 
   // Set message history for existing chats
   useEffect(() => {
@@ -151,7 +151,7 @@ export function Chat(props: ChatIdProps) {
       if (prev.length > 0) return prev
       return historyMessages
     })
-  }, [historyData])
+  }, [historyData, setMessages])
 
   // Abort current chat request on unmount
   useEffect(() => {
