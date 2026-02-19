@@ -49,9 +49,7 @@ Once connected, Vercel will inject the required environment variables automatica
 
 ### 3. Environment variables
 
-You only need to set the required secrets (e.g., `AUTH_SECRET`, `CRON_SECRET`). You may use `openssl rand -base64 32` to generate those secrets.
-
-Other env vars are provisioned by Vercel and can be pulled locally with:
+Most environment variables are provisioned by Vercel during setup and can be pulled locally with:
 
 ```bash
 # Install Vercel CLI
@@ -61,6 +59,10 @@ vercel link
 # Download your environment variables locally
 vercel env pull .env.development.local
 ```
+
+You only need to set the required secrets (e.g., `AUTH_SECRET`, `CRON_SECRET`). You may use `openssl rand -base64 32` to generate those secrets.
+
+Refer to [`.env.example`](.env.example) for more information.
 
 > **Recommended:** Set env vars in the Vercel dashboard so they’re automatically included whenever you pull envs.
 
