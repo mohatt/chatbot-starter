@@ -67,3 +67,5 @@ export function formatFileSize(bytes: number): string {
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export type { ClassValue }

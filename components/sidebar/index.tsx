@@ -17,7 +17,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChatsSidebar } from '@/components/chat/sidebar'
 import { ProjectsSidebar } from '@/components/project/sidebar'
-import { SquarePen, FolderPlus, Sparkles } from 'lucide-react'
+import { AppBrandLogo } from '@/components/brand'
+import { SquarePen, FolderPlus } from 'lucide-react'
 import { config } from '@/lib/config'
 import Link from 'next/link'
 
@@ -35,9 +36,7 @@ export function AppSidebar() {
               asChild
             >
               <Link href='/' onClick={() => setOpenMobile(false)}>
-                <span className='bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg'>
-                  <Sparkles className='size-4' />
-                </span>
+                <AppBrandLogo />
                 <span className='font-semibold text-lg'>{config.appName}</span>
               </Link>
             </SidebarMenuButton>
@@ -54,9 +53,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem className='hidden group-data-[collapsible=icon]:list-item'>
             <SidebarMenuButton className='group-hover:hidden' asChild>
-              <span className='bg-sidebar-primary text-sidebar-primary-foreground inline-flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <Sparkles className='size-4' />
-              </span>
+              <AppBrandLogo />
             </SidebarMenuButton>
             <SidebarMenuButton tooltip='Open sidebar' className='hidden group-hover:flex' asChild>
               <SidebarTrigger />
