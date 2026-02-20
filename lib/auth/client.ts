@@ -1,6 +1,7 @@
 import { betterAuth, APIError } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { anonymous, openAPI, createAuthMiddleware } from 'better-auth/plugins'
+import { waitUntil } from '@vercel/functions'
 import { billing } from './plugins/billing'
 import { Mailer, VerifyEmail, ResetPassword } from '@/lib/mailer'
 import { config } from '@/lib/config'
@@ -29,17 +30,18 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
       disableSignUp: env.AUTH_DISABLE_EMAIL,
       requireEmailVerification: isMailerEnabled,
       resetPasswordTokenExpiresIn: 3600 * 24,
-      sendResetPassword: sendMailFn(async ({ user, url }) => {
+      sendResetPassword: sendMailFn(async ({ user, url, token }) => {
         const { email, name } = user
-        const { subject, body } = ResetPassword({ name, email, url })
-        await mailer?.send({ to: email, subject, react: body })
+        const message = ResetPassword({ name, email, url, token })
+        // Avoid awaiting to prevent timing attacks
+        waitUntil(mailer!.send(message, { to: email }))
       }),
     },
     emailVerification: {
-      sendVerificationEmail: sendMailFn(async ({ user, url }) => {
+      sendVerificationEmail: sendMailFn(async ({ user, url, token }) => {
         const { email, name } = user
-        const { subject, body } = VerifyEmail({ name, email, url })
-        await mailer?.send({ to: email, subject, react: body })
+        const message = VerifyEmail({ name, email, url, token })
+        waitUntil(mailer!.send(message, { to: email }))
       }),
       autoSignInAfterVerification: true,
       expiresIn: 3600 * 24,

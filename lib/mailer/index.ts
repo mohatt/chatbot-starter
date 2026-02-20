@@ -1,7 +1,14 @@
 import { Resend, type CreateEmailOptions } from 'resend'
+import { v4 as uuidv4 } from 'uuid'
 import { config } from '@/lib/config'
 import type { Env } from '../env'
 import type { DistributiveOmit } from '@tanstack/react-query'
+import type { EmailMessage } from './templates'
+
+export type SendEmailOptions = DistributiveOmit<
+  CreateEmailOptions,
+  'from' | 'subject' | 'react' | 'text' | 'template' | 'html'
+>
 
 export class Mailer {
   private readonly _instance?: {
@@ -17,7 +24,7 @@ export class Mailer {
     }
 
     if (!EMAIL_SENDER_ADDRESS) {
-      throw new Error('Email sender name and address must be set in environment variables.')
+      throw new Error('Email sender address must be set in environment variables.')
     }
 
     this._instance = {
@@ -38,12 +45,31 @@ export class Mailer {
     return this._instance
   }
 
-  async send(email: DistributiveOmit<CreateEmailOptions, 'from'>) {
+  async send(mail: EmailMessage<string>, options: SendEmailOptions) {
     const { client, fromName, fromAddress } = this.instance
-    return await client.emails.send({
-      ...email,
-      from: `${fromName} <${fromAddress}>`,
-    })
+    const { template, key, subject, body } = mail
+    const result = await client.emails.send(
+      {
+        ...options,
+        ...(typeof body === 'string' ? { text: body } : { react: body }),
+        subject,
+        from: `${fromName} <${fromAddress}>`,
+        headers: {
+          ...options.headers,
+          'X-Entity-Ref-ID': uuidv4(),
+        },
+      },
+      { idempotencyKey: key },
+    )
+
+    if (result.error) {
+      console.error('Failed sending email message:', {
+        error: result.error,
+        template,
+      })
+    }
+
+    return result
   }
 }
 

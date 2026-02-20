@@ -1,17 +1,20 @@
-import { EmailTemplate } from '@daveyplate/better-auth-ui/server'
+import { EmailTemplate as AuthEmailTemplate } from '@daveyplate/better-auth-ui/server'
 import { config } from '@/lib/config'
+import type { AuthUser } from '@/lib/auth'
+import type { EmailMessage } from './template'
 
-export interface ResetPasswordProps {
-  name?: string
-  email: string
+export interface ResetPasswordProps extends Pick<AuthUser, 'email' | 'name'> {
   url: string
+  token: string
 }
 
-export function ResetPassword(props: ResetPasswordProps) {
-  const { name, email, url } = props
+export function ResetPassword(props: ResetPasswordProps): EmailMessage<'auth/reset-password'> {
+  const { name, email, url, token } = props
   return {
+    template: 'auth/reset-password',
+    key: `auth/reset-password/${token}`,
     subject: `Reset your password`,
-    body: EmailTemplate({
+    body: AuthEmailTemplate({
       preview: 'Reset your password - Action required',
       heading: 'Reset your password',
       content: (
