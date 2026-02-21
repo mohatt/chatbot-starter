@@ -23,6 +23,7 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
       provider: 'pg',
       camelCase: true,
       usePlural: true,
+      transaction: true,
       schema: authSchema,
     }),
     emailAndPassword: {
