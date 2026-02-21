@@ -1,4 +1,4 @@
-<img alt="Project logo" src="public/project-logo.png" width="512" />
+<img alt="Demo screen" src="public/project-screen-01.png" width="830" />
 
 # Chatbot Starter
 
