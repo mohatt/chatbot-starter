@@ -2,33 +2,36 @@
 
 # Chatbot Starter
 
-A full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped chats, built on **Next.js**, **Vercel AI SDK**, **Postgres**, and **Upstash Vector**.
+Full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped chats, built on **Next.js**, **Vercel AI SDK**, **Postgres**, and **Upstash Vector**.
 
 [Live Demo][vercel-demo]
 
 ## Features
 
-- **Streaming chat UI** with Markdown rendering, auto-scroll, and rich AI elements
-- **Multi-model support** via Vercel AI Gateway (OpenAI, Anthropic, Google, xAI, and many more)
-- **File uploads + RAG** with vector indexing and in-chat file search/read tools
-- **Web search** support for OpenAI, Anthropic, and Google Gemini models
-- **Projects + chats** with per-project history and organized sidebar
-- **Auth + access control** with public/private chat visibility
-- **System emails** for user account management
-- **Usage tracking & limits** with per-user chat credits
-- **Advanced routing + client-side caching** for seamless navigation and performance
+- **Streaming chat UI** with Markdown rendering, auto-scroll, and rich AI elements.
+- **Multi-model support** via Vercel AI Gateway (OpenAI, Anthropic, Google, xAI, and many more).
+- **File uploads + RAG** with vector indexing and in-chat file search/read tools.
+- **Web search** support for OpenAI, Anthropic, and Google Gemini models.
+- **Projects + chats** with per-project history and organized sidebar.
+- **Auth + access control** with public/private chat visibility.
+- **System emails** for user account management.
+- **Usage tracking & limits** with per-user chat credits.
+- **Advanced routing + client-side caching** for seamless navigation and performance.
 
 ## Tech Stack
 
-- Next.js 16 + React 19 + React Query
-- shadcn/ui + Tailwind CSS
-- Vercel AI SDK + AI Gateway
-- Neon Postgres + Drizzle ORM
-- Upstash Vector (RAG)
-- Vercel Blob (file storage)
-- BetterAuth for authentication
-- Resend API for sending emails
-- Hosted on Vercel
+- **Backend:**
+  - **AI layer:** Vercel AI SDK + AI Gateway
+  - **DB layer:** Neon Postgres + Drizzle ORM
+  - **RAG:** Upstash Vector
+  - **File storage:** Vercel Blob
+  - **Authentication:** Better Auth
+  - **Emails:** Resend API
+- **Frontend:**
+  - Next.js 16 + React 19 + React Query
+  - shadcn/ui + Tailwind CSS
+- **Hosting:**
+  - Vercel Platform
 
 ## Deploy Your Own
 
