@@ -65,7 +65,7 @@ export function ChatHeader({ chat }: ChatHeaderProps) {
       </Breadcrumb>
 
       <Button asChild size='sm' className='order-3 hidden md:flex md:ml-auto'>
-        <Link href='https://github.com/mohatt/ai-chatbot' rel='noreferrer' target='_noblank'>
+        <Link href='https://github.com/mohatt/chatbot-starter' rel='noreferrer' target='_noblank'>
           <GithubIcon size={16} />
           View on Github
         </Link>
