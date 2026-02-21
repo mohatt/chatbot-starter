@@ -33,9 +33,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       Link={Link}
       gravatar
     >
-      {children}
+      <AuthGuard>{children}</AuthGuard>
     </AuthUIProvider>
   )
+}
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { isPending, data } = useAuthenticate({ enabled: true, authClient })
+  if (isPending) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <LoadingDots className='text-4xl' />
+      </div>
+    )
+  }
+  if (!data) {
+    // useAuthenticate should redirect the user if not authenticated
+    return
+  }
+  return children
 }
 
 export function GuestAuthProvider({ children }: { children: ReactNode }) {
@@ -48,7 +64,6 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
 
     const signIn = async () => {
       setLoading(true)
-      console.log('guest login started')
       try {
         const { data } = await authClient.signIn.anonymous()
         return !!data?.user.id
@@ -79,10 +94,13 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  console.log('guest login done')
   return <AuthProvider>{children}</AuthProvider>
 }
 
 export function useAuth() {
-  return useAuthenticate({ enabled: true, authClient })
+  const { data } = useAuthenticate({ enabled: true, authClient })
+  if (!data) {
+    throw new Error('useAuth() must be used within AuthGuard component')
+  }
+  return data
 }

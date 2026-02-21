@@ -2,6 +2,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/components/auth-provider'
 import {
   Conversation,
   ConversationContent,
@@ -35,6 +36,7 @@ export function Chat(props: ChatIdProps) {
   const queryClient = useQueryClient()
   const { data: settings } = useClientSettings()
   const { mutate: addNewChatToCache } = useNewChatMutation()
+  const { user } = useAuth()
   const {
     data: chatData,
     error: chatDataError,
@@ -44,15 +46,15 @@ export function Chat(props: ChatIdProps) {
     enabled: isStoredChat,
   })
   const {
-    data: historyData,
-    error: historyDataError,
+    data: history,
+    error: historyError,
     isLoading: isHistoryLoading,
   } = useChatHistoryQuery({
     variables: { id },
     enabled: !isNewChat,
   })
   const isDataLoading = isHistoryLoading || (!isNewChat && isChatDataLoading)
-  let dataError = chatDataError || historyDataError
+  let dataError = chatDataError || historyError
   if (chatData && chatData.projectId !== projectId) {
     dataError = new AppError('not_found:chat')
   }
@@ -143,15 +145,15 @@ export function Chat(props: ChatIdProps) {
 
   // Set message history for existing chats
   useEffect(() => {
-    if (!historyData) return
-    const historyMessages = historyData.pages.flatMap((d) => d.data)
+    if (!history) return
+    const historyMessages = history.pages.flatMap((d) => d.data)
     setMessages((prev) => {
       // If we already have messages (e.g. coming back with a warm Chat store),
       // don't prepend history again and cause duplicates.
       if (prev.length > 0) return prev
       return historyMessages
     })
-  }, [historyData, setMessages])
+  }, [history, setMessages])
 
   // Abort current chat request on unmount
   useEffect(() => {
@@ -206,16 +208,18 @@ export function Chat(props: ChatIdProps) {
           </div>
         </div>
 
-        <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
-          <ChatPrompt
-            chatId={id}
-            isPending={isDataLoading}
-            isEphemeral={!isStoredChat}
-            sendMessage={handleSendMessage}
-            status={status}
-            stop={stop}
-          />
-        </div>
+        {(!chatData || chatData.userId === user.id) && (
+          <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
+            <ChatPrompt
+              chatId={id}
+              isPending={isDataLoading}
+              isEphemeral={!isStoredChat}
+              sendMessage={handleSendMessage}
+              status={status}
+              stop={stop}
+            />
+          </div>
+        )}
       </div>
     </>
   )

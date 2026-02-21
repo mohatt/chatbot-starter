@@ -14,7 +14,6 @@ import {
 import { CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/components/auth-provider'
 import { BadgeCheckIcon, BadgeInfoIcon } from 'lucide-react'
 
@@ -50,13 +49,11 @@ export function UserAccountDialog({ open, onOpenChange }: UserAccountDialogProps
 }
 
 function ReadonlyEmailCard() {
-  const { user, isPending } = useAuth()
+  const { user } = useAuth()
   const title = (
     <div className='flex items-center gap-3'>
       <span>Email</span>
-      {isPending ? (
-        <Skeleton className='h-5 w-20' />
-      ) : user?.emailVerified ? (
+      {user.emailVerified ? (
         <Badge variant='secondary' className='bg-blue-500 text-white dark:bg-blue-600'>
           <BadgeCheckIcon />
           Verified
@@ -76,11 +73,7 @@ function ReadonlyEmailCard() {
       className='mb-4 md:mb-6'
     >
       <CardContent>
-        {isPending ? (
-          <Skeleton className='h-9 w-full' />
-        ) : (
-          <Input value={user?.email} type='email' disabled />
-        )}
+        <Input value={user?.email} type='email' disabled />
       </CardContent>
     </SettingsCard>
   )
