@@ -64,7 +64,7 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
           .
         </>
       }
-      submit='Delete All'
+      submit='Delete all'
       variant='destructive'
       error={error && 'Failed to delete all chats.'}
       isPending={isPending}

@@ -87,12 +87,13 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={handleSubmit}
-      title='Chat Privacy'
+      title='Privacy settings'
       description='Choose who can access this chat.'
       submit='Save'
       error={error && 'Failed to save chat settings.'}
       isPending={isPending}
       isReady={!!privacy && privacy !== chat?.privacy}
+      className='sm:max-w-xl'
     >
       <FieldGroup>
         <FieldSet>

@@ -65,7 +65,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={handleSubmit}
-      title={project ? 'Edit Project' : 'New Project'}
+      title={project ? 'Edit project' : 'New project'}
       description={project ? 'Update project settings' : 'Create a new project'}
       submit='Save'
       error={error && 'Failed to save project.'}
@@ -83,7 +83,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
               <Input
                 id='name'
                 type='text'
-                placeholder='Enter Project Name'
+                placeholder='Enter project mame'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />

@@ -99,7 +99,6 @@ export const useDeleteProjectMutation = createMutation({
   },
   onSuccess: (_, { id }, _1, { client }) => {
     client.setQueryData(useProjectsQuery.getKey(), (prevData) => {
-      console.log({ prevData })
       if (!prevData) return prevData
       return {
         ...prevData,

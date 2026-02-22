@@ -43,7 +43,7 @@ export function DeleteAllProjectsDialog(props: DeleteAllProjectsDialogProps) {
           This will delete <b>all your projects</b>.
         </>
       }
-      submit='Delete All'
+      submit='Delete all'
       variant='destructive'
       error={error && 'Failed to delete all projects.'}
       isPending={isPending}

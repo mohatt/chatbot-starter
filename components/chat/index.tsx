@@ -11,7 +11,6 @@ import {
 } from '@/components/ai-elements/conversation'
 import { toast } from 'sonner'
 import { DefaultChatTransport } from 'ai'
-import { type StickToBottomContext } from 'use-stick-to-bottom'
 import { fetchWithOfflineHandler, generateUUID, getTimeZone } from '@/lib/utils'
 import { LoadingDots } from '@/components/loading'
 import { ChatHeader } from './header'
@@ -23,6 +22,7 @@ import { useChatQuery, useChatHistoryQuery, useNewChatMutation } from '@/api-cli
 import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
 import { CircleAlert } from 'lucide-react'
 import { AppError } from '@/lib/errors'
+import type { StickToBottomContext } from 'use-stick-to-bottom'
 import type { PostRequestBody } from '@/app/(chat)/api/chat/[id]/schema'
 import type { ModelUsage } from '@/lib/ai'
 

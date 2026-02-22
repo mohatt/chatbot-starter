@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useId, useState } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 import {
   Dialog,
   DialogClose,
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { LoadingDots } from '@/components/loading'
 import { CircleAlert } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface BaseDialogProps {
   open: boolean
@@ -37,6 +38,7 @@ export interface ComposedDialogProps extends BaseDialogProps {
   error?: string | null
   isPending?: boolean
   isReady?: boolean
+  className?: string
 }
 
 export interface AlertDialogProps extends ComposedDialogProps {
@@ -57,10 +59,11 @@ export function AlertDialog(props: AlertDialogProps) {
     error,
     isPending,
     isReady = true,
+    className,
   } = props
   return (
     <BaseAlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className={className}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
@@ -109,10 +112,11 @@ export function FormDialog(props: FormDialogProps) {
     error,
     isPending,
     isReady = true,
+    className,
   } = props
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-3xl'>
+      <DialogContent className={cn('sm:max-w-3xl', className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
