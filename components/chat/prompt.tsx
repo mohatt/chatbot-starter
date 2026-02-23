@@ -2,8 +2,7 @@
 import { useRef, useState, type SubmitEvent, type ClipboardEvent, type KeyboardEvent } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useFileUpload } from '@/hooks/use-file-upload'
-import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
-import { toast } from 'sonner'
+import { useUserBilling } from '@/hooks/use-user-billing'
 import {
   PromptInputBody,
   PromptInputFooter,
@@ -25,7 +24,6 @@ import {
   SquareIcon,
   CircleAlertIcon,
 } from 'lucide-react'
-import { config } from '@/lib/config'
 import type { UseChatResult } from './hooks'
 
 export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'stop' | 'status'> {
@@ -43,16 +41,18 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     data: billing,
     isLoading: isBillingLoading,
     error: billingError,
-  } = useUserBillingPeriodQuery()
-  const chatCredits = billing?.chatCredits
-  const hasNoChatCredits = chatCredits != null && chatCredits.remaining <= 0
-
+    hasNoChatCredits,
+  } = useUserBilling()
+  const maxMessageFiles = billing?.tierConfig.maxMessageFiles ?? 0
   const warning = hasNoChatCredits
     ? 'You’ve reached your monthly chat usage limit.'
     : billingError
       ? 'Failed loading your chat usage information.'
       : null
 
+  const isStreaming = status === 'submitted' || status === 'streaming'
+  const isDataLoading = isPending || isBillingLoading
+  const isInputDisabled = isDisabled || hasNoChatCredits || !!billingError
   const isComposingRef = useRef(false)
   const {
     files,
@@ -65,18 +65,13 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     openFileDialog,
     renderUpload,
   } = useFileUpload({
-    limit: config.chat.message.maxFileParts,
+    enabled: !isInputDisabled && maxMessageFiles > 0,
+    limit: maxMessageFiles,
     buckets: ['images', 'retrieval'],
     metadata: { namespace: 'chat', chatId },
-    onError: ({ file, message }) => {
-      toast.error(file?.name ?? 'Upload Error', {
-        description: message,
-      })
-    },
   })
-  const isStreaming = status === 'submitted' || status === 'streaming'
-  const isDataLoading = isPending || isBillingLoading
-  const isInputDisabled = isDisabled || hasNoChatCredits || !!billingError
+
+  const isFileUploadDisabled = isInputDisabled || hasMaxFiles || maxMessageFiles <= 0
   const isSubmitDisabled =
     isInputDisabled ||
     isStreaming ||
@@ -186,17 +181,20 @@ export const ChatPrompt = (props: ChatPromptProps) => {
           <PromptInputFooter>
             <PromptInputTools>
               <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger title='Attach files' disabled={isInputDisabled} />
+                <PromptInputActionMenuTrigger
+                  title='Attach files'
+                  disabled={isFileUploadDisabled}
+                />
                 <PromptInputActionMenuContent>
                   <PromptInputActionMenuItem
                     onClick={() => openFileDialog('images')}
-                    disabled={hasMaxFiles}
+                    disabled={isFileUploadDisabled}
                   >
                     <ImageIcon className='size-4' /> Add photos
                   </PromptInputActionMenuItem>
                   <PromptInputActionMenuItem
                     onClick={() => openFileDialog('retrieval')}
-                    disabled={hasMaxFiles}
+                    disabled={isFileUploadDisabled}
                   >
                     <PaperclipIcon className='size-4' /> Add documents
                   </PromptInputActionMenuItem>

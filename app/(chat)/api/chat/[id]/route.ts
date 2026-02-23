@@ -37,7 +37,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
       postRequestBodySchema.parse(await request.json())
 
     const billingPeriod = await billing.getCurrentPeriod(user)
-    const { chatCredits } = billingPeriod.period
+    const { chatCredits, tierConfig } = billingPeriod.period
     if (chatCredits.remaining <= 0) {
       throw new AppError('rate_limit:chat')
     }
@@ -54,7 +54,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
     }
 
     const fileIds = message.metadata?.files?.map((f) => f.id) ?? []
-    if (fileIds.length > config.chat.message.maxFileParts) {
+    if (fileIds.length > tierConfig.maxMessageFiles) {
       throw new AppError('bad_request:chat')
     }
     const files = fileIds.length > 0 ? await db.files.findByIdsForUser(fileIds, user.id) : []

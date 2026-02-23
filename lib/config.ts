@@ -95,23 +95,25 @@ export const config = {
     },
     message: {
       maxParts: 10,
-      maxFileParts: 3,
     },
     history: {
       defaultLimit: 100,
       maxLimit: 100,
     },
   },
-  project: {
-    maxFiles: 12,
-  },
   billing: {
-    tiers: {
+    tierMap: {
       user: {
         maxChatUsage: 2,
+        maxMessageFiles: 4,
+        maxProjects: 5,
+        maxProjectFiles: 20,
       },
       anonymous: {
         maxChatUsage: 1,
+        maxMessageFiles: 2,
+        maxProjects: 1,
+        maxProjectFiles: 10,
       },
     },
   },

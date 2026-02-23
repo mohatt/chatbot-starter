@@ -1,6 +1,7 @@
 import { createInfiniteQuery, createQuery, createMutation } from 'react-query-kit'
 import { fetcher } from '@/lib/utils'
 import { useChatsQuery } from './chats'
+import { useUserBillingPeriodQuery } from './user'
 import type { ChatProjectRecord, PaginatedResult } from '@/lib/db'
 import type { PostRequestBody, PatchRequestBody } from '@/app/(chat)/api/project/[id]/schema'
 
@@ -64,6 +65,16 @@ export const useCreateProjectMutation = createMutation({
       }
       return { pages: nextPages, pageParams }
     })
+    client.setQueryData(useUserBillingPeriodQuery.getKey(), (prevData) => {
+      if (!prevData) return prevData
+      const prevQuota = prevData.projectQuota
+      const used = Math.max(0, Math.min(prevQuota.max, prevQuota.used + 1))
+      const remaining = Math.max(0, prevQuota.max - used)
+      return {
+        ...prevData,
+        projectQuota: { ...prevQuota, used, remaining },
+      }
+    })
   },
 })
 
@@ -108,6 +119,16 @@ export const useDeleteProjectMutation = createMutation({
         })),
       }
     })
+    client.setQueryData(useUserBillingPeriodQuery.getKey(), (prevData) => {
+      if (!prevData) return prevData
+      const prevQuota = prevData.projectQuota
+      const used = Math.max(0, prevQuota.used - 1)
+      const remaining = Math.max(0, prevQuota.max - used)
+      return {
+        ...prevData,
+        projectQuota: { ...prevQuota, used, remaining },
+      }
+    })
   },
 })
 
@@ -116,12 +137,22 @@ export const useDeleteProjectsMutation = createMutation({
   mutationFn: async () => {
     return fetcher<string[]>('/api/project/history', { method: 'DELETE' })
   },
-  onSuccess: (_, _1, _2, { client }) => {
+  onSuccess: (deletedIds, _1, _2, { client }) => {
     client.setQueryData(useProjectsQuery.getKey(), (prevData) => {
       if (!prevData) return prevData
       return {
         pages: [{ data: [], nextCursor: null }],
         pageParams: [null],
+      }
+    })
+    client.setQueryData(useUserBillingPeriodQuery.getKey(), (prevData) => {
+      if (!prevData) return prevData
+      const prevQuota = prevData.projectQuota
+      const used = Math.max(0, prevQuota.used - deletedIds.length)
+      const remaining = Math.max(0, prevQuota.max - used)
+      return {
+        ...prevData,
+        projectQuota: { ...prevQuota, used, remaining },
       }
     })
   },

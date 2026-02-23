@@ -1,7 +1,7 @@
 import { and, or, asc, eq, inArray, isNull, lt, count } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
-import { files, type FileRecordMetadata } from '../schema'
+import { files, type FileRecordMetadata, users } from '../schema'
 
 export type FileRecord = typeof files.$inferSelect
 export type FileRecordInput = Omit<typeof files.$inferInsert, 'createdAt'> & { userId: string }
@@ -14,6 +14,45 @@ export class FileModel extends DbModel {
       const [insertedFile] = await this.db.insert(files).values(file).returning()
       return insertedFile
     } catch (_error) {
+      throw new AppError('bad_request:database', 'Failed to create new file')
+    }
+  }
+
+  async createWithQuota(
+    file: FileRecordInput,
+    quota: { maxCountPerProject: number },
+  ): Promise<FileRecord> {
+    try {
+      return await this.db.transaction(async (tx) => {
+        const { userId, projectId } = file
+        // Lock mutex row (this serializes file creation per user)
+        await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
+
+        if (projectId) {
+          const [{ value: current }] = await tx
+            .select({ value: count() })
+            .from(files)
+            .where(eq(files.projectId, projectId))
+
+          if (current >= quota.maxCountPerProject) {
+            throw new AppError('rate_limit:file')
+          }
+        }
+
+        const [inserted] = await tx
+          .insert(files)
+          .values({
+            ...file,
+            // chatId and messageId are set when the chat endpoint is called with the new message
+            // if not called, the file is considered orphan and should be removed by the cleanup cronjob
+            chatId: null,
+            messageId: null,
+          })
+          .returning()
+        return inserted
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
       throw new AppError('bad_request:database', 'Failed to create new file')
     }
   }

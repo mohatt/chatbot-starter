@@ -31,7 +31,7 @@ function getMessageByErrorCode(errorCode: ErrorCode): string {
       return "The request couldn't be processed. Please check your input and try again."
 
     case 'rate_limit:chat':
-      return 'You’ve reached your monthly chat usage limit. Please try again later.'
+      return 'You’ve reached your monthly chat usage limit.'
     case 'not_found:chat':
       return 'The requested chat was not found. Please check the chat ID and try again.'
     case 'forbidden:chat':
@@ -43,10 +43,15 @@ function getMessageByErrorCode(errorCode: ErrorCode): string {
     case 'bad_request:chat':
       return 'The request to update the chat was invalid. Please check your input and try again.'
 
+    case 'rate_limit:project':
+      return 'You’ve reached your maximum number of projects.'
     case 'not_found:project':
       return 'The requested project was not found. Please check the project ID and try again.'
     case 'bad_request:project':
       return 'The request to update the project was invalid. Please check your input and try again.'
+
+    case 'rate_limit:file':
+      return 'You’ve reached the maximum number of files for this project.'
 
     case 'not_found:api':
       return 'The requested api resource was not found.'

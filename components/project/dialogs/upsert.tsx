@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateProjectMutation, useUpdateProjectMutation } from '@/api-client/hooks/projects'
+import { useUserBilling } from '@/hooks/use-user-billing'
 import { useSidebar } from '@/components/ui/sidebar'
 import { generateUUID, getProjectUrl } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
-import { Alert, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { FormDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
+import { FormDialog, AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
+import { AppError } from '@/lib/errors'
 import type { ChatProjectRecord } from '@/lib/db'
-import type { AppError } from '@/lib/errors'
 
 export interface ProjectUpsertDialogProps extends BaseDialogProps {
   project: ChatProjectRecord | null
@@ -21,6 +22,8 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   const { project, open, onOpenChange } = props
   const [name, setName] = useState(project?.name ?? '')
   const [prompt, setPrompt] = useState(project?.prompt ?? '')
+  const { hasNoProjectQuota } = useUserBilling()
+  const isCreateLimitReached = !project && hasNoProjectQuota
   const createMutation = useCreateProjectMutation()
   const updateMutation = useUpdateProjectMutation()
   const { mutateAsync, reset, error, isPending } = project ? updateMutation : createMutation
@@ -35,7 +38,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
   }, [project, reset])
 
   const handleSubmit = () => {
-    if (isPending) return
+    if (isPending || isCreateLimitReached) return
 
     mutateAsync({
       id: project?.id ?? generateUUID(),
@@ -60,6 +63,23 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       })
   }
 
+  if (isCreateLimitReached) {
+    return (
+      <AlertDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title='Error'
+        description='Project quota reached'
+        cancel='Close'
+      >
+        <Alert variant='destructive'>
+          <CircleAlert />
+          <AlertDescription>{new AppError('rate_limit:project').message}</AlertDescription>
+        </Alert>
+      </AlertDialog>
+    )
+  }
+
   return (
     <FormDialog
       open={open}
@@ -71,6 +91,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       error={error && 'Failed to save project.'}
       isPending={isPending}
       isReady={
+        !isCreateLimitReached &&
         !!name.trim() &&
         (name.trim() !== project?.name || prompt.trim() !== (project?.prompt ?? ''))
       }
@@ -83,7 +104,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
               <Input
                 id='name'
                 type='text'
-                placeholder='Enter project mame'
+                placeholder='Enter project name'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -102,7 +123,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
               />
               {!project && (
                 <Alert className='text-muted-foreground'>
-                  <CircleAlert className='size-4' />
+                  <CircleAlert />
                   <AlertTitle>Files can later be added to this project.</AlertTitle>
                 </Alert>
               )}

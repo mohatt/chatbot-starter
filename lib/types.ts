@@ -1,7 +1,7 @@
-import type { BillingPeriodRecord } from '@/lib/db'
 import type { ModelsConfig, ModelKey } from '@/lib/ai/config'
 import type { FileLoaderOptions, FileLoaderType } from '@/lib/document'
 import type { FileUploadRules } from '@/lib/schema'
+import type { BillingTierMap } from '@/lib/billing'
 
 export interface AppConfig {
   appId: string
@@ -16,7 +16,6 @@ export interface AppConfig {
     }
     message: {
       maxParts: number
-      maxFileParts: number
     }
     history: {
       defaultLimit: number
@@ -24,11 +23,8 @@ export interface AppConfig {
     }
     models: ModelsConfig
   }
-  project: {
-    maxFiles: number
-  }
   billing: {
-    tiers: Record<BillingPeriodRecord['tier'], Pick<BillingPeriodRecord, 'maxChatUsage'>>
+    tierMap: BillingTierMap
   }
   fileLoader: FileLoaderOptions
   uploads: {

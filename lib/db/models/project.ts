@@ -1,7 +1,7 @@
-import { and, desc, eq, lt } from 'drizzle-orm'
+import { and, count, desc, eq, lt } from 'drizzle-orm'
 import { AppError } from '@/lib/errors'
 import { DbModel, type PaginatedResult } from './base'
-import { projects } from '../schema'
+import { projects, users } from '../schema'
 import type { ChatRecord } from './chat'
 
 export type ChatProjectRecord = typeof projects.$inferSelect
@@ -29,6 +29,34 @@ export class ChatProjectModel extends DbModel {
       const [insertedProject] = await this.db.insert(projects).values(project).returning()
       return insertedProject
     } catch (_error) {
+      throw new AppError('bad_request:database', 'Failed to create project')
+    }
+  }
+
+  async createWithQuota(
+    project: ChatProjectRecordInput,
+    maxCount: number,
+  ): Promise<ChatProjectRecord> {
+    try {
+      return await this.db.transaction(async (tx) => {
+        const { userId } = project
+        // Lock mutex row (this serializes project creation per user)
+        await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
+
+        const [{ value: current }] = await tx
+          .select({ value: count() })
+          .from(projects)
+          .where(eq(projects.userId, userId))
+
+        if (current >= maxCount) {
+          throw new AppError('rate_limit:project')
+        }
+
+        const [inserted] = await tx.insert(projects).values(project).returning()
+        return inserted
+      })
+    } catch (error) {
+      if (error instanceof AppError) throw error
       throw new AppError('bad_request:database', 'Failed to create project')
     }
   }
@@ -68,6 +96,18 @@ export class ChatProjectModel extends DbModel {
       return deleted.map((row) => row.id)
     } catch (_error) {
       throw new AppError('bad_request:database', 'Failed to delete user projects')
+    }
+  }
+
+  async countMany({ userId }: { userId: string }): Promise<number> {
+    try {
+      const [result] = await this.db
+        .select({ value: count() })
+        .from(projects)
+        .where(eq(projects.userId, userId))
+      return result.value
+    } catch (_error) {
+      throw new AppError('bad_request:database', 'Failed to count user projects')
     }
   }
 

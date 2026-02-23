@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useFileUpload, type ClientUpload } from '@/hooks/use-file-upload'
+import { useUserBilling } from '@/hooks/use-user-billing'
 import { useFilesQuery, useDeleteFileMutation } from '@/api-client/hooks/files'
 import { useDialogState, type BaseDialogProps } from '@/components/dialog'
-import { toast } from 'sonner'
 import { formatFileSize, cn } from '@/lib/utils'
 import {
   Dialog,
@@ -48,18 +48,17 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
   })
   const dbFilesRef = useRef(new Map<string, FileRecord>())
   const { mutateAsync: deleteDbFile } = useDeleteFileMutation()
+  const { data: billing } = useUserBilling()
+  const maxProjectFiles = billing?.tierConfig.maxProjectFiles ?? 0
 
   const { files, upsertFile, updateFile, renderUpload, openFileDialog, removeFile, hasMaxFiles } =
     useFileUpload({
+      enabled: maxProjectFiles > 0,
+      limit: maxProjectFiles,
       buckets: ['retrieval', 'images'],
       metadata: { namespace: 'project', projectId },
-      limit: config.project.maxFiles,
-      onError: ({ file, message }) => {
-        toast.error(file?.name ?? 'Upload Error', {
-          description: message,
-        })
-      },
     })
+  const isUploadDisabled = hasMaxFiles || maxProjectFiles <= 0
 
   useEffect(() => {
     dbFilesRef.current.clear()
@@ -107,7 +106,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
               variant='outline'
               size='sm'
               onClick={() => openFileDialog()}
-              disabled={hasMaxFiles}
+              disabled={isUploadDisabled}
             >
               <FilePlusCorner />
               <span>Add files</span>
@@ -142,6 +141,7 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
                 size='lg'
                 className='size-full flex-col whitespace-normal'
                 onClick={() => openFileDialog()}
+                disabled={isUploadDisabled}
               >
                 <FilePlusCorner className='size-6' />
                 <span>

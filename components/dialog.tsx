@@ -30,7 +30,6 @@ export interface BaseDialogProps {
 
 export interface ComposedDialogProps extends BaseDialogProps {
   title: string
-  onSubmit: () => void | Promise<void>
   description?: ReactNode
   children?: ReactNode
   submit?: string
@@ -43,6 +42,7 @@ export interface ComposedDialogProps extends BaseDialogProps {
 
 export interface AlertDialogProps extends ComposedDialogProps {
   variant?: 'destructive' | 'default'
+  onSubmit?: () => void | Promise<void>
 }
 
 export function AlertDialog(props: AlertDialogProps) {
@@ -82,22 +82,26 @@ export function AlertDialog(props: AlertDialogProps) {
               <Kbd className='not-md:hidden'>Esc</Kbd>
             </AlertDialogCancel>
           )}
-          <Button
-            type='button'
-            variant={variant}
-            disabled={isPending || !isReady}
-            onClick={onSubmit}
-          >
-            {isPending && <LoadingDots />}
-            {submit}
-          </Button>
+          {onSubmit && (
+            <Button
+              type='button'
+              variant={variant}
+              disabled={isPending || !isReady}
+              onClick={onSubmit}
+            >
+              {isPending && <LoadingDots />}
+              {submit}
+            </Button>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </BaseAlertDialog>
   )
 }
 
-export interface FormDialogProps extends ComposedDialogProps {}
+export interface FormDialogProps extends ComposedDialogProps {
+  onSubmit: () => void | Promise<void>
+}
 
 export function FormDialog(props: FormDialogProps) {
   const {

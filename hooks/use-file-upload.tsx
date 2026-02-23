@@ -13,6 +13,7 @@ import { useLazyRef } from '@/hooks/use-lazy-ref'
 import { useUploadFileMutation } from '@/api-client/hooks/files'
 import { AsyncCaller } from '@/lib/async-caller'
 import { config } from '@/lib/config'
+import { toast } from 'sonner'
 import { cn, generateUUID } from '@/lib/utils'
 import { fileUpload, getAllowedTypes } from '@/lib/schema/file-upload'
 import { Slot } from 'radix-ui'
@@ -29,7 +30,10 @@ export interface ClientUpload<B extends string> extends Omit<FileToolRecord, 'ur
   error?: string | null
 }
 
-export interface ClientErrorProps<B extends string> {
+export type UploadRejectReason = 'disabled' | 'limit' | 'validation'
+
+export interface UploadRejectProps<B extends string> {
+  reason: UploadRejectReason
   message: string
   bucket?: B
   file?: File
@@ -55,11 +59,12 @@ type MetadataForNS<N extends UploadNS> = Extract<
 >
 
 export interface UseFileUploadProps<N extends UploadNS, B extends string> {
+  enabled?: boolean
   metadata: MetadataForNS<N>
   buckets: readonly B[]
   limit?: number
   initialFiles?: readonly ClientUpload<B>[]
-  onError?: (props: ClientErrorProps<B>) => void
+  onReject?: (props: UploadRejectProps<B>) => void
 }
 
 const imagesRules = config.uploads.images.rules
@@ -77,10 +82,23 @@ const allBuckets = {
   },
 } satisfies Record<UploadPayload['bucket'], object>
 
+function defaultRejectHandler({ file, message }: UploadRejectProps<string>) {
+  toast.error(file?.name ?? 'Upload Error', {
+    description: message,
+  })
+}
+
 export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
   props: UseFileUploadProps<N, B>,
 ) {
-  const { buckets, metadata, limit = 1, initialFiles = [], onError } = props
+  const {
+    enabled = true,
+    buckets,
+    metadata,
+    limit = 1,
+    initialFiles = [],
+    onReject = defaultRejectHandler,
+  } = props
   const isSingle = limit === 1
   const { mutateAsync } = useUploadFileMutation()
   const [files, setFiles] = useState(initialFiles)
@@ -166,6 +184,11 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
   }, [])
 
   const uploadFiles = useEventCallback((input: File[] | FileList, bucket?: B) => {
+    if (!enabled) {
+      onReject({ reason: 'disabled', message: 'File uploads are temporarily unavailable' })
+      return
+    }
+
     const incoming = Array.from(input)
     const accepted = incoming
       .map((file) => {
@@ -179,10 +202,11 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
           return [generateUUID(), fileBucket, fileResult.data] as const
         }
 
-        onError?.({
+        onReject({
           file,
           bucket: fileBucket,
           message: fileResult.error.issues[0].message,
+          reason: 'validation',
         })
         return undefined
       })
@@ -193,10 +217,11 @@ export function useFileUpload<N extends UploadNS, B extends BucketsForNS<N>>(
 
     const capacity = isSingle ? 1 : Math.max(0, limit - files.length)
     if (accepted.length > capacity) {
-      onError?.({
+      onReject({
+        reason: 'limit',
         message:
           capacity <= 0
-            ? 'You’ve already attached the maximum number of files.'
+            ? 'You’ve already attached the maximum number of files allowed.'
             : 'Too many files. Some were skipped.',
       })
     }

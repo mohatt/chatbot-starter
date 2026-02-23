@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/components/auth-provider'
-import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
+import { useUserBilling } from '@/hooks/use-user-billing'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -150,7 +150,7 @@ export function UserSidebar() {
 }
 
 function UserChatCredits() {
-  const { data, isLoading, error } = useUserBillingPeriodQuery()
+  const { data, isLoading, error } = useUserBilling()
 
   const credits = useMemo(() => {
     if (!data) return null

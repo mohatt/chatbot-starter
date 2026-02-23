@@ -8,8 +8,9 @@ import type { FileRecordInput } from '@/lib/db'
 
 export const POST = createApiHandler<RouteContext<'/api/files'>>(
   async ({ api, session, request }) => {
-    const { authz, db, vectorDb, storage } = api
+    const { authz, db, vectorDb, storage, billing } = api
     const { user } = await session()
+    const { tierConfig } = billing.getUserInfo(user)
     const { id, file, bucket, metadata } = postRequestBodySchema.parse(await request.formData())
 
     // External refs passed to file loader and stored in vector doc metadata
@@ -33,10 +34,7 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(
     }
 
     if (metadata.namespace === 'chat') {
-      // We set only chatId when the chat endpoint is called, if not called,
-      // the file is considered orphan and will be removed during the next cleanup run
-      dbFile.chatId = null
-      // Make sure the user has access to existing chats, non-existing chats are considered new
+      // Make sure the user has access to existing chats, non-existing ids are considered new chats
       const chat = await db.chats.findById(metadata.chatId)
       if (chat && !authz.can(user, 'write:chat', chat)) {
         throw new AppError('not_found:file')
@@ -47,8 +45,8 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(
         throw new AppError('not_found:file')
       }
       const fileCount = await db.files.countMany({ projectId: project.id })
-      if (fileCount >= config.project.maxFiles) {
-        throw new AppError('bad_request:file', 'Project has reached the maximum number of files.')
+      if (fileCount >= tierConfig.maxProjectFiles) {
+        throw new AppError('rate_limit:file', 'Project has reached the maximum number of files.')
       }
     }
 
@@ -83,10 +81,12 @@ export const POST = createApiHandler<RouteContext<'/api/files'>>(
       }
     }
 
-    const storedFile = await db.files.create(dbFile).catch(async (err) => {
-      await cleanup()
-      throw err
-    })
+    const storedFile = await db.files
+      .createWithQuota(dbFile, { maxCountPerProject: tierConfig.maxProjectFiles })
+      .catch(async (err) => {
+        await cleanup()
+        throw err
+      })
 
     return NextResponse.json(storedFile)
   },

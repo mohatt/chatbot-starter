@@ -1,27 +1,49 @@
 import { config } from '@/lib/config'
 import type { Db, BillingPeriodRecord } from '@/lib/db'
 import type { AuthUser } from '@/lib/auth'
+import type { BillingTierType, BillingTier } from './tiers'
+
+export interface BillingPeriodQuota {
+  used: number
+  remaining: number
+  max: number
+}
 
 export interface BillingPeriod extends Pick<BillingPeriodRecord, 'id' | 'tier' | 'billingId'> {
-  chatCredits: {
-    used: number
-    remaining: number
-    max: number
-  }
+  chatCredits: BillingPeriodQuota
+  tierConfig: BillingTier
   startDate: string
   endDate: string
   createdAt: string
   updatedAt: string
 }
 
+export interface BillingUserInfo {
+  tier: BillingTierType
+  tierConfig: BillingTier
+  billingId: string
+}
+
+export type BillingUser = Pick<AuthUser, 'id' | 'billingId' | 'isAnonymous'>
+
 export class Billing {
   constructor(private readonly db: Db) {}
 
-  async getCurrentPeriod(user: AuthUser) {
-    const tier = user.isAnonymous ? 'anonymous' : 'user'
-    const { maxChatUsage } = config.billing.tiers[tier]
+  getUserInfo(user: BillingUser): BillingUserInfo {
+    const { id, isAnonymous, billingId } = user
+    if (!billingId) {
+      throw new Error(`User "${id}" does not have a valid billing profile`)
+    }
+    const tier: BillingTierType = isAnonymous ? 'anonymous' : 'user'
+    const tierConfig = config.billing.tierMap[tier]
+    return { tier, tierConfig, billingId }
+  }
+
+  async getCurrentPeriod(user: BillingUser) {
+    const { tier, tierConfig, billingId } = this.getUserInfo(user)
+    const { maxChatUsage } = tierConfig
     const periodModel = this.db.billingPeriods
-    const periodRecord = await periodModel.ensureCurrent(user.billingId!, {
+    const periodRecord = await periodModel.ensureCurrent(billingId, {
       tier,
       maxChatUsage,
     })
@@ -34,8 +56,9 @@ export class Billing {
     }
   }
 
-  async listPeriods(user: AuthUser): Promise<BillingPeriod[]> {
-    const periods = await this.db.billingPeriods.findMany(user.billingId!)
+  async listPeriods(user: BillingUser): Promise<BillingPeriod[]> {
+    const { billingId } = this.getUserInfo(user)
+    const periods = await this.db.billingPeriods.findMany(billingId)
     return periods.map((record) => this.createPeriod(record))
   }
 
@@ -55,6 +78,7 @@ export class Billing {
       updatedAt,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
+      tierConfig: config.billing.tierMap[tier],
       chatCredits: {
         used: chatUsage,
         remaining: Math.max(0, maxChatUsage - chatUsage),
@@ -63,3 +87,5 @@ export class Billing {
     }
   }
 }
+
+export * from './tiers'

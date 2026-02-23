@@ -6,16 +6,20 @@ import { postRequestBodySchema, patchRequestBodySchema } from './schema'
 
 export const POST = createApiHandler<RouteContext<'/api/project/[id]'>>(
   async ({ api, session, request, params }) => {
-    const { db } = api
+    const { db, billing } = api
     const id = uuidV7.parse(params.id)
     const { name, prompt } = postRequestBodySchema.parse(await request.json())
     const { user } = await session()
-    const data = await db.projects.create({
-      id,
-      name,
-      prompt,
-      userId: user.id,
-    })
+    const { tierConfig } = billing.getUserInfo(user)
+    const data = await db.projects.createWithQuota(
+      {
+        id,
+        name,
+        prompt,
+        userId: user.id,
+      },
+      tierConfig.maxProjects,
+    )
     return NextResponse.json(data, { status: 201 })
   },
   { namespace: 'project' },
