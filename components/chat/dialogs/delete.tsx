@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteChatMutation } from '@/api-client/hooks/chats'
 import { useAppParams } from '@/hooks/use-app-params'
-import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
+import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { toast } from 'sonner'
 import type { ChatRecord } from '@/lib/db'
 
@@ -39,7 +39,7 @@ export function DeleteChatDialog(props: DeleteChatDialogProps) {
   }, [id, projectId, activeChatId, mutate, onOpenChange, router])
 
   return (
-    <AlertDialog
+    <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={handleDelete}

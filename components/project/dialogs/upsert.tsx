@@ -6,7 +6,7 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { generateUUID, getProjectUrl } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FormDialog, AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
@@ -68,15 +68,10 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       <AlertDialog
         open={open}
         onOpenChange={onOpenChange}
-        title='Error'
-        description='Project quota reached'
-        cancel='Close'
-      >
-        <Alert variant='destructive'>
-          <CircleAlert />
-          <AlertDescription>{new AppError('rate_limit:project').message}</AlertDescription>
-        </Alert>
-      </AlertDialog>
+        title='Project quota reached'
+        description={new AppError('rate_limit:project').message}
+        variant='destructive'
+      />
     )
   }
 

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDeleteProjectMutation } from '@/api-client/hooks/projects'
 import { useAppParams } from '@/hooks/use-app-params'
-import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
+import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
 import { CircleAlert } from 'lucide-react'
@@ -40,7 +40,7 @@ export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
   }, [activeProjectId, id, mutate, onOpenChange, router])
 
   return (
-    <AlertDialog
+    <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={handleDelete}
@@ -65,7 +65,7 @@ export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
           </p>
         </AlertDescription>
       </Alert>
-    </AlertDialog>
+    </ConfirmDialog>
   )
 }
 

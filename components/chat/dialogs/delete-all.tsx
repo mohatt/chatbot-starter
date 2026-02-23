@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useDeleteChatsMutation } from '@/api-client/hooks/chats'
 import { useAppParams } from '@/hooks/use-app-params'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
+import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { CircleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ChatProjectRecord } from '@/lib/db'
@@ -46,7 +46,7 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
   }, [activeChatId, activeProjectId, mutate, onOpenChange, projectId, router])
 
   return (
-    <AlertDialog
+    <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={handleDelete}
@@ -86,7 +86,7 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
           </p>
         </AlertDescription>
       </Alert>
-    </AlertDialog>
+    </ConfirmDialog>
   )
 }
 

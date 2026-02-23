@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  AlertDialog as BaseAlertDialog,
+  AlertDialog as RadixAlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { LoadingDots } from '@/components/loading'
@@ -40,12 +41,12 @@ export interface ComposedDialogProps extends BaseDialogProps {
   className?: string
 }
 
-export interface AlertDialogProps extends ComposedDialogProps {
+export interface ConfirmDialogProps extends ComposedDialogProps {
   variant?: 'destructive' | 'default'
   onSubmit?: () => void | Promise<void>
 }
 
-export function AlertDialog(props: AlertDialogProps) {
+export function ConfirmDialog(props: ConfirmDialogProps) {
   const {
     open,
     onOpenChange,
@@ -62,7 +63,7 @@ export function AlertDialog(props: AlertDialogProps) {
     className,
   } = props
   return (
-    <BaseAlertDialog open={open} onOpenChange={onOpenChange}>
+    <RadixAlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className={className}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -95,7 +96,44 @@ export function AlertDialog(props: AlertDialogProps) {
           )}
         </AlertDialogFooter>
       </AlertDialogContent>
-    </BaseAlertDialog>
+    </RadixAlertDialog>
+  )
+}
+
+export interface AlertDialogProps extends BaseDialogProps {
+  title: string
+  description?: ReactNode
+  children?: ReactNode
+  variant?: 'default' | 'destructive'
+  className?: string
+}
+
+export function AlertDialog(props: AlertDialogProps) {
+  const { open, onOpenChange, title, description, children, variant = 'default', className } = props
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={className}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription className='sr-only'>{description}</DialogDescription>}
+        </DialogHeader>
+        <div data-slot='dialog-body' className='flex flex-col gap-2'>
+          <Alert variant={variant}>
+            <CircleAlert />
+            <AlertTitle>{description}</AlertTitle>
+          </Alert>
+          {children && <div className='text-sm'>{children}</div>}
+        </div>
+        <DialogFooter className='sm:items-center'>
+          <DialogClose asChild>
+            <Button type='button' variant='outline'>
+              Close
+              <Kbd className='not-md:hidden'>Esc</Kbd>
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
