@@ -7,4 +7,5 @@ next-env.d.ts
 dist
 components/ai-elements
 components/ui
+lib/db/schema/auth.ts
 pnpm-lock.yaml
