@@ -4,6 +4,7 @@ import { useDeleteChatMutation } from '@/api-client/hooks/chats'
 import { useAppParams } from '@/hooks/use-app-params'
 import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { toast } from 'sonner'
+import { Trash2Icon } from 'lucide-react'
 import type { ChatRecord } from '@/lib/db'
 
 export interface DeleteChatDialogProps extends BaseDialogProps {
@@ -49,6 +50,8 @@ export function DeleteChatDialog(props: DeleteChatDialogProps) {
           This will delete <b>{title}</b>.
         </>
       }
+      size='sm'
+      media={<Trash2Icon />}
       submit='Delete'
       variant='destructive'
       error={error && 'Failed to delete chat.'}

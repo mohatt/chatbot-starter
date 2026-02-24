@@ -59,7 +59,7 @@ export function ChatsSidebar() {
                   </SidebarMenuAction>
                 </TooltipTrigger>
                 <TooltipContent align='end' className='hidden md:block'>
-                  Delete All Chats
+                  Delete all chats
                 </TooltipContent>
               </Tooltip>
             )}

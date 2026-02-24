@@ -23,7 +23,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { LoadingDots } from '@/components/loading'
-import { CircleAlert, Trash2Icon } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface BaseDialogProps {
@@ -78,7 +78,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive',
             )}
           >
-            {media ?? (variant === 'destructive' ? <Trash2Icon /> : <CircleAlert />)}
+            {media ?? <CircleAlert />}
           </AlertDialogMedia>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
@@ -144,7 +144,7 @@ export function AlertDialog(props: AlertDialogProps) {
                 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive',
             )}
           >
-            {media ?? (variant === 'destructive' ? <Trash2Icon /> : <CircleAlert />)}
+            {media ?? <CircleAlert />}
           </DialogMedia>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription className='sr-only'>{description}</DialogDescription>}

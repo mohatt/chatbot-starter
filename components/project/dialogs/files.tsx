@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogMedia,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,7 +25,14 @@ import {
 } from '@/components/ui/item'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { LoadingDots } from '@/components/loading'
-import { DownloadIcon, FilePlusCorner, FileTextIcon, Trash2Icon, XIcon } from 'lucide-react'
+import {
+  FilesIcon,
+  FileTextIcon,
+  FilePlusCorner,
+  DownloadIcon,
+  Trash2Icon,
+  XIcon,
+} from 'lucide-react'
 import { config } from '@/lib/config'
 import type { ChatProjectRecord, FileRecord } from '@/lib/db'
 import type { AppError } from '@/lib/errors'
@@ -96,9 +104,12 @@ export function ProjectFilesDialog(props: ProjectFilesDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='px-0 sm:max-w-3xl' showCloseButton={false}>
         <DialogHeader className='px-6 flex flex-row items-center justify-between gap-4'>
+          <DialogMedia>
+            <FilesIcon />
+          </DialogMedia>
           <div className='text-left grow'>
             <DialogTitle>Project files {files.length > 0 && `(${files.length})`}</DialogTitle>
-            <DialogDescription></DialogDescription>
+            <DialogDescription className='sr-only'>Manage project files</DialogDescription>
           </div>
           <div className='flex gap-2'>
             <Button

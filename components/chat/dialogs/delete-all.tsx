@@ -4,7 +4,7 @@ import { useDeleteChatsMutation } from '@/api-client/hooks/chats'
 import { useAppParams } from '@/hooks/use-app-params'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ChatProjectRecord } from '@/lib/db'
 
@@ -64,6 +64,7 @@ export function DeleteAllChatsDialog(props: DeleteAllChatsDialogProps) {
           .
         </>
       }
+      media={<Trash2Icon />}
       submit='Delete all'
       variant='destructive'
       error={error && 'Failed to delete all chats.'}

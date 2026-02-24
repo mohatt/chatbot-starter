@@ -5,7 +5,7 @@ import { useAppParams } from '@/hooks/use-app-params'
 import { ConfirmDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, Trash2Icon } from 'lucide-react'
 import type { ChatProjectRecord } from '@/lib/db'
 
 export interface DeleteProjectDialogProps extends BaseDialogProps {
@@ -50,6 +50,7 @@ export function DeleteProjectDialog(props: DeleteProjectDialogProps) {
           This will delete <b>{name}</b> project.
         </>
       }
+      media={<Trash2Icon />}
       submit='Delete'
       variant='destructive'
       error={error && 'Failed to delete project.'}

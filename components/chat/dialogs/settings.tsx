@@ -20,7 +20,7 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 import { FormDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
-import { LockIcon, GlobeIcon, CopyIcon, CheckIcon } from 'lucide-react'
+import { LockIcon, GlobeIcon, GlobeLockIcon, CopyIcon, CheckIcon } from 'lucide-react'
 import type { ChatRecord } from '@/lib/db'
 
 const privacyOptions: Array<{
@@ -89,6 +89,7 @@ export function ChatSettingsDialog(props: ChatSettingsDialogProps) {
       onSubmit={handleSubmit}
       title='Privacy settings'
       description='Choose who can access this chat.'
+      media={<GlobeLockIcon />}
       submit='Save'
       error={error && 'Failed to save chat settings.'}
       isPending={isPending}

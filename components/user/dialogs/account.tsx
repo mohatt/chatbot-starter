@@ -2,6 +2,7 @@ import {
   Dialog,
   DialogHeader,
   DialogTitle,
+  DialogMedia,
   DialogContent,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -15,7 +16,7 @@ import { CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/auth-provider'
-import { BadgeCheckIcon, BadgeInfoIcon } from 'lucide-react'
+import { BadgeCheckIcon, BadgeInfoIcon, UserRoundCogIcon } from 'lucide-react'
 
 export interface UserAccountDialogProps {
   open: boolean
@@ -27,6 +28,9 @@ export function UserAccountDialog({ open, onOpenChange }: UserAccountDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-3xl'>
         <DialogHeader>
+          <DialogMedia>
+            <UserRoundCogIcon />
+          </DialogMedia>
           <DialogTitle>Account</DialogTitle>
           <DialogDescription>Make changes to your account here.</DialogDescription>
         </DialogHeader>

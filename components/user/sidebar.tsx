@@ -29,7 +29,7 @@ import { UserView } from '@daveyplate/better-auth-ui'
 import { LoadingDots } from '@/components/loading'
 import {
   ChevronsUpDown,
-  BadgeCheck,
+  UserRoundCog,
   LogIn,
   LogOut,
   Palette,
@@ -99,7 +99,7 @@ export function UserSidebar() {
                     </Link>
                   ) : (
                     <button onClick={() => setIsAccountOpen(true)}>
-                      <BadgeCheck />
+                      <UserRoundCog />
                       Account
                     </button>
                   )}

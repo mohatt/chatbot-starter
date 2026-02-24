@@ -86,7 +86,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-header"
       className={cn(
-        "grid grid-rows-[auto_1fr] place-items-start gap-2 text-left has-data-[slot=dialog-media]:grid-rows-[auto_1fr] has-data-[slot=dialog-media]:grid-cols-[auto_minmax(0,1fr)] has-data-[slot=dialog-media]:gap-x-4",
+        "grid place-items-start gap-1.5 text-left has-data-[slot=dialog-media]:grid-cols-[auto_minmax(0,1fr)] has-data-[slot=dialog-media]:gap-x-4 has-data-[slot=dialog-media]:[&>[data-slot=dialog-title]]:col-start-2 has-data-[slot=dialog-media]:[&>[data-slot=dialog-description]]:col-start-2",
+        "[&:has([data-slot=dialog-description]:not(.sr-only))>[data-slot=dialog-media]]:row-span-2 [&:has([data-slot=dialog-description]:not(.sr-only))>[data-slot=dialog-media]]:self-start [&:not(:has([data-slot=dialog-description]:not(.sr-only)))>[data-slot=dialog-title]]:self-center [&:not(:has([data-slot=dialog-description]:not(.sr-only)))>[data-slot=dialog-media]]:self-center",
         className
       )}
       {...props}
@@ -161,7 +162,7 @@ function DialogMedia({
     <div
       data-slot="dialog-media"
       className={cn(
-        "bg-muted inline-flex size-10 items-center justify-center rounded-md row-span-2 *:[svg:not([class*='size-'])]:size-6",
+        "bg-muted inline-flex size-10 items-center justify-center rounded-md *:[svg:not([class*='size-'])]:size-6",
         className
       )}
       {...props}

@@ -10,7 +10,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FormDialog, AlertDialog, type BaseDialogProps, useDialogState } from '@/components/dialog'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, FolderCog, FolderPlus } from 'lucide-react'
 import { AppError } from '@/lib/errors'
 import type { ChatProjectRecord } from '@/lib/db'
 
@@ -82,6 +82,7 @@ export function ProjectUpsertDialog(props: ProjectUpsertDialogProps) {
       onSubmit={handleSubmit}
       title={project ? 'Edit project' : 'New project'}
       description={project ? 'Update project settings' : 'Create a new project'}
+      media={project ? <FolderCog /> : <FolderPlus />}
       submit='Save'
       error={error && 'Failed to save project.'}
       isPending={isPending}
