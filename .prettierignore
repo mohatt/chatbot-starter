@@ -8,4 +8,5 @@ dist
 components/ai-elements
 components/ui
 lib/db/schema/auth.ts
+lib/db/migrations
 pnpm-lock.yaml

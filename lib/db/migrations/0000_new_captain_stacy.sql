@@ -17,6 +17,7 @@ CREATE TABLE "accounts" (
 CREATE TABLE "billings" (
 	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
 	"type" text NOT NULL,
+	"source" text NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

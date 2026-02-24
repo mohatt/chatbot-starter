@@ -97,6 +97,7 @@ export const billings = pgTable("billings", {
     .default(sql`pg_catalog.gen_random_uuid()`)
     .primaryKey(),
   type: text("type", { enum: ["anonymous", "user"] }).notNull(),
+  source: text("source").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

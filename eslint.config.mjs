@@ -5,12 +5,16 @@ const config = [
   {
     ignores: [
       'node_modules',
+      '.cache',
       '.next',
       '.vercel',
+      'next-env.d.ts',
       'dist',
       'public',
       'components/ai-elements',
       'components/ui',
+      'lib/db/schema/auth.ts',
+      'lib/db/migrations',
     ],
   },
   {

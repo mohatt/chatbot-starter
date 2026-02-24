@@ -69,6 +69,10 @@ export function billing(db: Db) {
             type: ['anonymous', 'user'],
             required: true,
           },
+          source: {
+            type: 'string',
+            required: true,
+          },
           createdAt: {
             type: 'date',
             required: true,
@@ -118,11 +122,13 @@ function resolveBillingIdentity(
     return {
       id: uuidv5(fingerprint, IP_NAMESPACE),
       type: 'anonymous',
+      source: email, // Avoid storing IP addresses in DB
     }
   }
 
   return {
     id: uuidv5(email, EMAIL_NAMESPACE),
     type: 'user',
+    source: email,
   }
 }
