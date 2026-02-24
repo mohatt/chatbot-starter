@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToasterProvider } from '@/components/toaster-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           <ToasterProvider position='top-center' />
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
