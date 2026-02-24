@@ -6,6 +6,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogMedia,
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
@@ -15,13 +16,14 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { LoadingDots } from '@/components/loading'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, Trash2Icon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface BaseDialogProps {
@@ -33,6 +35,7 @@ export interface ComposedDialogProps extends BaseDialogProps {
   title: string
   description?: ReactNode
   children?: ReactNode
+  media?: ReactNode
   submit?: string
   cancel?: string
   error?: string | null
@@ -42,7 +45,8 @@ export interface ComposedDialogProps extends BaseDialogProps {
 }
 
 export interface ConfirmDialogProps extends ComposedDialogProps {
-  variant?: 'destructive' | 'default'
+  variant?: 'default' | 'destructive'
+  size?: 'default' | 'sm'
   onSubmit?: () => void | Promise<void>
 }
 
@@ -57,6 +61,8 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
     children,
     onSubmit,
     variant,
+    size,
+    media,
     error,
     isPending,
     isReady = true,
@@ -64,8 +70,16 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
   } = props
   return (
     <RadixAlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={className}>
+      <AlertDialogContent size={size} className={className}>
         <AlertDialogHeader>
+          <AlertDialogMedia
+            className={cn(
+              variant === 'destructive' &&
+                'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive',
+            )}
+          >
+            {media ?? (variant === 'destructive' ? <Trash2Icon /> : <CircleAlert />)}
+          </AlertDialogMedia>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
@@ -104,16 +118,34 @@ export interface AlertDialogProps extends BaseDialogProps {
   title: string
   description?: ReactNode
   children?: ReactNode
+  media?: ReactNode
   variant?: 'default' | 'destructive'
   className?: string
 }
 
 export function AlertDialog(props: AlertDialogProps) {
-  const { open, onOpenChange, title, description, children, variant = 'default', className } = props
+  const {
+    open,
+    onOpenChange,
+    title,
+    description,
+    children,
+    variant = 'default',
+    media,
+    className,
+  } = props
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={className}>
         <DialogHeader>
+          <DialogMedia
+            className={cn(
+              variant === 'destructive' &&
+                'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive',
+            )}
+          >
+            {media ?? (variant === 'destructive' ? <Trash2Icon /> : <CircleAlert />)}
+          </DialogMedia>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription className='sr-only'>{description}</DialogDescription>}
         </DialogHeader>
@@ -147,6 +179,7 @@ export function FormDialog(props: FormDialogProps) {
     onOpenChange,
     title,
     description,
+    media,
     submit = 'Save',
     cancel = 'Cancel',
     children,
@@ -160,6 +193,7 @@ export function FormDialog(props: FormDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn('sm:max-w-3xl', className)}>
         <DialogHeader>
+          {media && <DialogMedia>{media}</DialogMedia>}
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
