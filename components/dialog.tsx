@@ -209,6 +209,7 @@ export function FormDialog(props: FormDialogProps) {
             <DialogClose asChild>
               <Button type='button' variant='outline' disabled={isPending}>
                 {cancel}
+                <Kbd className='not-md:hidden'>Esc</Kbd>
               </Button>
             </DialogClose>
           )}
