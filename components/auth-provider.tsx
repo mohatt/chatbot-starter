@@ -13,7 +13,12 @@ export const authClient = createAuthClient({
   plugins: [anonymousClient(), billingClient()],
 })
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export interface AuthProviderProps {
+  children: ReactNode
+  disableGuard?: boolean
+}
+
+export function AuthProvider({ children, disableGuard }: AuthProviderProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -33,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       Link={Link}
       gravatar
     >
-      <AuthGuard>{children}</AuthGuard>
+      {disableGuard ? children : <AuthGuard>{children}</AuthGuard>}
     </AuthUIProvider>
   )
 }
