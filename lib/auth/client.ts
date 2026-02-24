@@ -1,6 +1,6 @@
 import { betterAuth, APIError } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { anonymous, openAPI, createAuthMiddleware } from 'better-auth/plugins'
+import { anonymous, createAuthMiddleware } from 'better-auth/plugins'
 import { waitUntil } from '@vercel/functions'
 import { billing } from './plugins/billing'
 import { Mailer, VerifyEmail, ResetPassword } from '@/lib/mailer'
@@ -72,6 +72,9 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
       ipAddress: {
         ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
       },
+      backgroundTasks: {
+        handler: waitUntil,
+      },
     },
     plugins: [
       anonymous({
@@ -92,7 +95,6 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
         },
       }),
       billing(db),
-      openAPI(),
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
