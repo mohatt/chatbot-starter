@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ToasterProvider } from '@/components/toaster-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'

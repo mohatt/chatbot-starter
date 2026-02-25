@@ -4,6 +4,7 @@ import { useProjectQuery } from '@/api-client/hooks/projects'
 import { useChatsQuery } from '@/api-client/hooks/chats'
 import { useFilesQuery } from '@/api-client/hooks/files'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { usePageTitle } from '@/hooks/use-page-title'
 import { Item, ItemActions, ItemTitle } from '@/components/ui/item'
 import {
   DropdownMenu,
@@ -73,6 +74,8 @@ export function ProjectIndex({ id }: ProjectIndexProps) {
   const chats = useMemo(() => chatsData?.pages.flatMap((page) => page.data) ?? [], [chatsData])
   const isDataLoading = projectLoading || chatsLoading
   const dataError = projectError || filesError || chatsError
+
+  usePageTitle({ title: project?.name })
 
   if (isDataLoading) {
     return (

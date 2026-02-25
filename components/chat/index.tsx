@@ -18,6 +18,7 @@ import { ChatMessages } from './messages'
 import { ChatPrompt } from './prompt'
 import { useChat, useNewChatRef, type ChatIdProps } from './hooks'
 import { useClientSettings } from '@/hooks/use-client-settings'
+import { usePageTitle } from '@/hooks/use-page-title'
 import { useChatQuery, useChatHistoryQuery, useNewChatMutation } from '@/api-client/hooks/chats'
 import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
 import { CircleAlert } from 'lucide-react'
@@ -53,6 +54,7 @@ export function Chat(props: ChatIdProps) {
     variables: { id },
     enabled: !isNewChat,
   })
+  const activeChatData = chatData ?? newChat.current?.chat
   const isDataLoading = isHistoryLoading || (!isNewChat && isChatDataLoading)
   let dataError = chatDataError || historyError
   if (chatData && chatData.projectId !== projectId) {
@@ -113,6 +115,10 @@ export function Chat(props: ChatIdProps) {
       scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
     }, 10)
     return sendMessage(...args)
+  })
+
+  usePageTitle({
+    title: activeChatData && !activeChatData.isTitlePending ? activeChatData.title : null,
   })
 
   // Mark new chats as stored when it starts streaming
@@ -180,7 +186,7 @@ export function Chat(props: ChatIdProps) {
   return (
     <>
       <div className='overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col'>
-        <ChatHeader chat={chatData ?? newChat.current?.chat} />
+        <ChatHeader chat={activeChatData} />
 
         <div className='relative flex-1'>
           <div className='absolute inset-0'>
