@@ -179,7 +179,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
             />
           </PromptInputBody>
           <PromptInputFooter>
-            <PromptInputTools>
+            <PromptInputTools className='overflow-x-auto'>
               <PromptInputActionMenu>
                 <PromptInputActionMenuTrigger
                   title='Attach files'
