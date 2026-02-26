@@ -36,7 +36,7 @@ export function useCreateNewChat(props: ChatIdProps) {
         chat: {
           id,
           title: config.chat.title.fallback,
-          createdAt: new Date().toISOString() as any, // @todo dates are strings in client app
+          createdAt: new Date().toISOString(),
           projectId,
           isTitlePending: true,
           privacy: 'private',

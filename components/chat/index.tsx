@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { DefaultChatTransport } from 'ai'
 import { fetchWithOfflineHandler, generateUUID, getTimeZone } from '@/lib/utils'
 import { LoadingDots } from '@/components/loading'
-import { ChatHeader } from './header'
+import { ChatLayout } from './layout'
 import { ChatMessages } from './messages'
 import { ChatPrompt } from './prompt'
 import { useChat, useNewChatRef, type ChatIdProps } from './hooks'
@@ -174,59 +174,57 @@ export function Chat(props: ChatIdProps) {
 
   if (dataError) {
     return (
-      <ConversationEmptyState
-        className='text-destructive'
-        icon={<CircleAlert className='text-destructive' />}
-        title='Unable to load chat data.'
-        description={dataError.message}
-      />
+      <ChatLayout>
+        <ConversationEmptyState
+          className='text-destructive'
+          icon={<CircleAlert className='text-destructive' />}
+          title='Unable to load chat data.'
+          description={dataError.message}
+        />
+      </ChatLayout>
     )
   }
 
   return (
-    <>
-      <div className='overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col'>
-        <ChatHeader chat={activeChatData} />
-
-        <div className='relative flex-1'>
-          <div className='absolute inset-0'>
-            <div className='h-full flex min-w-0 flex-col'>
-              <Conversation contextRef={scrollRef} initial='instant'>
-                {isDataLoading && (
-                  <ConversationEmptyState>
-                    <LoadingDots className='text-4xl' />
-                  </ConversationEmptyState>
-                )}
-                <ConversationContent className='mx-auto max-w-4xl px-2 py-4 md:px-4 [&>*:last-child]:min-h-40'>
-                  <ChatMessages
-                    isReadonly={!isStoredChat}
-                    messages={messages}
-                    modelUsageMap={modelUsageMap}
-                    sendMessage={handleSendMessage}
-                    regenerate={regenerate}
-                    status={status}
-                    error={error}
-                  />
-                </ConversationContent>
-                <ConversationScrollButton />
-              </Conversation>
-            </div>
+    <ChatLayout chat={activeChatData}>
+      <div className='relative flex-1'>
+        <div className='absolute inset-0'>
+          <div className='h-full flex min-w-0 flex-col'>
+            <Conversation contextRef={scrollRef} initial='instant'>
+              {isDataLoading && (
+                <ConversationEmptyState>
+                  <LoadingDots className='text-4xl' />
+                </ConversationEmptyState>
+              )}
+              <ConversationContent className='mx-auto max-w-4xl px-2 py-4 md:px-4 [&>*:last-child]:min-h-40'>
+                <ChatMessages
+                  isReadonly={!isStoredChat}
+                  messages={messages}
+                  modelUsageMap={modelUsageMap}
+                  sendMessage={handleSendMessage}
+                  regenerate={regenerate}
+                  status={status}
+                  error={error}
+                />
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
           </div>
         </div>
-
-        {(!chatData || chatData.userId === user.id) && (
-          <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
-            <ChatPrompt
-              chatId={id}
-              isPending={isDataLoading}
-              isEphemeral={!isStoredChat}
-              sendMessage={handleSendMessage}
-              status={status}
-              stop={stop}
-            />
-          </div>
-        )}
       </div>
-    </>
+
+      {(!chatData || chatData.userId === user.id) && (
+        <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
+          <ChatPrompt
+            chatId={id}
+            isPending={isDataLoading}
+            isEphemeral={!isStoredChat}
+            sendMessage={handleSendMessage}
+            status={status}
+            stop={stop}
+          />
+        </div>
+      )}
+    </ChatLayout>
   )
 }

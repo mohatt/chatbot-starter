@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { useSidebar } from '@/components/ui/sidebar'
-import { getProjectUrl } from '@/lib/utils'
+import { cn, getProjectUrl } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Breadcrumb,
@@ -17,11 +17,11 @@ import { GithubIcon } from '../icons'
 import Link from 'next/link'
 import type { ChatRecord } from '@/lib/db'
 
-export interface ChatHeaderProps {
+interface ChatHeaderProps {
   chat?: ChatRecord | null
 }
 
-export function ChatHeader({ chat }: ChatHeaderProps) {
+function ChatHeader({ chat }: ChatHeaderProps) {
   const { open, isMobile, toggleSidebar } = useSidebar()
   const isPointerFine = useMediaQuery('(pointer: fine)')
   const items: ReactNode[] = []
@@ -71,5 +71,24 @@ export function ChatHeader({ chat }: ChatHeaderProps) {
         </Link>
       </Button>
     </header>
+  )
+}
+
+export interface ChatLayoutProps extends ChatHeaderProps {
+  children: ReactNode
+  className?: string
+}
+
+export function ChatLayout({ chat, children, className }: ChatLayoutProps) {
+  return (
+    <div
+      className={cn(
+        'overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col',
+        className,
+      )}
+    >
+      <ChatHeader chat={chat} />
+      {children}
+    </div>
   )
 }

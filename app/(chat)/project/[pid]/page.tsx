@@ -1,15 +1,14 @@
 'use client'
-import { use } from 'react'
+import { use, useMemo } from 'react'
 import { generateUUID } from '@/lib/utils'
 import { ProjectIndex } from '@/components/project'
-import { NewChat } from '@/components/chat/new-chat'
 
-export default function ChatPage(props: PageProps<'/project/[pid]'>) {
+export default function ProjectPage(props: PageProps<'/project/[pid]'>) {
   const { pid } = use(props.params)
-  const cid = generateUUID()
-  return (
-    <NewChat key={`${pid}/${cid}`} id={cid} projectId={pid}>
-      {({ sendMessage }) => <ProjectIndex id={pid} sendMessage={sendMessage} />}
-    </NewChat>
+  const cid = useMemo(
+    () => generateUUID(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pid],
   )
+  return <ProjectIndex key={`${pid}/${cid}`} id={pid} newChatId={cid} />
 }
