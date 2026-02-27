@@ -101,6 +101,9 @@ export const config = {
       maxLimit: 100,
     },
   },
+  sidebar: {
+    defaultOpen: true,
+  },
   billing: {
     tierMap: {
       user: {

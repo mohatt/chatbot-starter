@@ -23,6 +23,9 @@ export interface AppConfig {
     }
     models: ModelsConfig
   }
+  sidebar: {
+    defaultOpen: boolean
+  }
   billing: {
     tierMap: BillingTierMap
   }

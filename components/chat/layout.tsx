@@ -22,11 +22,12 @@ interface ChatHeaderProps {
 }
 
 function ChatHeader({ chat }: ChatHeaderProps) {
-  const { open, isMobile, toggleSidebar } = useSidebar()
+  const { open, openMobile, isMobile, toggleSidebar } = useSidebar()
   const isPointerFine = useMediaQuery('(pointer: fine)')
   const items: ReactNode[] = []
+  const isSidebarHidden = isMobile ? !openMobile : !open
 
-  if (!open && (isMobile || !isPointerFine)) {
+  if (isSidebarHidden && (isMobile || !isPointerFine)) {
     items.push(
       <BreadcrumbPage>
         <Button className='w-6' onClick={toggleSidebar} variant='ghost' size='icon-sm'>
