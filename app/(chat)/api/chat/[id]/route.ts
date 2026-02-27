@@ -33,6 +33,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
     const { db, ai, authz, billing } = api
     const id = uuidV7.parse(params.id)
     const { user } = await session()
+    console.log('POST /api/chat', await request.json())
     const { message, projectId, timeZone, regenerate, createChat, model } =
       postRequestBodySchema.parse(await request.json())
 

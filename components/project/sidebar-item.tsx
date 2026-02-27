@@ -102,7 +102,7 @@ export function ProjectsSidebarItem(props: ProjectsSidebarItemProps) {
         </CollapsibleContent>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuAction showOnHover>
+            <SidebarMenuAction className='pointer-fine:opacity-0 md:opacity-100' showOnHover>
               <MoreHorizontal />
               <span className='sr-only'>More</span>
             </SidebarMenuAction>
