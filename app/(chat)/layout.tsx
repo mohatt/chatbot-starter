@@ -8,13 +8,13 @@ import { Api } from '@/lib/api'
 export default async function Layout({ children }: LayoutProps<'/'>) {
   const { auth } = Api.getInstance()
   const [session, cookieStore] = await Promise.all([auth.getSession(), cookies()])
-  const isCollapsed = cookieStore.get('sidebar_state')?.value !== 'true'
+  const sidebarState = cookieStore.get('sidebar_state')?.value
   const Auth = session ? AuthProvider : GuestAuthProvider
 
   return (
     <ClientShell>
       <Auth>
-        <SidebarProvider defaultOpen={!isCollapsed}>
+        <SidebarProvider defaultOpen={sidebarState !== 'false'}>
           <AppSidebar />
           <SidebarInset>{children}</SidebarInset>
         </SidebarProvider>
