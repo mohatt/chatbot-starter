@@ -70,7 +70,10 @@ export function ChatSuggestions({ sendMessage, className }: ChatSuggestionsProps
             className='h-auto w-full whitespace-normal p-3 text-left'
             suggestion={suggestion}
             onClick={(text) => {
-              void sendMessage({ text })
+              void sendMessage({
+                parts: [{ type: 'text' as const, text }],
+                metadata: { parentId: null },
+              })
             }}
           >
             {suggestion}

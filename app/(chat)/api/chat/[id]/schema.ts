@@ -12,11 +12,10 @@ export const postRequestBodySchema = z.object({
     id: uuidV7,
     role: z.enum(['user']),
     parts: z.array(textPartSchema).nonempty().max(config.chat.message.maxParts),
-    metadata: z
-      .object({
-        files: z.array(z.object({ id: uuidV7 })).optional(),
-      })
-      .optional(),
+    metadata: z.object({
+      parentId: z.union([uuidV7, z.null()]),
+      files: z.array(z.object({ id: uuidV7 })).optional(),
+    }),
   }),
   timeZone,
   regenerate: z.boolean().default(false),

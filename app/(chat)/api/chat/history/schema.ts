@@ -4,7 +4,7 @@ import { uuidV7 } from '@/lib/schema'
 export const getRequestBodySchema = z.object({
   projectId: uuidV7.optional(),
   cursor: uuidV7.optional(),
-  limit: z.coerce.number().int().positive().min(25).max(50).default(25),
+  limit: z.coerce.number().int().positive().min(25).max(1000).optional(),
 })
 
 export type GetRequestBody = z.input<typeof getRequestBodySchema>

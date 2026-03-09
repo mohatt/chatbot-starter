@@ -22,6 +22,7 @@ import {
 import { geolocation } from '@vercel/functions'
 import { generateUUID } from '@/lib/utils'
 import { createApiHandler } from '@/lib/api'
+import { ChatTree } from '@/lib/ai/chat-tree'
 import { AppError } from '@/lib/errors'
 import { config } from '@/lib/config'
 import { uuidV7 } from '@/lib/schema'
@@ -53,7 +54,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
       })
     }
 
-    const fileIds = message.metadata?.files?.map((f) => f.id) ?? []
+    const fileIds = message.metadata.files?.map((f) => f.id) ?? []
     if (fileIds.length > tierConfig.maxMessageFiles) {
       throw new AppError('bad_request:chat')
     }
@@ -71,9 +72,11 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
       }
     }
 
+    const parentId = message.metadata.parentId
     const uiMessage: ChatMessage = {
       ...message,
       metadata: {
+        parentId,
         files: files.map(({ id, name, mimeType, size, metadata, url, createdAt }) => {
           return { id, name, mimeType, size, url, metadata, createdAt }
         }),
@@ -112,14 +115,21 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
       throw new Error(`Model ${model.key.id} does not support reasoning.`)
     }
 
-    if (regenerate) {
-      await db.messages.deleteMany(id, message.id)
+    const dbMessages = await db.messages.findMany(id, tierConfig.maxChatMessages)
+    if (dbMessages.nextCursor) {
+      throw new AppError('bad_request:chat')
     }
+    const chatTree = new ChatTree(dbMessages.data)
+    const uiMessages = await (async () => {
+      if (regenerate) {
+        // The user message should be already in the tree
+        return chatTree.buildPathFromLeafNode(message.id)
+      }
 
-    const { data: dbMessages } = await db.messages.findMany(id, 25)
-    const uiMessages = [...dbMessages, uiMessage]
-
-    await db.messages.insertMany(id, [uiMessage])
+      chatTree.addNode(uiMessage)
+      await db.messages.insertMany(id, [uiMessage])
+      return chatTree.buildLatestPath()
+    })()
 
     // Update attached files if any
     if (fileIdsToUpdate.length > 0) {
@@ -247,7 +257,7 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
             sendSources: true, // Mainly used for google search sources
             messageMetadata: ({ part }) => {
               if (part.type === 'start') {
-                return { model: model.key }
+                return { parentId: message.id, model: model.key }
               }
             },
           }),

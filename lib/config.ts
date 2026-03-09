@@ -109,12 +109,14 @@ export const config = {
       user: {
         maxChatUsage: 2,
         maxMessageFiles: 4,
+        maxChatMessages: 150,
         maxProjects: 5,
         maxProjectFiles: 20,
       },
       anonymous: {
         maxChatUsage: 1,
         maxMessageFiles: 2,
+        maxChatMessages: 50,
         maxProjects: 1,
         maxProjectFiles: 10,
       },

@@ -37,8 +37,11 @@ import {
   CheckIcon,
   PencilIcon,
   BrainIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Sources, SourceItem, type SourceFileItem, type SourceUrlItem } from './sources'
 import { ModelMessageInfo } from './message-info'
@@ -54,11 +57,23 @@ export type ChatMessagesProps = Pick<
   'messages' | 'sendMessage' | 'regenerate' | 'status' | 'error'
 > & {
   isReadonly: boolean
-  modelUsageMap: Record<string, ModelUsage>
+  getModelUsage: (messageId: string) => ModelUsage
+  getVersions: (messageId: string) => string[]
+  onSwitchVersion: (messageId: string) => void
 }
 
 export function ChatMessages(props: ChatMessagesProps) {
-  const { isReadonly, messages, modelUsageMap, sendMessage, regenerate, status, error } = props
+  const {
+    isReadonly,
+    messages,
+    sendMessage,
+    regenerate,
+    getModelUsage,
+    getVersions,
+    onSwitchVersion,
+    status,
+    error,
+  } = props
   const [editorId, setEditorId] = useState<string | null>(null)
   const totalCount = messages.length
   const isStreaming = status === 'streaming'
@@ -90,13 +105,15 @@ export function ChatMessages(props: ChatMessagesProps) {
           <ChatMessage
             key={id}
             message={message}
-            modelUsage={modelUsageMap[id]}
+            modelUsage={getModelUsage(id)}
             editorId={editorId}
             isReadonly={isReadonly}
             isStreaming={index === totalCount - 1 && isStreaming}
             regenerate={regenerate}
             sendMessage={sendMessage}
             setEditorId={setEditorId}
+            versions={getVersions(id)}
+            onSwitchVersion={onSwitchVersion}
           />
         )
       })}
@@ -116,8 +133,12 @@ const toolTitles: Record<`tool-${keyof ChatTools}`, string> = {
   'tool-anthropic_web_search': 'Searching web',
 }
 
-interface ChatMessageProps extends Pick<UseChatResult, 'regenerate' | 'sendMessage'> {
-  message: UseChatResult['messages'][0]
+interface ChatMessageProps extends Pick<
+  ChatMessagesProps,
+  'regenerate' | 'sendMessage' | 'onSwitchVersion'
+> {
+  message: ChatMessagesProps['messages'][0]
+  versions: string[]
   modelUsage?: ModelUsage
   editorId: string | null
   setEditorId: (id: string | null) => void
@@ -134,6 +155,8 @@ function ChatMessage(props: ChatMessageProps) {
     isStreaming = false,
     regenerate,
     sendMessage,
+    versions,
+    onSwitchVersion,
     setEditorId,
   } = props
   const { id, role, parts, metadata } = message
@@ -320,7 +343,6 @@ function ChatMessage(props: ChatMessageProps) {
                 onCancel={() => setEditorId(null)}
                 onSubmit={async (value) => {
                   await sendMessage({
-                    messageId: id,
                     metadata: message.metadata,
                     parts: parts.map((p) => {
                       if (p === part) {
@@ -363,6 +385,13 @@ function ChatMessage(props: ChatMessageProps) {
               : 'justify-end pointer-fine:opacity-0 transition-opacity duration-300 delay-300 pointer-fine:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto',
           )}
         >
+          {versions.length > 1 && (
+            <MessageBranchSelector
+              versions={versions}
+              currentVersion={message.id}
+              onSwitchVersion={onSwitchVersion}
+            />
+          )}
           {hasTextParts && (
             <MessageAction
               onClick={() => copyToClipboard(textParts.map(({ text }) => text).join(''))}
@@ -454,6 +483,68 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
         </InputGroupButton>
       </InputGroupAddon>
     </InputGroup>
+  )
+}
+
+interface MessageBranchSelectorProps extends Pick<
+  ChatMessageProps,
+  'versions' | 'onSwitchVersion'
+> {
+  currentVersion: string
+}
+
+export function MessageBranchSelector(props: MessageBranchSelectorProps) {
+  const { versions, currentVersion, onSwitchVersion } = props
+  const currentIndex = useMemo(
+    () => Math.max(0, versions.indexOf(currentVersion)),
+    [versions, currentVersion],
+  )
+
+  const total = versions.length
+  const hasPrev = currentIndex > 0
+  const hasNext = currentIndex < total - 1
+
+  const handlePrev = () => {
+    if (!hasPrev) return
+    onSwitchVersion(versions[currentIndex - 1]!)
+  }
+
+  const handleNext = () => {
+    if (!hasNext) return
+    onSwitchVersion(versions[currentIndex + 1]!)
+  }
+
+  return (
+    <ButtonGroup
+      className='[&>*:not(:first-child)]:rounded-l-md [&>*:not(:last-child)]:rounded-r-md'
+      orientation='horizontal'
+    >
+      <Button
+        aria-label='Previous branch'
+        disabled={!hasPrev}
+        onClick={handlePrev}
+        size='icon-sm'
+        type='button'
+        variant='ghost'
+      >
+        <ChevronLeftIcon className='size-4' />
+      </Button>
+
+      <ButtonGroupText className='border-none bg-transparent px-2 text-muted-foreground shadow-none'>
+        {total === 0 ? '0 of 0' : `${currentIndex + 1} of ${total}`}
+      </ButtonGroupText>
+
+      <Button
+        aria-label='Next branch'
+        disabled={!hasNext}
+        onClick={handleNext}
+        size='icon-sm'
+        type='button'
+        variant='ghost'
+      >
+        <ChevronRightIcon className='size-4' />
+      </Button>
+    </ButtonGroup>
   )
 }
 

@@ -4,7 +4,7 @@ import { getRequestBodySchema, deleteRequestBodySchema } from './schema'
 
 export const GET = createApiHandler<RouteContext<'/api/chat/history'>>(
   async ({ api, session, request }) => {
-    const { db } = api
+    const { db, billing } = api
     const { searchParams } = request.nextUrl
     const { projectId, limit, cursor } = getRequestBodySchema.parse({
       projectId: searchParams.get('projectId') || undefined,
@@ -12,7 +12,9 @@ export const GET = createApiHandler<RouteContext<'/api/chat/history'>>(
       limit: searchParams.get('limit') || undefined,
     })
     const { user } = await session()
-    const result = await db.chats.findMany({ userId: user.id, projectId }, limit, cursor)
+    const { tierConfig } = billing.getUserInfo(user)
+    const resolvedLimit = limit ?? tierConfig.maxChatMessages
+    const result = await db.chats.findMany({ userId: user.id, projectId }, resolvedLimit, cursor)
     return NextResponse.json(result)
   },
   { namespace: 'chat' },

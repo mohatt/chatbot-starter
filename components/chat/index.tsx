@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/components/auth-provider'
@@ -22,10 +22,11 @@ import { usePageTitle } from '@/hooks/use-page-title'
 import { useChatQuery, useChatHistoryQuery, useNewChatMutation } from '@/api-client/hooks/chats'
 import { useUserBillingPeriodQuery } from '@/api-client/hooks/user'
 import { CircleAlert } from 'lucide-react'
+import { ChatTree } from '@/lib/ai/chat-tree'
 import { AppError } from '@/lib/errors'
 import type { StickToBottomContext } from 'use-stick-to-bottom'
 import type { PostRequestBody } from '@/app/(chat)/api/chat/[id]/schema'
-import type { ModelUsage } from '@/lib/ai'
+import type { ModelUsage, ChatMessage } from '@/lib/ai'
 
 export function Chat(props: ChatIdProps) {
   const { id, projectId } = props
@@ -33,6 +34,14 @@ export function Chat(props: ChatIdProps) {
   const isNewChat = newChat.current != null
   const [isStoredChat, setIsStoredChat] = useState(!isNewChat)
   const scrollRef = useRef<StickToBottomContext>(null)
+
+  const chatTree = useRef(new ChatTree())
+  const [chatPath, setChatPath] = useState<ChatMessage[]>([])
+  const isLiveChatPath = useMemo(() => {
+    const currentLeafId = chatPath.at(-1)?.id ?? null
+    const liveLeafId = chatTree.current.getLatestNodeId()
+    return currentLeafId === liveLeafId
+  }, [chatPath])
 
   const queryClient = useQueryClient()
   const { data: settings } = useClientSettings()
@@ -110,12 +119,64 @@ export function Chat(props: ChatIdProps) {
   const statusRef = useRef(status)
   statusRef.current = status
 
-  const handleSendMessage: typeof sendMessage = useEventCallback((...args) => {
-    setTimeout(() => {
-      scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
-    }, 10)
-    return sendMessage(...args)
-  })
+  const handleSendMessage = useCallback<typeof sendMessage>(
+    (...args) => {
+      setTimeout(() => {
+        scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
+      }, 10)
+      return sendMessage(...args)
+    },
+    [sendMessage],
+  )
+
+  const handleRegenerate = useCallback<typeof regenerate>(
+    async (args) => {
+      if (statusRef.current === 'streaming' || statusRef.current === 'submitted') {
+        return
+      }
+      const { messageId, ...options } = args ?? {}
+      const resolvedMessageId = messageId ?? chatTree.current.getLatestNodeId('assistant')
+      if (!resolvedMessageId) {
+        throw new Error('No assistant message to regenerate')
+      }
+      const { role, metadata } = chatTree.current.getNodeById(resolvedMessageId)
+      if (role !== 'assistant' || !metadata.parentId) {
+        throw new Error('Invalid assistant message ID to regenerate')
+      }
+      const parentMessage = chatTree.current.getNodeById(metadata.parentId)
+      setChatPath(chatTree.current.buildPathFromLeafNode(parentMessage.id))
+      try {
+        return await handleSendMessage(
+          {
+            messageId: parentMessage.id,
+            metadata: parentMessage.metadata,
+            parts: parentMessage.parts,
+          },
+          options,
+        )
+      } finally {
+        // sendMessage deletes all messages after `messageId`, so we have to revert original messages
+        setMessages(chatTree.current.getAllNodes())
+      }
+    },
+    [handleSendMessage, setMessages],
+  )
+
+  const handleSwitchMessageVersion = useCallback((messageId: string) => {
+    const leafMessageId = chatTree.current.findLatestLeafDescendant(messageId)
+    setChatPath(chatTree.current.buildPathFromLeafNode(leafMessageId))
+  }, [])
+
+  const handleGetMessageVersions = useCallback((messageId: string) => {
+    return chatTree.current.getNodeVariants(messageId)
+  }, [])
+
+  const handleGetModelUsage = useCallback(
+    (messageId: string) => {
+      return modelUsageMap[messageId]
+    },
+    [modelUsageMap],
+  )
 
   usePageTitle({
     title: activeChatData && !activeChatData.isTitlePending ? activeChatData.title : null,
@@ -161,6 +222,53 @@ export function Chat(props: ChatIdProps) {
     })
   }, [history, setMessages])
 
+  useEffect(() => {
+    if (!messages.length) {
+      setChatPath((prev) => (prev.length ? [] : prev))
+      return
+    }
+
+    const tree = chatTree.current
+    const inserted: string[] = []
+    const updated: string[] = []
+    for (const message of messages) {
+      const existing = tree.getNodeById(message.id, false)
+      if (!existing) {
+        tree.addNode(message)
+        inserted.push(message.id)
+      } else if (existing !== message) {
+        tree.updateNode(message)
+        updated.push(message.id)
+      }
+    }
+
+    if (inserted.length) {
+      const rebuilt = tree.buildPathFromLeafNode(inserted.at(-1)!)
+      setChatPath(rebuilt)
+      return
+    }
+
+    if (updated.length) {
+      setChatPath((prevPath) => {
+        const updatedSet = new Set(updated)
+        let nextPath = prevPath
+        let remaining = updatedSet.size
+        for (let i = prevPath.length - 1; i >= 0 && remaining > 0; i--) {
+          const prevMsg = prevPath[i]
+          if (!updatedSet.has(prevMsg.id)) continue
+          updatedSet.delete(prevMsg.id)
+          remaining--
+
+          const latest = tree.getNodeById(prevMsg.id)
+          if (latest === prevMsg) continue
+          if (nextPath === prevPath) nextPath = prevPath.slice()
+          nextPath[i] = latest
+        }
+        return nextPath
+      })
+    }
+  }, [messages])
+
   // Abort current chat request on unmount
   useEffect(() => {
     // Abort only on unmount; this has no effect if no active chat request
@@ -198,13 +306,15 @@ export function Chat(props: ChatIdProps) {
               )}
               <ConversationContent className='mx-auto max-w-4xl px-2 py-4 md:px-4 [&>*:last-child]:min-h-40'>
                 <ChatMessages
-                  isReadonly={!isStoredChat}
-                  messages={messages}
-                  modelUsageMap={modelUsageMap}
+                  isReadonly={!isStoredChat || status === 'streaming' || status === 'submitted'}
+                  messages={chatPath}
+                  getVersions={handleGetMessageVersions}
+                  onSwitchVersion={handleSwitchMessageVersion}
+                  getModelUsage={handleGetModelUsage}
                   sendMessage={handleSendMessage}
-                  regenerate={regenerate}
-                  status={status}
-                  error={error}
+                  regenerate={handleRegenerate}
+                  status={isLiveChatPath ? status : 'ready'}
+                  error={isLiveChatPath ? error : undefined}
                 />
               </ConversationContent>
               <ConversationScrollButton />
@@ -220,6 +330,8 @@ export function Chat(props: ChatIdProps) {
             isPending={isDataLoading}
             isEphemeral={!isStoredChat}
             sendMessage={handleSendMessage}
+            parentMessageId={chatPath.at(-1)?.id}
+            messagesCount={messages.length}
             status={status}
             stop={stop}
           />

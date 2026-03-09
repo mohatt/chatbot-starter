@@ -34,7 +34,12 @@ export function NewChat(props: NewChatProps) {
   useEffect(() => {
     if (query && !isQuerySent.current) {
       isQuerySent.current = true
-      const { url } = createNewChat([{ text: query }])
+      const { url } = createNewChat([
+        {
+          parts: [{ type: 'text' as const, text: query }],
+          metadata: { parentId: null },
+        },
+      ])
       setIsNavigating(true)
       router.replace(url)
     }

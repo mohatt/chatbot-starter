@@ -28,13 +28,24 @@ import type { UseChatResult } from './hooks'
 
 export interface ChatPromptProps extends Pick<UseChatResult, 'sendMessage' | 'stop' | 'status'> {
   chatId: string
+  parentMessageId?: string | null
+  messagesCount?: number
   isPending?: boolean
   isDisabled?: boolean
   isEphemeral?: boolean
 }
 
 export const ChatPrompt = (props: ChatPromptProps) => {
-  const { chatId, sendMessage, stop, status, isPending, isDisabled } = props
+  const {
+    chatId,
+    sendMessage,
+    stop,
+    status,
+    parentMessageId,
+    messagesCount,
+    isPending,
+    isDisabled,
+  } = props
   const [input, setInput] = useState('')
 
   const {
@@ -44,15 +55,20 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     hasNoChatCredits,
   } = useUserBilling()
   const maxMessageFiles = billing?.tierConfig.maxMessageFiles ?? 0
+  const maxChatMessages = billing?.tierConfig.maxChatMessages
+  const hasNoMessageQuota =
+    maxChatMessages != null && messagesCount != null && messagesCount >= maxChatMessages
   const warning = hasNoChatCredits
     ? 'You’ve reached your monthly chat usage limit.'
-    : billingError
-      ? 'Failed loading your chat usage information.'
-      : null
+    : hasNoMessageQuota
+      ? 'You’ve reached your maximum number of messages for this chat.'
+      : billingError
+        ? 'Failed loading your chat usage information.'
+        : null
 
   const isStreaming = status === 'submitted' || status === 'streaming'
   const isDataLoading = isPending || isBillingLoading
-  const isInputDisabled = isDisabled || hasNoChatCredits || !!billingError
+  const isInputDisabled = isDisabled || hasNoChatCredits || hasNoMessageQuota || !!billingError
   const isComposingRef = useRef(false)
   const {
     files,
@@ -90,6 +106,7 @@ export const ChatPrompt = (props: ChatPromptProps) => {
     void sendMessage({
       parts: [{ type: 'text' as const, text }],
       metadata: {
+        parentId: parentMessageId ?? null,
         files: files
           .filter((f) => f.status === 'uploaded' && f.url)
           .map(({ id, name, mimeType, size, metadata, url, createdAt }) => {

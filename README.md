@@ -11,6 +11,8 @@ Full‑stack AI chatbot starter with RAG, file uploads, and project‑scoped cha
 - **Streaming chat UI** with Markdown rendering, auto-scroll, and rich AI elements.
 - **Multi-model support** via Vercel AI Gateway (OpenAI, Anthropic, Google, xAI, and many more).
 - **File uploads + RAG** with vector indexing and in-chat file search/read tools.
+- **Conversation branching** with immutable message trees.
+- **Per-message branch navigation** (`1 of N`) to switch between message variants inline.
 - **Web search** support for OpenAI, Anthropic, and Google Gemini models.
 - **Projects + chats** with per-project history and organized sidebar.
 - **Auth + access control** with public/private chat visibility.
@@ -95,7 +97,7 @@ This will sync the current schema in [`lib/db/schema`](./lib/db/schema) to your 
 Most app configurations live in [`lib/config.ts`](./lib/config.ts), including:
 
 - AI models registry and defaults
-- Chat limits (message parts, history)
+- Chat limits (message parts, history, max messages per chat)
 - File upload rules and size limits
 - Billing tiers and usage caps
 - Project limits (e.g., max files)

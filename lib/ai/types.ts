@@ -8,6 +8,7 @@ export type LanguageModel = ReturnType<typeof gateway>
 export type EmbeddingModel = ReturnType<(typeof gateway)['embeddingModel']>
 
 export interface ChatMessageMetadata {
+  parentId: string | null
   model?: ModelKey
   files?: FileToolRecord[]
 }
@@ -22,4 +23,4 @@ export type ChatMessage = UIMessage<
     usage: ModelUsage
   },
   ChatTools
->
+> & { metadata: ChatMessageMetadata }
