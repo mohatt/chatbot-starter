@@ -110,10 +110,6 @@ export function Chat(props: ChatIdProps) {
       queryClient.invalidateQueries({
         queryKey: useUserBillingPeriodQuery.getKey(),
       })
-      queryClient.setQueryData(useChatHistoryQuery.getKey({ id }), {
-        pages: [{ data: [...messages], nextCursor: null }],
-        pageParams: [null],
-      })
     }),
   })
   const statusRef = useRef(status)
@@ -223,6 +219,12 @@ export function Chat(props: ChatIdProps) {
   }, [history, setMessages])
 
   useEffect(() => {
+    // Reset react query cache
+    queryClient.setQueryData(useChatHistoryQuery.getKey({ id }), {
+      pages: [{ data: [...messages], nextCursor: null }],
+      pageParams: [null],
+    })
+
     if (!messages.length) {
       setChatPath((prev) => (prev.length ? [] : prev))
       return
@@ -267,7 +269,7 @@ export function Chat(props: ChatIdProps) {
         return nextPath
       })
     }
-  }, [messages])
+  }, [messages, queryClient, id])
 
   // Abort current chat request on unmount
   useEffect(() => {
