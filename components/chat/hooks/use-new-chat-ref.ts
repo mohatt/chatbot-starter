@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, type RefObject } from 'react'
 import { useLazyRef } from '@/hooks/use-lazy-ref'
+import { useAuth } from '@/components/auth-provider'
 import { getChatUrl } from '@/lib/utils'
 import { config } from '@/lib/config'
 import type { UseChatResult } from './use-chat'
@@ -30,6 +31,7 @@ export function useNewChatRef(props: ChatIdProps) {
 
 export function useCreateNewChat(props: ChatIdProps) {
   const { id, projectId } = props
+  const { user } = useAuth()
   return useCallback(
     (initialMessageArgs: NewChatState['initialMessageArgs']) => {
       newChat.current = {
@@ -40,7 +42,7 @@ export function useCreateNewChat(props: ChatIdProps) {
           projectId,
           isTitlePending: true,
           privacy: 'private',
-          userId: '00000000-0000-0000-0000-000000000000',
+          userId: user.id,
         },
         initialMessageArgs,
       }
@@ -49,6 +51,6 @@ export function useCreateNewChat(props: ChatIdProps) {
         url: getChatUrl({ id, projectId }),
       }
     },
-    [id, projectId],
+    [id, projectId, user],
   )
 }

@@ -112,6 +112,11 @@ export function Chat(props: ChatIdProps) {
       })
     }),
   })
+  const isReadonly =
+    !isStoredChat ||
+    status === 'streaming' ||
+    status === 'submitted' ||
+    chatData?.userId !== user.id
   const statusRef = useRef(status)
   statusRef.current = status
 
@@ -127,7 +132,7 @@ export function Chat(props: ChatIdProps) {
 
   const handleRegenerate = useCallback<typeof regenerate>(
     async (args) => {
-      if (statusRef.current === 'streaming' || statusRef.current === 'submitted') {
+      if (isReadonly) {
         return
       }
       const { messageId, ...options } = args ?? {}
@@ -155,7 +160,7 @@ export function Chat(props: ChatIdProps) {
         setMessages(chatTree.current.getAllNodes())
       }
     },
-    [handleSendMessage, setMessages],
+    [handleSendMessage, setMessages, isReadonly],
   )
 
   const handleSwitchMessageVersion = useCallback((messageId: string) => {
@@ -310,7 +315,7 @@ export function Chat(props: ChatIdProps) {
               )}
               <ConversationContent className='mx-auto max-w-4xl px-2 py-4 md:px-4 [&>*:last-child]:min-h-40'>
                 <ChatMessages
-                  isReadonly={!isStoredChat || status === 'streaming' || status === 'submitted'}
+                  isReadonly={isReadonly}
                   messages={chatPath}
                   getVersions={handleGetMessageVersions}
                   onSwitchVersion={handleSwitchMessageVersion}
