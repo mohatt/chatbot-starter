@@ -37,11 +37,6 @@ export function Chat(props: ChatIdProps) {
 
   const chatTree = useRef(new ChatTree())
   const [chatPath, setChatPath] = useState<ChatMessage[]>([])
-  const isLiveChatPath = useMemo(() => {
-    const currentLeafId = chatPath.at(-1)?.id ?? null
-    const liveLeafId = chatTree.current.getLatestNodeId()
-    return currentLeafId === liveLeafId
-  }, [chatPath])
 
   const queryClient = useQueryClient()
   const { data: settings } = useClientSettings()
@@ -70,6 +65,7 @@ export function Chat(props: ChatIdProps) {
     dataError = new AppError('not_found:chat')
   }
 
+  const [lastSentMessageId, setLastSentMessageId] = useState<string | null>(null)
   const [modelUsageMap, setModelUsageMap] = useState<Record<string, ModelUsage>>({})
   const { messages, sendMessage, setMessages, status, stop, regenerate, error } = useChat({
     id,
@@ -79,8 +75,10 @@ export function Chat(props: ChatIdProps) {
       api: `/api/chat/${id}`,
       fetch: fetchWithOfflineHandler,
       prepareSendMessagesRequest: useEventCallback((req) => {
+        const message = req.messages.at(-1)!
+        setLastSentMessageId(message.id)
         const body: PostRequestBody = {
-          message: req.messages.at(-1) as any,
+          message: message as any,
           timeZone: getTimeZone(),
           createChat: !isStoredChat,
           regenerate: req.trigger === 'regenerate-message' || req.messageId != null,
@@ -112,11 +110,19 @@ export function Chat(props: ChatIdProps) {
       })
     }),
   })
+
   const isReadonly =
     !isStoredChat ||
     status === 'streaming' ||
     status === 'submitted' ||
     chatData?.userId !== user.id
+
+  const isLiveChatPath = useMemo(() => {
+    const currentLeafId = chatPath.at(-1)?.id ?? null
+    const liveLeafId = chatTree.current.getLatestNodeId()
+    return currentLeafId === liveLeafId || currentLeafId === lastSentMessageId
+  }, [chatPath, lastSentMessageId])
+
   const statusRef = useRef(status)
   statusRef.current = status
 
