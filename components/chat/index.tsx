@@ -159,6 +159,8 @@ export function Chat(props: ChatIdProps) {
   )
 
   const handleSwitchMessageVersion = useCallback((messageId: string) => {
+    // prevent auto-scroll to bottom when version is switched
+    scrollRef.current?.stopScroll()
     const leafMessageId = chatTree.current.findLatestLeafDescendant(messageId)
     setChatPath(chatTree.current.buildPathFromLeafNode(leafMessageId))
   }, [])
