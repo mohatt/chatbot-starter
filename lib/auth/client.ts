@@ -60,9 +60,9 @@ export function createAuthClient(env: AuthEnv, db: Db, mailer?: Mailer) {
       },
     },
     session: {
-      cookieCache: {
-        enabled: true,
-      },
+      // Use a long-lived first-party session so users stay signed in across long gaps.
+      // 400 days aligns with modern browser maximum cookie lifetime.
+      expiresIn: 3600 * 24 * 400,
     },
     advanced: {
       cookiePrefix: config.appId,
