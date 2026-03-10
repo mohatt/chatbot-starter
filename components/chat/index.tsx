@@ -111,11 +111,9 @@ export function Chat(props: ChatIdProps) {
     }),
   })
 
-  const isReadonly =
-    !isStoredChat ||
-    status === 'streaming' ||
-    status === 'submitted' ||
-    chatData?.userId !== user.id
+  const isChatOwner = activeChatData?.userId === user.id
+  const canSendMessage = isChatOwner && status !== 'streaming' && status !== 'submitted'
+  const canRegenerateMessage = canSendMessage && isStoredChat
 
   const isLiveChatPath = useMemo(() => {
     const currentLeafId = chatPath.at(-1)?.id ?? null
@@ -127,18 +125,21 @@ export function Chat(props: ChatIdProps) {
   statusRef.current = status
 
   const handleSendMessage = useCallback<typeof sendMessage>(
-    (...args) => {
+    async (...args) => {
+      if (!canSendMessage) {
+        return
+      }
       setTimeout(() => {
         scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
       }, 10)
       return sendMessage(...args)
     },
-    [sendMessage],
+    [sendMessage, canSendMessage],
   )
 
   const handleRegenerate = useCallback<typeof regenerate>(
     async (args) => {
-      if (isReadonly) {
+      if (!canRegenerateMessage) {
         return
       }
       const { messageId, ...options } = args ?? {}
@@ -166,7 +167,7 @@ export function Chat(props: ChatIdProps) {
         setMessages(chatTree.current.getAllNodes())
       }
     },
-    [handleSendMessage, setMessages, isReadonly],
+    [handleSendMessage, setMessages, canRegenerateMessage],
   )
 
   const handleSwitchMessageVersion = useCallback((messageId: string) => {
@@ -321,7 +322,7 @@ export function Chat(props: ChatIdProps) {
               )}
               <ConversationContent className='mx-auto max-w-4xl px-2 py-4 md:px-4 [&>*:last-child]:min-h-40'>
                 <ChatMessages
-                  isReadonly={isReadonly}
+                  isReadonly={!canRegenerateMessage}
                   messages={chatPath}
                   getVersions={handleGetMessageVersions}
                   onSwitchVersion={handleSwitchMessageVersion}
@@ -338,7 +339,7 @@ export function Chat(props: ChatIdProps) {
         </div>
       </div>
 
-      {(!chatData || chatData.userId === user.id) && (
+      {(!chatData || isChatOwner) && (
         <div className='sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4'>
           <ChatPrompt
             chatId={id}

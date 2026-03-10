@@ -38,7 +38,7 @@ const privacyOptions: Array<{
   {
     id: 'public',
     label: 'Public',
-    description: 'Anyone with the link can access this chat.',
+    description: 'Anyone with the link can read this chat.',
     icon: <GlobeIcon className='size-5' />,
   },
 ]
