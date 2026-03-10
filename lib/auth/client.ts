@@ -1,6 +1,7 @@
 import { betterAuth, APIError } from 'better-auth'
+import { anonymous } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { anonymous, createAuthMiddleware } from 'better-auth/plugins'
+import { createAuthMiddleware } from 'better-auth/api'
 import { waitUntil } from '@vercel/functions'
 import { billing } from './plugins/billing'
 import { Mailer, VerifyEmail, ResetPassword } from '@/lib/mailer'
