@@ -216,7 +216,7 @@ export const ReasoningContent = memo(
       {...props}
     >
       {typeof children === 'string' ? (
-        <Streamdown plugins={streamdownPlugins} {...props}>
+        <Streamdown plugins={streamdownPlugins} {...props as any}>
           {children}
         </Streamdown>
       ) : (
