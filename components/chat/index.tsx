@@ -124,51 +124,53 @@ export function Chat(props: ChatIdProps) {
   const statusRef = useRef(status)
   statusRef.current = status
 
-  const handleSendMessage = useCallback<typeof sendMessage>(
-    async (...args) => {
-      if (!canSendMessage) {
-        return
-      }
-      setTimeout(() => {
-        scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
-      }, 10)
-      return sendMessage(...args)
-    },
-    [sendMessage, canSendMessage],
-  )
+  const retryLastRequestRef = useRef<(() => Promise<void>) | null>(null)
 
-  const handleRegenerate = useCallback<typeof regenerate>(
-    async (args) => {
-      if (!canRegenerateMessage) {
-        return
+  const handleSendMessage: typeof sendMessage = useEventCallback(async (...args) => {
+    if (!canSendMessage) {
+      return
+    }
+    setTimeout(() => {
+      scrollRef.current?.scrollToBottom({ ignoreEscapes: true })
+    }, 10)
+    return sendMessage(...args).finally(() => {
+      retryLastRequestRef.current = () => handleSendMessage(...args)
+    })
+  })
+
+  const handleRegenerate: typeof regenerate = useEventCallback(async (args) => {
+    if (!canRegenerateMessage) {
+      return
+    }
+    const { messageId, ...options } = args ?? {}
+    if (!messageId) {
+      if (!retryLastRequestRef.current) {
+        throw new Error('No previous chat request to retry')
       }
-      const { messageId, ...options } = args ?? {}
-      const resolvedMessageId = messageId ?? chatTree.current.getLatestNodeId('assistant')
-      if (!resolvedMessageId) {
-        throw new Error('No assistant message to regenerate')
-      }
-      const { role, metadata } = chatTree.current.getNodeById(resolvedMessageId)
-      if (role !== 'assistant' || !metadata.parentId) {
-        throw new Error('Invalid assistant message ID to regenerate')
-      }
-      const parentMessage = chatTree.current.getNodeById(metadata.parentId)
-      setChatPath(chatTree.current.buildPathFromLeafNode(parentMessage.id))
-      try {
-        return await handleSendMessage(
-          {
-            messageId: parentMessage.id,
-            metadata: parentMessage.metadata,
-            parts: parentMessage.parts,
-          },
-          options,
-        )
-      } finally {
-        // sendMessage deletes all messages after `messageId`, so we have to revert original messages
-        setMessages(chatTree.current.getAllNodes())
-      }
-    },
-    [handleSendMessage, setMessages, canRegenerateMessage],
-  )
+      return retryLastRequestRef.current()
+    }
+
+    const { role, metadata } = chatTree.current.getNodeById(messageId)
+    if (role !== 'assistant' || !metadata.parentId) {
+      throw new Error('Invalid assistant message ID to regenerate')
+    }
+    const parentMessage = chatTree.current.getNodeById(metadata.parentId)
+    setChatPath(chatTree.current.buildPathFromLeafNode(parentMessage.id))
+    try {
+      return await handleSendMessage(
+        {
+          messageId: parentMessage.id,
+          metadata: parentMessage.metadata,
+          parts: parentMessage.parts,
+        },
+        options,
+      )
+    } finally {
+      retryLastRequestRef.current = () => handleRegenerate(args)
+      // sendMessage deletes all messages after `messageId`, so we have to revert original messages
+      setMessages(chatTree.current.getAllNodes())
+    }
+  })
 
   const handleSwitchMessageVersion = useCallback((messageId: string) => {
     // prevent auto-scroll to bottom when version is switched

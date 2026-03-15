@@ -473,7 +473,7 @@ function ChatMessageEditor(props: ChatMessageEditorProps) {
         <InputGroupButton
           size='sm'
           variant='default'
-          disabled={!input.trim()}
+          disabled={!input.trim() || input.trim() === initialValue}
           onClick={() => {
             void onSubmit(input.trim())
             onCancel()
