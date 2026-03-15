@@ -64,10 +64,10 @@ export const POST = createApiHandler<RouteContext<'/api/chat/[id]'>>(
     }
     const fileIdsToUpdate: string[] = []
     for (const f of files) {
-      if ((f.chatId && f.chatId !== id) || (f.messageId && f.messageId !== message.id)) {
+      if (f.chatId && f.chatId !== id) {
         throw new AppError('bad_request:chat')
       }
-      if (f.chatId !== id || f.messageId !== message.id) {
+      if (f.chatId !== id) {
         fileIdsToUpdate.push(f.id)
       }
     }
