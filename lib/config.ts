@@ -86,7 +86,7 @@ export const config = {
     ]),
     title: {
       model: {
-        id: 'openai/gpt-4.1-nano',
+        id: 'openai/gpt-4.1-mini',
         provider: 'vercel',
         modifiers: {},
       },
